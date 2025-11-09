@@ -18,7 +18,7 @@ export default function Login() {
   }, []);
 
   const handleLogin = async () => {
-    const res = await fetch(`${API_URL}/home/login`, {
+    const res = await fetch(`${API_URL}/login-home`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -34,7 +34,7 @@ export default function Login() {
   };
 
   const handleCreateHome = async () => {
-    const res = await fetch(`${API_URL}/home/create`, {
+    const res = await fetch(`${API_URL}/create-home`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name }),
