@@ -7,7 +7,7 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
 export default function ProfileSelect() {
   const [profiles, setProfiles] = useState([]);
-  const [showModal, setShowModal] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const navigate = useNavigate();
 
@@ -26,12 +26,8 @@ export default function ProfileSelect() {
     navigate("/"); // ✅ Après sélection du profil → dashboard
   };
 
-  const handleAddProfile = () => {
-    setShowModal(true);
-  };
-
   return (
-<div className="min-h-screen flex flex-col items-center justify-center bg-[#6b926f] text-white font-nunito">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-[#6b926f] text-white font-nunito">
       {/* === Logo === */}
       <img
         src={`${CLOUDINARY_RES}${CLOUDINARY_LOGO_HOME}`}
@@ -68,42 +64,41 @@ export default function ProfileSelect() {
 
         {/* === Ajouter un profil === */}
         <div 
-        onClick={handleAddProfile}
-        className="group flex flex-col items-center cursor-pointer"
-        >
-        <div className="w-28 h-28 flex items-center justify-center rounded-xl border-2 border-transparent group-hover:border-white transition duration-200 bg-[#5e8263] text-white text-4xl font-bold">
-            +
-        </div>
-        <p className="mt-2 text-lg font-semibold">Ajouter un profil</p>
+          onClick={() => setShowCreate(true)}
+          className="group flex flex-col items-center cursor-pointer"
+          >
+          <div className="w-28 h-28 flex items-center justify-center rounded-xl border-2 border-transparent group-hover:border-white transition duration-200 bg-[#5e8263] text-white text-4xl font-bold">
+              +
+          </div>
+          <p className="mt-2 text-lg font-semibold">Ajouter un profil</p>
         </div>
 
         <div 
-        onClick={() => setShowTransfer(true)}
-        className="group flex flex-col items-center cursor-pointer"
-        >
-        <div className="w-28 h-28 flex items-center justify-center rounded-xl border-2 border-transparent group-hover:border-white transition duration-200 bg-[#5e8263] text-white">
-            <Repeat size={28} strokeWidth={2} className="translate-y-1" /> {/* ajustement vertical */}
+          onClick={() => setShowTransfer(true)}
+          className="group flex flex-col items-center cursor-pointer"
+          >
+          <div className="w-28 h-28 flex items-center justify-center rounded-xl border-2 border-transparent group-hover:border-white transition duration-200 bg-[#5e8263] text-white">
+              <Repeat size={28} strokeWidth={2} className="translate-y-1" /> {/* ajustement vertical */}
+          </div>
+          <p className="mt-2 text-lg font-semibold">Transférer un profil</p>
         </div>
-        <p className="mt-2 text-lg font-semibold">Transférer un profil</p>
-        </div>
-
       </div>
 
-    {/* === Logout === */}
-    <button 
-    onClick={() => {
-        navigate("/login");
-    }}
-    className="mt-16 px-6 py-3 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-[#6b926f] transition">
-        Changer de compte
-    </button>
+      {/* === Logout === */}
+      <button 
+        onClick={() => {
+            navigate("/login");
+        }}
+        className="mt-16 px-6 py-3 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-[#6b926f] transition">
+            Changer de compte
+      </button>
 
       {/* Modal */}
-      {showModal && (
+      {showCreate && (
         <ModalCreateProfile
-          onClose={() => setShowModal(false)}
+          onClose={() => setShowCreate(false)}
           onCreated={() => {
-            setShowModal(false);
+            setShowCreate(false);
             window.location.reload(); // recharge pour voir le nouveau profil
           }}
         />
@@ -117,7 +112,7 @@ export default function ProfileSelect() {
             window.location.reload();
             }}
         />
-        )}
+      )}
     </div>
   );
 }

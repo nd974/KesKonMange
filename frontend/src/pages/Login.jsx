@@ -2,21 +2,22 @@ import React, { useState, useEffect  } from "react";
 import { useNavigate } from "react-router-dom";
 import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+console.log(API_URL)
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
-  const API_URL = import.meta.env.VITE_API_URL;
   
-//   useEffect(() => {
-//     // Supprime home_id et profile_id à chaque fois qu'on rend la page Login
-//     localStorage.removeItem("home_id");
-//     localStorage.removeItem("profile_id");
-//   }, []);
+  useEffect(() => {
+    localStorage.removeItem("home_id");
+    localStorage.removeItem("profile_id");
+  }, []);
 
-    const handleLogin = async () => {
+  const handleLogin = async () => {
     const res = await fetch(`${API_URL}/home/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -30,9 +31,9 @@ export default function Login() {
     } else {
         setMessage("❌ Email ou mot de passe incorrect");
     }
-    };
+  };
 
-    const handleCreateHome = async () => {
+  const handleCreateHome = async () => {
     const res = await fetch(`${API_URL}/home/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -40,12 +41,11 @@ export default function Login() {
     });
     const data = await res.json();
     setMessage(data.ok ? "✅ Compte créé !" : "❌ Erreur: " + data.error);
-    };
-
-
+  };
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#6b926f] text-white font-nunito">
+
       {/* === Logo === */}
       <img
         src={`${CLOUDINARY_RES}${CLOUDINARY_LOGO_HOME}`}
