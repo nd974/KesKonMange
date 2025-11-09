@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route, useLocation, useNavigate } from "react-router-dom";
 import Login from "./pages/Login";
 import ProfileSelect from "./pages/ProfileSelect";
-
+import Dashboard from "./pages/Dashboard";
 
 function AppRoutes() {
   return (
@@ -10,6 +10,7 @@ function AppRoutes() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/profiles" element={<ProfileSelect />} />
+          <Route path="/" element={<Dashboard />} />
         </Routes>
       </div>
     </>
