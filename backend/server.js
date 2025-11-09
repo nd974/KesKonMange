@@ -20,6 +20,7 @@ app.use(cors({
   credentials: true
 }));
 
+app.options('*', cors()); // pour toutes les routes
 
 app.use(express.json());
 
