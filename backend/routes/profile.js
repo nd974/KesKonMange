@@ -3,80 +3,8 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
-// ------------------- CREATE HOME -------------------
-router.post("/create", async (req, res) => {
-  try {
-    const { email, password, name } = req.body;
-    if (!email || !password || !name) return res.status(400).json({ error: "missing fields" });
-
-    const result = await pool.query(
-      "INSERT INTO Home (email, password, name) VALUES ($1, $2, $3) RETURNING id",
-      [email, password, name]
-    );
-
-    // Pour récupérer l'id inséré :
-    const homeId = result.rows[0].id;
-
-    res.json({ ok: true, homeId });
-
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-// ------------------- LOGIN HOME -------------------
-router.post("/login", async (req, res) => {
-  try {
-    const { email, password } = req.body;
-
-    // PostgreSQL : pool.query() renvoie un objet { rows, rowCount, ... }
-    const result = await pool.query(
-      "SELECT id FROM Home WHERE email = $1 AND password = $2 LIMIT 1",
-      [email, password]
-    );
-
-    if (result.rows.length === 0) return res.json({ ok: false });
-
-    res.json({ ok: true, homeId: result.rows[0].id });
-  } catch (e) {
-    res.status(500).json({ error: e.message });
-  }
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 // ------------------- GET PROFILES FOR A HOME -------------------
-router.get("/get-profiles", async (req, res) => {
+router.get("/get", async (req, res) => {
   try {
     const homeId = req.query.homeId;
     if (!homeId) return res.status(400).json({ error: "missing homeId" });
@@ -96,7 +24,7 @@ router.get("/get-profiles", async (req, res) => {
 });
 
 // ------------------- CREATE PROFILE -------------------
-router.post("/create-profile", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const { username, password, name, avatar, home_id, role_id } = req.body;
     if (!username || !password || !name || !home_id) 
@@ -124,5 +52,48 @@ router.post("/create-profile", async (req, res) => {
   }
 });
 
+// ------------------- TRANSFERT PROFILE -------------------
+router.post("/transfer", async (req, res) => {
+  try {
+    const { username, password, home_id } = req.body;
+
+    if (!username || !password || !home_id) {
+      return res.status(400).json({ ok: false, error: "missing field" });
+    }
+
+    // Vérifier si le profil existe
+    const profileResult = await pool.query(
+      "SELECT id FROM Profile WHERE username = $1 AND password = $2 LIMIT 1",
+      [username, password]
+    );
+
+    if (profileResult.rows.length === 0) {
+      return res.json({ ok: false, error: "Profil introuvable" });
+    }
+
+    const profileId = profileResult.rows[0].id;
+
+    // Vérifier si le profil est déjà lié au home
+    const existsResult = await pool.query(
+      "SELECT 1 FROM homes_profiles WHERE home_id = $1 AND profile_id = $2",
+      [home_id, profileId]
+    );
+
+    if (existsResult.rows.length > 0) {
+      return res.json({ ok: false, error: "Profil déjà lié à ce home" });
+    }
+
+    // Lier le profil au home
+    await pool.query(
+      "INSERT INTO homes_profiles (home_id, profile_id) VALUES ($1, $2)",
+      [home_id, profileId]
+    );
+
+    res.json({ ok: true });
+
+  } catch (e) {
+    res.status(500).json({ ok: false, error: e.message });
+  }
+});
 
 export default router;

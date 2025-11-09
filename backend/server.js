@@ -11,12 +11,13 @@ import express from "express";
 import cors from "cors";
 import menuRoutes from "./routes/menu.js";
 import homeRoutes from "./routes/home.js";
+import profileRoutes from "./routes/profile.js";
 
 const app = express();
 
 app.use(cors({
   origin: [
-    "https://keskonmange-n7p6r8dco-nd974s-projects.vercel.app",
+    "https://keskonmange-l1gwme7q4-nd974s-projects.vercel.app",
     "http://localhost:5173"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
@@ -27,6 +28,7 @@ app.use(express.json());
 
 app.use("/menu", menuRoutes);
 app.use("/home", homeRoutes);
+app.use("/profile", profileRoutes);
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
