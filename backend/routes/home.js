@@ -4,13 +4,13 @@ import { pool } from "../db.js";
 const router = express.Router();
 
 // ------------------- CREATE HOME -------------------
-router.post("/create", async (req, res) => {
+router.post("/create-home", async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!email || !password || !name) return res.status(400).json({ error: "missing fields" });
 
     const [result] = await pool.query(
-      "INSERT INTO Home (email, password, name) VALUES (?, ?, ?)",
+      "INSERT INTO Home (email, password, name) VALUES ($1, $2, $3)",
       [email, password, name]
     );
 
@@ -21,11 +21,11 @@ router.post("/create", async (req, res) => {
 });
 
 // ------------------- LOGIN HOME -------------------
-router.post("/login", async (req, res) => {
+router.post("/login-home", async (req, res) => {
   try {
     const { email, password } = req.body;
     const [rows] = await pool.query(
-      "SELECT id FROM Home WHERE email = ? AND password = ? LIMIT 1",
+      "SELECT id FROM Home WHERE email = $1 AND password = $2 LIMIT 1",
       [email, password]
     );
     if (!rows.length) return res.json({ ok: false });
@@ -65,7 +65,7 @@ router.post("/create-profile", async (req, res) => {
     try {
       // créer le profil
       const [profileResult] = await conn.execute(
-        "INSERT INTO Profile (username, password, name, avatar, role_id) VALUES (?, ?, ?, ?, ?)",
+        "INSERT INTO Profile (username, password, name, avatar, role_id) VALUES ($1, $2, $3, $4, $5)",
         [username, password, name, avatar || null, role_id || 1]
       );
 
@@ -73,7 +73,7 @@ router.post("/create-profile", async (req, res) => {
 
       // lier le profil à la maison
       await conn.execute(
-        "INSERT INTO homes_profiles (home_id, profile_id) VALUES (?, ?)",
+        "INSERT INTO homes_profiles (home_id, profile_id) VALUES ($1, $2)",
         [home_id, newProfileId]
       );
 
