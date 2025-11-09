@@ -8,6 +8,7 @@ export default function Login() {
   const [name, setName] = useState("");
   const [message, setMessage] = useState("");
   const navigate = useNavigate();
+  const API_URL = import.meta.env.VITE_API_URL;
   
 //   useEffect(() => {
 //     // Supprime home_id et profile_id à chaque fois qu'on rend la page Login
@@ -16,7 +17,7 @@ export default function Login() {
 //   }, []);
 
     const handleLogin = async () => {
-    const res = await fetch("http://localhost:3000/home/login", {
+    const res = await fetch(`${API_URL}/home/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password }),
@@ -32,7 +33,7 @@ export default function Login() {
     };
 
     const handleCreateHome = async () => {
-    const res = await fetch("http://localhost:3000/home/create", {
+    const res = await fetch(`${API_URL}/home/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, name }),
