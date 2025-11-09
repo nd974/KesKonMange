@@ -1,9 +1,7 @@
-import pkg from "pg";
+import pg from "pg";
 import dotenv from "dotenv";
 dotenv.config();
 
-const { Pool } = pkg;
-
 export const pool = new pg.Pool({
-    connectionString: process.env.DATABASE_URL,
+    connectionString: `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}.oregon-postgres.render.com/${DB_NAME}`,
 });
