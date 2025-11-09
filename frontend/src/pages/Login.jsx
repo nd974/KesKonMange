@@ -3,7 +3,6 @@ import { useNavigate } from "react-router-dom";
 import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
-console.log(API_URL)
 
 export default function Login() {
   const [email, setEmail] = useState("");
