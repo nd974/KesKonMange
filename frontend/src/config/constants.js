@@ -4,6 +4,7 @@ export const CLOUDINARY_API = `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME
 
 export const CLOUDINARY_PRESET_LOGO = "Logos";
 export const CLOUDINARY_LOGO_HOME = "v1762694603/KsKnMg_Home_qe5fbb.png";
+export const CLOUDINARY_LOGO_HEADER = "v1762694546/KsKnMg_ljgxhk.svg";
 
 export const CLOUDINARY_PRESET_AVATAR = "Avatars";
 export const CLOUDINARY_AVATAR5_DEFAULT = [

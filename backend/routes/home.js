@@ -44,81 +44,46 @@ router.post("/login", async (req, res) => {
 });
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-// ------------------- GET PROFILES FOR A HOME -------------------
-router.get("/get-profiles", async (req, res) => {
+// ------------------- GET HOMES (BY PROFILE) -------------------
+router.get("/homes-get/:profileId", async (req, res) => {
   try {
-    const homeId = req.query.homeId;
-    if (!homeId) return res.status(400).json({ error: "missing homeId" });
+    const { profileId } = req.params;
+    if (!profileId) return res.status(400).json({ error: "missing profileId" });
 
-    const result = await pool.query(
-      `SELECT p.id, p.name, p.avatar
-       FROM Profile p
-       JOIN homes_profiles ahp ON ahp.profile_id = p.id
-       WHERE ahp.home_id = $1`,
-      [homeId]
-    );
+    const query = `
+      SELECT h.id, h.name, h.email
+      FROM Home h
+      JOIN homes_profiles hp ON hp.home_id = h.id
+      WHERE hp.profile_id = $1
+    `;
 
-    res.json(result.rows);
+    const { rows } = await pool.query(query, [profileId]);
+
+    res.json(rows);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
 
-// ------------------- CREATE PROFILE -------------------
-router.post("/create-profile", async (req, res) => {
+// Récupérer un profil par son ID
+router.get("/get/:profileId", async (req, res) => {
   try {
-    const { username, password, name, avatar, home_id, role_id } = req.body;
-    if (!username || !password || !name || !home_id) 
-      return res.status(400).json({ error: "missing fields" });
+    const { profileId } = req.params;
+    if (!profileId) return res.status(400).json({ error: "missing profileId" });
 
-    // créer le profil et récupérer l'id
-    const profileResult = await pool.query(
-      `INSERT INTO Profile (username, password, name, avatar, role_id)
-       VALUES ($1, $2, $3, $4, $5)
-       RETURNING id`,
-      [username, password, name, avatar || null, role_id || 1]
-    );
+    const query = `
+      SELECT id, username, name, avatar, role_id
+      FROM Profile
+      WHERE id = $1
+    `;
 
-    const newProfileId = profileResult.rows[0].id;
+    const { rows } = await pool.query(query, [profileId]);
 
-    // lier le profil à la maison
-    await pool.query(
-      "INSERT INTO homes_profiles (home_id, profile_id) VALUES ($1, $2)",
-      [home_id, newProfileId]
-    );
+    if (!rows.length) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
 
-    res.json({ ok: true, profileId: newProfileId });
+    res.json(rows[0]);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
