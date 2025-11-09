@@ -1,11 +1,12 @@
 import pg from "pg";
 import dotenv from "dotenv";
+dotenv.config();
 
-dotenv.config(); // charge les variables depuis .env
+const { Pool } = pg;
 
-const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME, DB_PORT } = process.env;
-
-export const pool = new pg.Pool({
-  connectionString: `postgresql://${DB_USER}:${DB_PASSWORD}@${DB_HOST}.oregon-postgres.render.com/${DB_NAME}`,
-  port: DB_PORT ? Number(DB_PORT) : 5432, // port par défaut PostgreSQL
+export const pool = new Pool({
+  connectionString: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}.oregon-postgres.render.com/${process.env.DB_NAME}`,
+  ssl: {
+    rejectUnauthorized: false // nécessaire sur Render
+  }
 });
