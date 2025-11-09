@@ -5,6 +5,8 @@ import ModalTransferProfile from "../components/ModalTransferProfile";
 import { Repeat } from "lucide-react";
 import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 export default function ProfileSelect() {
   const [profiles, setProfiles] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
@@ -16,7 +18,7 @@ export default function ProfileSelect() {
     const homeId = localStorage.getItem("home_id");
     if (!homeId) return;
 
-    fetch(`http://localhost:3000/home/get-profiles?homeId=${homeId}`)
+    fetch(`${API_URL}/profile/get?homeId=${homeId}`)
       .then((res) => res.json())
       .then((data) => setProfiles(data || []));
   }, []);
