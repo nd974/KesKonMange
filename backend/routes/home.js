@@ -4,7 +4,7 @@ import { pool } from "../db.js";
 const router = express.Router();
 
 // ------------------- CREATE HOME -------------------
-router.post("/home/create", async (req, res) => {
+router.post("/create", async (req, res) => {
   try {
     const { email, password, name } = req.body;
     if (!email || !password || !name) return res.status(400).json({ error: "missing fields" });
@@ -21,7 +21,7 @@ router.post("/home/create", async (req, res) => {
 });
 
 // ------------------- LOGIN HOME -------------------
-router.post("/home/login", async (req, res) => {
+router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
     const [rows] = await pool.query(
