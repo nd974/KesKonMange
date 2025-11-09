@@ -13,7 +13,14 @@ import menuRoutes from "./routes/menu.js";
 import homeRoutes from "./routes/home.js";
 
 const app = express();
-app.use(cors());
+
+app.use(cors({
+  origin: "https://keskonmange-tan.vercel.app", // Ton FRONT en prod
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  credentials: true
+}));
+
+
 app.use(express.json());
 
 app.use("/menu", menuRoutes);
