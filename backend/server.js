@@ -19,7 +19,7 @@ const app = express();
 
 app.use(cors({
   origin: [
-    "https://keskonmange-l1gwme7q4-nd974s-projects.vercel.app",
+    "https://keskonmange-dx6caldf1-nd974s-projects.vercel.app/",
     "http://localhost:5173"
   ],
   methods: ["GET", "POST", "PUT", "DELETE"],
