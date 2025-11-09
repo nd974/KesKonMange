@@ -15,7 +15,7 @@ import homeRoutes from "./routes/home.js";
 const app = express();
 
 app.use(cors({
-  origin: "https://keskonmange-tan.vercel.app", // Ton FRONT en prod
+  origin: ["https://keskonmange-tan.vercel.app", "http://localhost:5173"], // Ton FRONT en prod
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
