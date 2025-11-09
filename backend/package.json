@@ -6,9 +6,10 @@
     "dev": "node server.js"
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "mysql2": "^3.3.2",
-    "cors": "^2.8.5"
+    "mysql2": "^3.3.2"
   },
   "devDependencies": {
     "nodemon": "^3.0.2"
