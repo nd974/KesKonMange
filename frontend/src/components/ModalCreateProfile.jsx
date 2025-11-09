@@ -29,7 +29,7 @@ export default function ModalCreateProfile({ onClose, onCreated }) {
         return;
       }
 
-      const response = await fetch("http://localhost:3000/home/create-profile", {
+      const response = await fetch(`${API_URL}/profile/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
