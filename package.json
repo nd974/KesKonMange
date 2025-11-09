@@ -2,12 +2,15 @@
   "name": "mon-projet",
   "private": true,
   "scripts": {
-    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\""
+    "dev": "concurrently \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "start": "react-scripts start",
+    "build": "react-scripts build"
   },
   "devDependencies": {
     "concurrently": "^9.2.1"
   },
   "dependencies": {
-    "dotenv": "^17.2.3"
+    "dotenv": "^17.2.3",
+    "react-scripts": "^5.0.1"
   }
 }
