@@ -15,12 +15,13 @@ import homeRoutes from "./routes/home.js";
 const app = express();
 
 app.use(cors({
-  origin: ["https://https://keskonmange-4ittcv1v8-nd974s-projects.vercel.app/", "http://localhost:5173"], // Ton FRONT en prod
+  origin: [
+    "https://keskonmange-4ittcv1v8-nd974s-projects.vercel.app",
+    "http://localhost:5173"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
   credentials: true
 }));
-
-app.options('*', cors()); // pour toutes les routes
 
 app.use(express.json());
 
