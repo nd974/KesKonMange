@@ -9,12 +9,16 @@ router.post("/create", async (req, res) => {
     const { email, password, name } = req.body;
     if (!email || !password || !name) return res.status(400).json({ error: "missing fields" });
 
-    const [result] = await pool.query(
-      "INSERT INTO Home (email, password, name) VALUES ($1, $2, $3)",
+    const result = await pool.query(
+      "INSERT INTO Home (email, password, name) VALUES ($1, $2, $3) RETURNING id",
       [email, password, name]
     );
 
-    res.json({ ok: true, homeId: result.insertId });
+    // Pour récupérer l'id inséré :
+    const homeId = result.rows[0].id;
+
+    res.json({ ok: true, homeId });
+
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -24,17 +28,20 @@ router.post("/create", async (req, res) => {
 router.post("/login", async (req, res) => {
   try {
     const { email, password } = req.body;
-    const [rows] = await pool.query(
+
+    // PostgreSQL : pool.query() renvoie un objet { rows, rowCount, ... }
+    const result = await pool.query(
       "SELECT id FROM Home WHERE email = $1 AND password = $2 LIMIT 1",
       [email, password]
     );
-    if (!rows.length) return res.json({ ok: false });
-    res.json({ ok: true, homeId: rows[0].id });
+
+    if (result.rows.length === 0) return res.json({ ok: false });
+
+    res.json({ ok: true, homeId: result.rows[0].id });
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
 });
-
 // ------------------- GET PROFILES FOR A HOME -------------------
 router.get("/get-profiles", async (req, res) => {
   try {
