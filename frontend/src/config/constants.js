@@ -7,11 +7,11 @@ export const CLOUDINARY_LOGO_HOME = "v1762694603/KsKnMg_Home_qe5fbb.png";
 
 export const CLOUDINARY_PRESET_AVATAR = "Avatars";
 export const CLOUDINARY_AVATAR5_DEFAULT = [
-    `${CLOUDINARY_RES}v1762693648/avatar1_enqee6.png`,
-    `${CLOUDINARY_RES}v1762693665/avatar2_h6ubef.png`,
-    `${CLOUDINARY_RES}v1762693667/avatar3_ibhdeb.png`,
-    `${CLOUDINARY_RES}v1762693668/avatar4_czjb1t.png`,
-    `${CLOUDINARY_RES}v1762693670/avatar5_vmpvxy.png`,
+    `v1762693648/avatar1_enqee6.png`,
+    `v1762693665/avatar2_h6ubef.png`,
+    `v1762693667/avatar3_ibhdeb.png`,
+    `v1762693668/avatar4_czjb1t.png`,
+    `v1762693670/avatar5_vmpvxy.png`,
 ];
 
 export const CLOUDINARY_PRESET_RECIPE = "Recettes";

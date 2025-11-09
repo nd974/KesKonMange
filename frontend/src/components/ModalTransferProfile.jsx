@@ -25,7 +25,7 @@ export default function ModalTransferProfile({ onClose, onTransferred }) {
         return;
       }
 
-      const response = await fetch("`${API_URL}/profile/transfer`", {
+      const response = await fetch(`${API_URL}/profile/transfer`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { CLOUDINARY_AVATAR5_DEFAULT } from "../config/constants";
+import { CLOUDINARY_AVATAR5_DEFAULT, CLOUDINARY_RES } from "../config/constants";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function ModalCreateProfile({ onClose, onCreated }) {
@@ -98,7 +98,7 @@ export default function ModalCreateProfile({ onClose, onCreated }) {
                 onClick={() => setAvatar(a)}
                 className={`rounded-full p-1 transition border-2 ${avatar === a ? "border-green-600" : "border-transparent"} hover:scale-105`}
               >
-                <img src={a} alt="avatar" className="rounded-full w-14 h-14 object-cover" />
+                <img src={`${CLOUDINARY_RES}${a}`} alt="avatar" className="rounded-full w-14 h-14 object-cover" />
               </button>
             ))}
           </div>
