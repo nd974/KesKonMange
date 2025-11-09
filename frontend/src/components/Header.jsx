@@ -74,7 +74,7 @@ export default function Header() {
         </div>
         <div className="hidden md:block">
           <div className="text-2xl font-bold" style={{ color: "#6b926f" }}>
-            Bonjour {profile ? profile.name : "!"}
+            Bonjour {profile ? profile.name : ""} !
           </div>
         </div>
       </div>
