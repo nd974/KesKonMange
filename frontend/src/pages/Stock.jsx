@@ -1,19 +1,16 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import BarCodeScanner from "../components/BarCodeScanner";
-import Tesseract from "tesseract.js";
 
 export default function Stock() {
   const [scannedCode, setScannedCode] = useState("");
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
 
-  // Popin OCR / saisie date
+  // Popin pour la date de péremption
   const [showExpirationPopin, setShowExpirationPopin] = useState(false);
   const [expirationDate, setExpirationDate] = useState("");
-  const [imageFile, setImageFile] = useState(null);
 
-  // Quand un code est détecté, on interroge l’API OpenFoodFacts
   useEffect(() => {
     if (!scannedCode) return;
 
@@ -40,7 +37,7 @@ export default function Stock() {
           image: p.image_small_url || p.image_front_url || null
         });
 
-        // Ouvrir la popin pour la date de péremption
+        // Afficher la popin pour la date de péremption
         setShowExpirationPopin(true);
       } catch (err) {
         console.error(err);
@@ -50,28 +47,6 @@ export default function Stock() {
 
     fetchProduct();
   }, [scannedCode]);
-
-  // OCR pour lire la date sur une image
-  const scanExpirationDateOCR = async () => {
-    if (!imageFile) return;
-
-    try {
-      const { data: { text } } = await Tesseract.recognize(imageFile, "fra", {
-        logger: m => console.log(m),
-      });
-
-      // Regex pour trouver une date au format JJ/MM/AAAA ou JJ-MM-AAAA
-      const dateMatch = text.match(/(\d{2}[\/-]\d{2}[\/-]\d{4})/);
-      if (dateMatch) {
-        setExpirationDate(dateMatch[0]);
-      } else {
-        setExpirationDate("Non trouvée");
-      }
-    } catch (err) {
-      console.error(err);
-      setExpirationDate("Erreur OCR");
-    }
-  };
 
   const handleConfirmExpiration = () => {
     setShowExpirationPopin(false);
@@ -122,37 +97,23 @@ export default function Stock() {
         </div>
       )}
 
-      {/* POPIN pour la date de péremption */}
+      {/* Popin pour la saisie manuelle */}
       {showExpirationPopin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
           <div className="bg-white p-6 rounded-lg w-80">
             <h3 className="text-lg font-semibold mb-2">Date de péremption</h3>
-            <p className="mb-2">Vous pouvez saisir la date ou utiliser OCR depuis une photo du produit.</p>
+            <p className="mb-2">Veuillez saisir la date de péremption :</p>
 
             <input
               type="date"
               value={expirationDate}
               onChange={(e) => setExpirationDate(e.target.value)}
-              className="border p-2 w-full mb-2"
+              className="border p-2 w-full mb-4"
             />
-
-            <input
-              type="file"
-              accept="image/*"
-              onChange={(e) => setImageFile(e.target.files[0])}
-              className="mb-2"
-            />
-
-            <button
-              onClick={scanExpirationDateOCR}
-              className="bg-blue-500 text-white p-2 rounded mr-2"
-            >
-              Scanner OCR
-            </button>
 
             <button
               onClick={handleConfirmExpiration}
-              className="bg-green-500 text-white p-2 rounded"
+              className="bg-green-500 text-white p-2 rounded w-full"
             >
               Valider
             </button>
