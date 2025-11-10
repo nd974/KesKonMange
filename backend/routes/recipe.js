@@ -59,4 +59,35 @@ router.get("/get-all", async (req, res) => {
   }
 });
 
+router.get("/get-one/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    const recipeRes = await pool.query(
+      `SELECT id, name, time_prep, time_cook, time_rest, time_clean, portion, level, picture
+       FROM "Recipe" WHERE id = $1`,
+      [id]
+    );
+
+    if (recipeRes.rowCount === 0)
+      return res.status(404).json({ error: "Recette introuvable" });
+
+    const recipe = recipeRes.rows[0];
+
+    const tagRes = await pool.query(
+      `SELECT t.id, t.name, t.parent_id
+       FROM "recipes_tags" rt
+       JOIN "Tag" t ON t.id = rt.tag_id
+       WHERE rt.recipe_id = $1`,
+      [id]
+    );
+
+    recipe.tags = tagRes.rows || [];
+    res.json(recipe);
+  } catch (err) {
+    console.error("Erreur /recipe/get-one:", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 export default router;
