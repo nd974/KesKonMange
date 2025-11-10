@@ -17,6 +17,8 @@ export default function ModalCreateProfile({ onClose, onCreated }) {
 
     try {
       const home_id = localStorage.getItem("home_id"); // clé telle que stockée précédemment
+      if (home_id) setUser(JSON.parse(home_id));
+      else fetchUser();
       if (!home_id) {
         setError("Aucun home sélectionné. Reconnecte-toi.");
         setLoading(false);

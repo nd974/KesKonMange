@@ -5,24 +5,29 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HEADER } from "../config/constants";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Header() {
-  const location = useLocation();
-  const navigate = useNavigate();
+    const location = useLocation();
+    const navigate = useNavigate();
 
-  const [profile, setProfile] = useState(null);
-  const [homes, setHomes] = useState([]);
-  const [selectedHome, setSelectedHome] = useState(null);
+    const [profile, setProfile] = useState(null);
+    const [homes, setHomes] = useState([]);
+    const [selectedHome, setSelectedHome] = useState(null);
 
-  // Récupération des ids stockés en localStorage
-  const profileId = localStorage.getItem("profile_id");
-  const homeId = localStorage.getItem("home_id");
+    // Récupération des ids stockés en localStorage
+    const profileId = localStorage.getItem("profile_id");
+    if (profileId) setUser(JSON.parse(profileId));
+    else fetchUser();
 
-  const links = [
+    const homeId = localStorage.getItem("home_id");
+    if (homeId) setUser(JSON.parse(homeId));
+    else fetchUser();
+
+    const links = [
     { name: "Dashboard", path: "/" },
     { name: "Recettes", path: "/recipes" },
     { name: "Calendrier", path: "/calendar" },
     { name: "Garde manger", path: "/stock" },
     { name: "Listes de courses", path: "/list" },
-  ];
+    ];
 
   // 🔹 Fetch du profil logué
   useEffect(() => {
