@@ -21,7 +21,7 @@ export default function Header() {
     { name: "Recettes", path: "/recipes" },
     { name: "Calendrier", path: "/calendar" },
     { name: "Garde manger", path: "/stock" },
-    { name: "Listes de courses", path: "/list" },
+    { name: "Listes de courses", path: "/shopping_list" },
     ];
 
   // 🔹 Fetch du profil logué

@@ -9,7 +9,7 @@ export default function MobileNav() {
     { to: "/recipes", icon: <BookOpen size={22} />, label: "Recettes" },
     { to: "/calendar", icon: <Calendar size={22} />, label: "Calendrier" },
     { to: "/stock", icon: <Boxes size={22} />, label: "Stock" },
-    { to: "/list", icon: <ShoppingCart size={22} />, label: "Courses" },
+    { to: "/shopping_list", icon: <ShoppingCart size={22} />, label: "Courses" },
   ];
 
   return (

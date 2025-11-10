@@ -3,7 +3,7 @@ import Header from "../components/Header";
 import Menus from "../components/Menus";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
-import { CLOUDINARY_RES } from "../config/constants";
+import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
 
 dayjs.locale("fr");
 
@@ -206,9 +206,26 @@ export default function Dashboard() {
             {selectedRecipe ? (
               <>
                 <div className="flex items-start gap-4">
-                  <div className="w-10 h-10 rounded-full bg-lightGreen flex items-center justify-center font-semibold text-green-900">
-                    🍽
-                  </div>
+                    <div className="w-100 h-100 rounded-full bg-lightGreen flex items-center justify-center font-semibold text-green-900">
+                        {selectedRecipe?.picture ? (
+                        <img
+                            src={`${CLOUDINARY_RES}${selectedRecipe.picture}`}
+                            alt={selectedRecipe.name || "Recette"}
+                            className="object-cover rounded-lg"
+                            style={{ height: 100, width: 100 }} // ou utiliser w-24 h-24
+                        />
+                        ) : (
+                        <div className="w-100 h-100 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
+                        <img
+                            src={`${CLOUDINARY_RES}${CLOUDINARY_RECETTE_NOTFOUND}`}
+                            alt="Image Not Found"
+                            className="object-cover rounded-lg"
+                            style={{ height: 100, width: 100 }} // ou utiliser w-24 h-24
+                        />
+                        </div>
+                        )}
+                    </div>
+
 
                   <div className="flex-1">
                     <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
@@ -220,7 +237,7 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {selectedRecipe?.picture ? (
+                  {/* {selectedRecipe?.picture ? (
                     <img
                       src={`${CLOUDINARY_RES}${selectedRecipe.picture}`}
                       alt={selectedRecipe.name || "Recette"}
@@ -231,7 +248,7 @@ export default function Dashboard() {
                     <div className="w-24 h-24 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
                       📷
                     </div>
-                  )}
+                  )} */}
                 </div>
 
                 {/* flèches de navigation */}

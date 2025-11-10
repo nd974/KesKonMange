@@ -16,3 +16,4 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
 ];
 
 export const CLOUDINARY_PRESET_RECIPE = "Recettes";
+export const CLOUDINARY_RECETTE_NOTFOUND = "v1762771501/imageNotFound_kkrdc3.png";

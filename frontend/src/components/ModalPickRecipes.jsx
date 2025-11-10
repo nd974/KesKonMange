@@ -8,6 +8,7 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
   const [loading, setLoading] = useState(true);
   const [selectedRecipeIds, setSelectedRecipeIds] = useState(new Set());
   const [selectedTagId, setSelectedTagId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");  // Ajout de l'état de recherche
   const isPast = day.isBefore(dayjs(), "day");
 
   // --- CHARGEMENT DES RECETTES ET TAGS ---
@@ -50,6 +51,21 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
   const toggleTag = (id) => {
     setSelectedTagId((prev) => (prev === id ? null : id));
   };
+
+  // --- FILTRAGE DES RECETTES PAR RECHERCHE ---
+  const filteredRecipes = recipes.filter((recipe) =>
+    recipe.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  // --- TRI DES RECETTES PAR LEVEL (DECROISSANT) ET LIMITATION À 10 ---
+  const sortedAndLimitedRecipes = filteredRecipes
+    .sort((a, b) => {
+      // Assurez-vous que level est un entier et triez par ordre décroissant
+      const levelA = parseInt(a.level, 10) || 0;  // Si level est invalid, mettre 0
+      const levelB = parseInt(b.level, 10) || 0;  // Si level est invalid, mettre 0
+      return levelB - levelA;  // Trier en ordre décroissant
+    })
+    .slice(0, 10); // Limite à 10 recettes
 
   // --- VALIDATION ---
   const handleValidate = async () => {
@@ -122,6 +138,7 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
           </div>
         )}
 
+
         <div className="mb-3">
           <h3 className="font-semibold text-sm mb-2">Tags (Repas)</h3>
           <div className="flex flex-wrap gap-2">
@@ -149,15 +166,27 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
           </div>
         </div>
 
-        <div className="mb-4">
+        <div className="mb-4 py-8">
           <h3 className="font-semibold text-sm mb-2">Recettes</h3>
+
+        {/* Barre de recherche pour les recettes */}
+        <div className="mb-3">
+        <input
+            type="text"
+            placeholder="Rechercher une recette..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="w-full p-2 border rounded-md"
+        />
+        </div>
+
           {loading ? (
             <div className="text-sm text-gray-500">Chargement...</div>
-          ) : recipes.length === 0 ? (
+          ) : sortedAndLimitedRecipes.length === 0 ? (
             <div className="text-sm text-gray-500">Aucune recette trouvée.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-h-56 overflow-auto">
-              {recipes.map((r) => {
+              {sortedAndLimitedRecipes.map((r) => {
                 const selected = selectedRecipeIds.has(r.id);
                 return (
                   <div
@@ -172,7 +201,10 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
                     <div className="flex-1">
                       <div className="font-medium">{r.name}</div>
                       <div className="text-xs text-gray-500">
-                        {r.time_prep} min
+                        {/* Affichage des étoiles en jaune */}
+                        <span className="text-yellow-500">
+                          {"★".repeat(parseInt(r.level) || 0)}
+                        </span>
                       </div>
                     </div>
                     <div className="w-6 h-6 flex items-center justify-center text-sm">
