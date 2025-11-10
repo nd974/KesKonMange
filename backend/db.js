@@ -8,5 +8,7 @@ export const pool = new Pool({
   connectionString: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}.oregon-postgres.render.com/${process.env.DB_NAME}`,
   ssl: {
     rejectUnauthorized: false // nécessaire sur Render
-  }
+  },
+  idleTimeoutMillis: 30000, // garde la connexion ouverte 30 s
+  connectionTimeoutMillis: 5000
 });
