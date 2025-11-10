@@ -123,9 +123,9 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
       <div className="bg-white rounded-lg p-4 w-11/12 max-w-xl">
-        <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center justify-between">
           <h2 className="text-lg font-bold">
-            Créer un menu pour le {day.format("DD/MM/YYYY")}
+            Menu pour le {day.format("DD/MM/YYYY")}
           </h2>
           <button onClick={onClose} className="text-sm text-gray-500">
             Fermer
