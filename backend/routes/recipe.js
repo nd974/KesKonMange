@@ -5,11 +5,12 @@ const router = express.Router();
 
 /**
  * GET /recipe/get-all
- * Récupère toutes les recettes
+ * Récupère toutes les recettes avec leurs tags
  */
 router.get("/get-all", async (req, res) => {
   try {
-    const { rows } = await pool.query(`
+    // 🔹 Récupérer toutes les recettes
+    const { rows: recipes } = await pool.query(`
       SELECT 
         id,
         name,
@@ -23,7 +24,35 @@ router.get("/get-all", async (req, res) => {
       FROM "Recipe"
       ORDER BY name ASC
     `);
-    res.json(rows);
+
+    // 🔹 Récupérer tous les tags liés
+    const { rows: recipeTags } = await pool.query(`
+      SELECT rt.recipe_id, t.id AS tag_id, t.name, t.parent_id
+      FROM "recipes_tags" rt
+      JOIN "Tag" t ON t.id = rt.tag_id
+    `);
+
+    // 🔹 Créer un map recipe_id => tags
+    const tagsByRecipe = {};
+    for (const t of recipeTags) {
+      if (!tagsByRecipe[t.recipe_id]) tagsByRecipe[t.recipe_id] = [];
+      // 🔹 Ne pas ajouter de tag null
+      if (t.tag_id && t.name) {
+        tagsByRecipe[t.recipe_id].push({
+          id: t.tag_id,
+          name: t.name,
+          parent_id: t.parent_id,
+        });
+      }
+    }
+
+    // 🔹 Ajouter les tags à chaque recette
+    const recipesWithTags = recipes.map((r) => ({
+      ...r,
+      tags: tagsByRecipe[r.id] || [], // 🔹 tableau vide si pas de tags
+    }));
+
+    res.json(recipesWithTags);
   } catch (err) {
     console.error("Erreur /recipe/get-all:", err);
     res.status(500).json({ error: "Erreur serveur" });
