@@ -127,8 +127,8 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
           <h2 className="text-lg font-bold">
             Menu pour le {day.format("DD/MM/YYYY")}
           </h2>
-          <button onClick={onClose} className="text-sm text-gray-500">
-            Fermer
+          <button onClick={onClose} className="text-sm text-red-500">
+            ❌
           </button>
         </div>
 
@@ -166,7 +166,7 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
           </div>
         </div>
 
-        <div className="mb-4 py-8">
+        <div className="mb-4 py-4">
           <h3 className="font-semibold text-sm mb-2">Recettes</h3>
 
         {/* Barre de recherche pour les recettes */}
