@@ -9,6 +9,7 @@ import ShoppingList from "./pages/ShoppingList";
 
 
 import MobileNav from "./components/MobileNav";
+import RecipeDetail from "./pages/RecipeDetails";
 
 function AppRoutes() {
   const location = useLocation();
@@ -25,6 +26,8 @@ function AppRoutes() {
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/stock" element={<Stock />} />
           <Route path="/shopping_list" element={<ShoppingList/>} />
+
+          <Route path="/recipe/:id" element={<RecipeDetail />} />
         </Routes>
       </div>
 

@@ -1,4 +1,5 @@
 import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
+import { useNavigate } from "react-router-dom";
 
 /**
  * Calcule la profondeur d’un tag dans la hiérarchie.
@@ -14,6 +15,8 @@ function getTagDepth(tagId, tagsFlat = []) {
 }
 
 export default function RecipeCard({ recipe }) {
+  const navigate = useNavigate();
+
   if (!recipe) return null;
 
   
@@ -29,22 +32,23 @@ export default function RecipeCard({ recipe }) {
   });
 
   const visibleTags = sortedTags.slice(0, 4);
+  const hiddenTags = sortedTags.slice(4, sortedTags.length);
   const remaining = sortedTags.length - visibleTags.length;
 
   return (
-    <div className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white">
+    <div className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white" onClick={() => navigate(`/recipe/${recipe.id}`)}>
       <img
         src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
         alt={recipe.name}
         className="w-full h-40 object-cover rounded-md mb-2"
       />
 
-      <h4 className="font-semibold text-lg mb-2 truncate">{recipe.name}</h4>
+      <h4 className="font-semibold text-lg truncate">{recipe.name}</h4>
 
       {/* ✅ Afficher les tags uniquement s’il y en a */}
       
       {visibleTags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2">
+        <div className="flex flex-wrap gap-1 mb-2 relative">
           {visibleTags.map((tag) => (
             <span
               key={tag.id}
@@ -55,9 +59,16 @@ export default function RecipeCard({ recipe }) {
           ))}
 
           {remaining > 0 && (
-            <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs">
-              +{remaining}
-            </span>
+            <div className="relative group">
+              <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs cursor-pointer">
+                +{remaining}
+              </span>
+
+              {/* Tooltip */}
+              <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                {hiddenTags.map(tag => tag.name).join(", ")}
+              </div>
+            </div>
           )}
         </div>
       )}
