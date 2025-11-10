@@ -112,8 +112,27 @@ router.post("/update-menu", async (req, res) => {
   }
 });
 
+// ------------------- GET TAGS FOPR MENUS -------------------
+router.post("/get-tags-for-menus", async (req, res) => {
+  const { menuIds } = req.body;
+  if (!Array.isArray(menuIds) || menuIds.length === 0) {
+    return res.status(400).json({ error: "menuIds manquants" });
+  }
 
-
+  try {
+    const { rows } = await pool.query(
+      `SELECT m.id AS menu_id, t.id AS tag_id, t.name AS tag_name
+       FROM "Menu" m
+       JOIN "Tag" t ON t.id = m.tag_id
+       WHERE m.id = ANY($1::int[])`,
+      [menuIds]
+    );
+    res.json(rows);
+  } catch (err) {
+    console.error("Erreur get-tags-for-menus:", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 
 

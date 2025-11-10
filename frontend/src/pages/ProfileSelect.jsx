@@ -12,12 +12,11 @@ export default function ProfileSelect() {
   const [showCreate, setShowCreate] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const navigate = useNavigate();
+  
 
   useEffect(() => {
     localStorage.removeItem("profile_id");
     const homeId = localStorage.getItem("home_id");
-    if (home_id) setUser(JSON.parse(home_id));
-    else fetchUser();
     if (!homeId) return;
 
     fetch(`${API_URL}/profile/get?homeId=${homeId}`)

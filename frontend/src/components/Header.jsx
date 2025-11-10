@@ -14,12 +14,7 @@ export default function Header() {
 
     // Récupération des ids stockés en localStorage
     const profileId = localStorage.getItem("profile_id");
-    if (profileId) setUser(JSON.parse(profileId));
-    else fetchUser();
-
     const homeId = localStorage.getItem("home_id");
-    if (homeId) setUser(JSON.parse(homeId));
-    else fetchUser();
 
     const links = [
     { name: "Dashboard", path: "/" },

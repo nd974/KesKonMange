@@ -13,8 +13,6 @@ export default function ModalTransferProfile({ onClose, onTransferred }) {
 
     try {
       const home_id = localStorage.getItem("home_id");
-      if (home_id) setUser(JSON.parse(home_id));
-      else fetchUser();
       if (!home_id) {
         setError("Aucun home sélectionné. Reconnecte-toi.");
         setLoading(false);
