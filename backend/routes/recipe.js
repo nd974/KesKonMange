@@ -15,7 +15,10 @@ router.get("/get-all", async (req, res) => {
         name,
         time_prep,
         time_cook,
+        time_rest,
+        time_clean,
         portion,
+        level,
         picture
       FROM "Recipe"
       ORDER BY name ASC
