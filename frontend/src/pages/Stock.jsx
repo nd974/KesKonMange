@@ -25,7 +25,7 @@ export default function Stock() {
 
         const p = data.product;
         setProduct({
-          name: p.product_name || "Nom non disponible",
+          name: p.product_name || "Nom incconu",
           quantity: p.quantity || "Inconnu",
           brand: p.brands || "Marque inconnue",
           nutriments: p.nutriments || {},
