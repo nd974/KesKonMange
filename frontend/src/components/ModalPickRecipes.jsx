@@ -203,7 +203,7 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
                       <div className="text-xs text-gray-500">
                         {/* Affichage des étoiles en jaune */}
                         <span className="text-yellow-500">
-                          {"★".repeat(parseInt(r.level) || 0)}
+                          {"⭐".repeat(parseInt(r.level) || 0)}
                         </span>
                       </div>
                     </div>

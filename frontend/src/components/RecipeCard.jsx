@@ -161,10 +161,8 @@ export default function RecipeCard({ recipe , homeId}) {
         }`}
       >
 
-      {/* 🔹 timer => a remplacer par note */}
-      <span>prep: {recipe.time_prep} min</span>
-      <span>|</span>
-      <span>cook: {recipe.time_cook} min</span>
+      {/* 🔹 level => a remplacer par note */}
+      {"⭐".repeat(parseInt(recipe.level) || 0)}
       </div>
 
 
