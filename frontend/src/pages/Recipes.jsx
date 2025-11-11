@@ -13,14 +13,6 @@ export default function Recipes({homeId}) {
   const [loading, setLoading] = useState(true);
   const [showMobileTags, setShowMobileTags] = useState(false);
 
-  // Modal add to menu
-  const [showAddToMenuModal, setShowAddToMenuModal] = useState(false);
-  const [selectedRecipe, setSelectedRecipe] = useState(null);
-  const [menus, setMenus] = useState([]);
-  const [selectedMenuId, setSelectedMenuId] = useState(null);
-  const [menuDate, setMenuDate] = useState("");
-  const [selectedMealTagId, setSelectedMealTagId] = useState([]);
-
   // ⚡ Charger les recettes et tags
   useEffect(() => {
     let mounted = true;
@@ -98,44 +90,9 @@ export default function Recipes({homeId}) {
     });
   }, [recipes, search, selectedTagIds, tagsFlat]);
 
-  // Récupérer menus existants
-  async function fetchMenus() {
-    try {
-      const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
-      const data = await res.json();
-      setMenus(data || []);
-    } catch (err) {
-      console.error("Erreur récupération menus :", err);
-    }
-  }
-
-  async function addToMenu() {
-    if (!selectedRecipe) return;
-    const payload = selectedMenuId
-      ? { menu_id: selectedMenuId, recipe_id: selectedRecipe.id }
-      : { recipe_id: selectedRecipe.id, date: menuDate, home_id: homeId,  tag_id: selectedMealTagId};
-
-    try {
-      const url = selectedMenuId ? `${API_URL}/menu/add-recipe` : `${API_URL}/menu/create`;
-      console.log(payload);
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Erreur ajout menu");
-
-      setShowAddToMenuModal(false);
-      alert("Recette ajoutée au menu !");
-    } catch (err) {
-      console.error(err);
-      alert("Impossible d'ajouter la recette au menu.", err);
-    }
-  }
-
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header />
+      <Header homeId={homeId}/>
 
       <div className="content py-8">
         <div className="recipes-header">
@@ -195,98 +152,23 @@ export default function Recipes({homeId}) {
             ) : filteredRecipes.length === 0 ? (
               <div className="muted">Aucune recette trouvée.</div>
             ) : (
-              <div className="recipes-grid grid grid-cols-[repeat(auto-fill,minmax(200px,1fr))] gap-4">
-                {filteredRecipes.map((recipe) => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    onAddToMenu={(r) => {
-                      setSelectedRecipe(r);
-                      setShowAddToMenuModal(true);
-                      fetchMenus();
-                    }}
-                  />
+              <div className="
+                grid 
+                grid-cols-1 
+                sm:grid-cols-2 
+                md:grid-cols-3 
+                lg:grid-cols-4 
+                xl:grid-cols-5 
+                gap-4
+              ">
+                {filteredRecipes.slice(0, 15).map(recipe => (
+                  <RecipeCard key={recipe.id} recipe={recipe} homeId={homeId} />
                 ))}
               </div>
             )}
           </section>
         </div>
       </div>
-
-      {/* Modal Add to Menu */}
-      {showAddToMenuModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white p-6 rounded shadow w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Ajouter {selectedRecipe?.name} à un menu</h3>
-
-            {menus.length > 0 ? (
-              <>
-                <label className="block mb-2">Choisir un menu existant :</label>
-                <select
-                  className="w-full mb-4 p-2 border rounded"
-                  value={selectedMenuId || ""}
-                  onChange={(e) => setSelectedMenuId(e.target.value)}
-                >
-                  <option value="">-- Nouveau menu --</option>
-                  {menus.map(m => (
-                    <option key={m.id} value={m.id}>{m.name} - {m.date}</option>
-                  ))}
-                </select>
-              </>
-            ) : (
-              <p className="mb-4">Aucun menu existant, créez-en un nouveau :</p>
-            )}
-
-            {!selectedMenuId && (
-              <>
-                <label className="block mb-2">Date du menu :</label>
-                <input
-                  type="date"
-                  className="w-full mb-4 p-2 border rounded"
-                  value={menuDate}
-                  onChange={(e) => setMenuDate(e.target.value)}
-                />
-
-                {/* ✅ Sélection d’un seul tag enfant de "Repas" */}
-                <label className="block mb-2 font-semibold">Type de repas :</label>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {(tagsFlat
-                    .filter(t => t.parent_id === tagsFlat.find(tag => tag.name === "Repas")?.id)
-                    || []).map(tag => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      className={`px-3 py-1 rounded-full border ${
-                        selectedMealTagId === tag.id
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-gray-100 text-gray-700 border-gray-300"
-                      }`}
-                      onClick={() => setSelectedMealTagId(tag.id)}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                className="px-4 py-2 bg-gray-200 rounded"
-                onClick={() => setShowAddToMenuModal(false)}
-              >
-                Annuler
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-                onClick={addToMenu}
-              >
-                Ajouter
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
 
       {/* Mobile Tags */}
       {showMobileTags && (

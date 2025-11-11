@@ -1,5 +1,8 @@
 import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
 import { useNavigate } from "react-router-dom";
+import { useState } from "react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 /**
  * Calcule la profondeur d’un tag dans la hiérarchie.
@@ -14,12 +17,10 @@ function getTagDepth(tagId, tagsFlat = []) {
   return depth;
 }
 
-export default function RecipeCard({ recipe, onAddToMenu }) {
+export default function RecipeCard({ recipe , homeId}) {
   const navigate = useNavigate();
 
   if (!recipe) return null;
-
-  
 
   const allTags = window.__ALL_TAGS__ || [];
   const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
@@ -35,10 +36,70 @@ export default function RecipeCard({ recipe, onAddToMenu }) {
   const hiddenTags = sortedTags.slice(4, sortedTags.length);
   const remaining = sortedTags.length - visibleTags.length;
 
+  // Modal add to menu
+  const [showAddToMenuModal, setShowAddToMenuModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [menus, setMenus] = useState([]);
+  const [selectedMenuId, setSelectedMenuId] = useState(null);
+  const [menuDate, setMenuDate] = useState("");
+  const [selectedMealTagId, setSelectedMealTagId] = useState([]);
+  const [repasTags, setRepasTags] = useState([]);
+    
+    
+  // Récupérer tags repas
+  async function fetchTagsRepas() {
+    try {
+      const repasTags = await fetch(`${API_URL}/tag/get-childs?parent=Repas`);
+      const resTags = await repasTags.json();
+      setRepasTags(resTags || []);
+    } catch (err) {
+      console.error("Erreur récupération tags (Repas) :", err);
+    }
+  }
+
+  // Récupérer menus existants
+  async function fetchMenus() {
+    try {
+      const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
+      const data = await res.json();
+      setMenus(data || []);
+    } catch (err) {
+      console.error("Erreur récupération menus :", err);
+    }
+  }
+
+  async function addToMenu() {
+
+    if (!selectedRecipe) return;
+    const payload = selectedMenuId
+      ? { menu_id: selectedMenuId, recipe_id: selectedRecipe.id }
+      : { recipe_id: selectedRecipe.id, date: menuDate, home_id: homeId,  tag_id: selectedMealTagId};
+
+    try {
+      const url = selectedMenuId ? `${API_URL}/menu/add-recipe` : `${API_URL}/menu/create`;
+      console.log(payload);
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Erreur ajout menu");
+
+      setShowAddToMenuModal(false);
+      alert("Recette ajoutée au menu !");
+    } catch (err) {
+      console.error(err);
+      alert("Impossible d'ajouter la recette au menu.", err);
+    }
+  }
+  
+  console.log(menus);
   return (
     <div
       className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white"
-      onClick={() => navigate(`/recipe/${recipe.id}`)}
+      onClick={() => {
+        if (!showAddToMenuModal) navigate(`/recipe/${recipe.id}`);
+      }}
     >
       <div className="relative">
         <img
@@ -52,12 +113,16 @@ export default function RecipeCard({ recipe, onAddToMenu }) {
           className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 bg-white/80 rounded-full p-1 shadow"
           title="Ajouter au menu"
           onClick={(e) => {
-            e.stopPropagation(); // ✅ Empêche le click de naviguer vers la recette
-            onAddToMenu(recipe);
+            e.stopPropagation();
+            setSelectedRecipe(recipe);
+            setShowAddToMenuModal(true);
+            fetchMenus(); // Pour lister les menus existants
+            fetchTagsRepas();  // Pour lister les tags enfants de Repas
           }}
         >
           📝
         </button>
+
       </div>
 
       <h4 className="font-semibold text-lg truncate">{recipe.name}</h4>
@@ -101,6 +166,84 @@ export default function RecipeCard({ recipe, onAddToMenu }) {
       <span>|</span>
       <span>cook: {recipe.time_cook} min</span>
       </div>
+
+
+      {/* Modal Add to Menu */}
+      {showAddToMenuModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white p-6 rounded shadow w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Ajouter {selectedRecipe?.name} à un menu</h3>
+
+            {menus.length > 0 ? (
+              <>
+                <label className="block mb-2">Choisir un menu existant :</label>
+                <select
+                  className="w-full mb-4 p-2 border rounded"
+                  value={selectedMenuId || ""}
+                  onChange={(e) => setSelectedMenuId(e.target.value)}
+                >
+                  <option value="">-- Nouveau menu --</option>
+                  {menus.map(m => (
+                    
+                    <option key={m.id} value={m.id}>{m.date.slice(0, 10).split('-').reverse().join('/')} -- {m.tag.name}</option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <p className="mb-4">Aucun menu existant, créez-en un nouveau :</p>
+            )}
+
+            {!selectedMenuId && (
+              <>
+                <label className="block mb-2">Date du menu :</label>
+                <input
+                  type="date"
+                  className="w-full mb-4 p-2 border rounded"
+                  value={menuDate}
+                  onChange={(e) => setMenuDate(e.target.value)}
+                />
+
+                {/* ✅ Sélection d’un seul tag enfant de "Repas" */}
+                <label className="block mb-2 font-semibold">Type de repas :</label>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(repasTags
+                    .filter(t => t.parent_id === repasTags.find(tag => tag.name === "Repas")?.id)
+                    || []).map(tag => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`px-3 py-1 rounded-full border ${
+                        selectedMealTagId === tag.id
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-gray-100 text-gray-700 border-gray-300"
+                      }`}
+                      onClick={() => setSelectedMealTagId(tag.id)}
+                    >
+                      {tag.name}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+
+            <div className="flex justify-end gap-2 mt-4">
+              <button
+                className="px-4 py-2 bg-gray-200 rounded"
+                onClick={() => setShowAddToMenuModal(false)}
+              >
+                Annuler
+              </button>
+              <button
+                className="px-4 py-2 bg-blue-600 text-white rounded"
+                onClick={addToMenu}
+              >
+                Ajouter
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
     </div>
 
   );

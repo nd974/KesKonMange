@@ -208,7 +208,7 @@ export default function RecipeDetail({homeId}) {
       </div>
 
       {/* === Slide nutrition mobile === */}
-      <div className={`fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-4 transition-transform duration-300 z-50
+      <div className={`fixed inset-0 bg-black/50 top-0 left-0 w-64 h-full bg-white shadow-lg p-4 transition-transform duration-300 z-50
                       ${showNutrition ? "translate-x-0" : "-translate-x-full"}`}>
         <button 
           className="mb-4 text-gray-600 hover:text-gray-900"
