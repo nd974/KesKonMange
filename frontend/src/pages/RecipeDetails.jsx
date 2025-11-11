@@ -5,7 +5,7 @@ import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeDetail() {
+export default function RecipeDetail({homeId}) {
   const { id } = useParams();
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -32,7 +32,7 @@ export default function RecipeDetail() {
 
   return (
   <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8 relative">
-      <Header />
+      <Header homeId={homeId}/>
 
       <div className="lg:flex lg:gap-6 py-8">
 

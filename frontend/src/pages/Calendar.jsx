@@ -8,12 +8,12 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 dayjs.extend(isoWeek);
 
-export default function Calendar() {
+export default function Calendar({homeId}) {
   const today = dayjs();
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDay, setSelectedDay] = useState(null);
   const [menus, setMenus] = useState([]);
-  const [homeId, setHomeId] = useState(Number(localStorage.getItem("home_id")));
+  // const [homeId, setHomeId] = useState(Number(localStorage.getItem("home_id")));
 
   // --- RELOAD MENUS DEPUIS L'API ---
   const reloadMenus = async (currentHomeId) => {
@@ -85,14 +85,14 @@ export default function Calendar() {
   const startOfGrid = startOfMonth.startOf("isoWeek");
   const days = Array.from({ length: 42 }, (_, i) => startOfGrid.add(i, "day"));
 
-  const handleChangeHome = (newHomeId) => {
-    localStorage.setItem("home_id", newHomeId);
-    setHomeId(Number(newHomeId));
-  };
+  // const handleChangeHome = (newHomeId) => {
+  //   localStorage.setItem("home_id", newHomeId);
+  //   setHomeId(Number(newHomeId));
+  // };
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header onChangeHome={handleChangeHome} currentHomeId={homeId} />
+      <Header homeId={homeId}/> {/* onChangeHome={handleChangeHome} currentHomeId={homeId} /> */}
 
       <div className="flex items-center justify-between py-5">
         <button onClick={() => setCurrentMonth(currentMonth.subtract(1, "month"))}>←</button>

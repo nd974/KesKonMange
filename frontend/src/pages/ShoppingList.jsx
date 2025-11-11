@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import Header from "../components/Header";
 import { CLOUDINARY_API, CLOUDINARY_PRESET_RECIPE } from "../config/constants";
 
-export default function ShoppingList() {
+export default function ShoppingList({homeId}) {
   const fileInputRef = useRef(null);
   const [status, setStatus] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
@@ -86,7 +86,7 @@ export default function ShoppingList() {
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header />
+      <Header homeId={homeId}/>
       <h1 className="text-2xl font-bold mb-4">Uploader une image de recette 🍰</h1>
 
       <input type="file" ref={fileInputRef} accept="image/*" className="block mb-4" />

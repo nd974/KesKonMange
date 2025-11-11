@@ -5,7 +5,7 @@ import RecipeCard from "../components/RecipeCard.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Recipes() {
+export default function Recipes({homeId}) {
   const [recipes, setRecipes] = useState([]);
   const [tagsFlat, setTagsFlat] = useState([]);
   const [search, setSearch] = useState("");
@@ -109,7 +109,7 @@ export default function Recipes() {
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header />
+      <Header homeId={homeId}/>
 
       <div className="content py-8">
         <div className="recipes-header">

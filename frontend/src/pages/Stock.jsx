@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import BarCodeScanner from "../components/BarCodeScanner";
 
-export default function Stock() {
+export default function Stock({homeId}) {
   const [scannedCode, setScannedCode] = useState("");
   const [product, setProduct] = useState(null);
   const [error, setError] = useState(null);
@@ -54,7 +54,7 @@ export default function Stock() {
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header />
+      <Header homeId={homeId}/>
       <h1 className="text-2xl font-bold mb-4">Garde-manger v2</h1>
 
       <h2 className="text-lg font-semibold mb-2">Scanner un produit</h2>

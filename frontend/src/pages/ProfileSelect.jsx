@@ -7,27 +7,31 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function ProfileSelect() {
+import { refreshHomeId} from "../../session";
+
+
+export default function ProfileSelect({homeId}) {
   const [profiles, setProfiles] = useState([]);
   const [showCreate, setShowCreate] = useState(false);
   const [showTransfer, setShowTransfer] = useState(false);
   const navigate = useNavigate();
-  
 
   useEffect(() => {
     localStorage.removeItem("profile_id");
-    const homeId = localStorage.getItem("home_id");
+    // const homeId = localStorage.getItem("home_id");
     if (!homeId) return;
 
     fetch(`${API_URL}/profile/get?homeId=${homeId}`)
       .then((res) => res.json())
       .then((data) => setProfiles(data || []));
-  }, []);
+  }, [homeId]);
 
   const handleSelectProfile = (profileId) => {
     localStorage.setItem("profile_id", profileId);
     navigate("/"); // ✅ Après sélection du profil → dashboard
   };
+
+  // refreshHomeId();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#6b926f] text-white font-nunito">

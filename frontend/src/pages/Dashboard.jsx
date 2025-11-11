@@ -9,7 +9,7 @@ dayjs.locale("fr");
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Dashboard() {
+export default function Dashboard({homeId}) {
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedMenusForDay, setSelectedMenusForDay] = useState([]);
   const [activeMenuIndex, setActiveMenuIndex] = useState(0);
@@ -17,7 +17,7 @@ export default function Dashboard() {
   const [selectedDay, setSelectedDay] = useState(null);
   const [menus, setMenus] = useState([]);
   const [todayMenus, setTodayMenus] = useState([]);
-  const [homeId, setHomeId] = useState(Number(localStorage.getItem("home_id")));
+  // const [homeId, setHomeId] = useState(Number(localStorage.getItem("home_id")));
 
   // 🔁 Charger les menus depuis le backend PostgreSQL
   const loadMenus = async (homeId) => {
@@ -156,7 +156,7 @@ export default function Dashboard() {
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header />
+      <Header homeId={homeId}/>
       <main className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Left: détail de la recette sélectionnée */}
         <section className="order-2 lg:order-1">

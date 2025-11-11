@@ -4,7 +4,9 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HEADER } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Header() {
+import { setHomeId, getHomeId } from "../../session";
+
+export default function Header({homeId}) {
     const location = useLocation();
     const navigate = useNavigate();
 
@@ -14,7 +16,7 @@ export default function Header() {
 
     // Récupération des ids stockés en localStorage
     const profileId = localStorage.getItem("profile_id");
-    const homeId = localStorage.getItem("home_id");
+    // const homeId = localStorage.getItem("home_id");
 
     const links = [
     { name: "Dashboard", path: "/" },
@@ -54,10 +56,11 @@ export default function Header() {
     }, [profileId, homeId]);
 
   // 🔹 Changement de home dans le menu déroulant
-  const handleChangeHome = (event) => {
+  const handleChangeHome = async (event) => {
     const newHomeId = event.target.value;
     setSelectedHome(homes.find((h) => h.id === parseInt(newHomeId)));
     localStorage.setItem("home_id", newHomeId);
+    await setHomeId(newHomeId);
     window.location.reload(); // recharge la page pour appliquer le changement
   };
 

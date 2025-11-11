@@ -4,6 +4,8 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { setHomeId, getHomeId } from "../../session";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -13,6 +15,8 @@ export default function Login() {
   
   useEffect(() => {
     localStorage.removeItem("home_id");
+    // await clearHomeId();
+    setHomeId(0);
     localStorage.removeItem("profile_id");
   }, []);
 
@@ -26,6 +30,8 @@ export default function Login() {
     const data = await res.json();
     if (data.ok) {
         localStorage.setItem("home_id", data.homeId);
+        await setHomeId(data.homeId);
+        console.log("Login [data.homeId]", data.homeId, "|", "await setHomeId(data.homeId)", await getHomeId());
         navigate("/profiles");
     } else {
         setMessage("❌ Email ou mot de passe incorrect");
