@@ -41,7 +41,7 @@ function AppRoutes() {
 
   return (
     <>
-      <div className={hideMobileNav ? "" : "pb-12 md:pb-0"}>
+      <div lang="fr" translate="no" className={hideMobileNav ? "" : "pb-12 md:pb-0"}>
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/profiles" element={<ProfileSelect key={home_id} homeId={home_id} />} />

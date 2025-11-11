@@ -14,7 +14,7 @@ function getTagDepth(tagId, tagsFlat = []) {
   return depth;
 }
 
-export default function RecipeCard({ recipe }) {
+export default function RecipeCard({ recipe, onAddToMenu }) {
   const navigate = useNavigate();
 
   if (!recipe) return null;
@@ -44,6 +44,14 @@ export default function RecipeCard({ recipe }) {
       />
 
       <h4 className="font-semibold text-lg truncate">{recipe.name}</h4>
+
+        <button
+          className="text-blue-600 hover:text-blue-800"
+          title="Ajouter au menu"
+          onClick={() => onAddToMenu(recipe)}
+        >
+          ➕
+        </button>
 
       {/* ✅ Afficher les tags uniquement s’il y en a */}
       
