@@ -207,26 +207,38 @@ export default function RecipeDetail({homeId}) {
 
       </div>
 
-      {/* === Slide nutrition mobile === */}
-      <div className={`fixed inset-0 bg-black/50 top-0 left-0 w-64 h-full bg-white shadow-lg p-4 transition-transform duration-300 z-50
-                      ${showNutrition ? "translate-x-0" : "-translate-x-full"}`}>
-        <button 
-          className="mb-4 text-gray-600 hover:text-gray-900"
-          onClick={() => setShowNutrition(false)}
+     {showNutrition && (
+      // Fond cliquable
+      <div
+        className="fixed inset-0 z-40 bg-black/50"
+        onClick={() => setShowNutrition(false)} // ferme si on clique sur le fond
+      >
+        {/* Slide */}
+        <div
+          className={`fixed top-0 left-0 w-64 h-full bg-white shadow-lg p-4 transition-transform duration-300 z-50
+                      ${showNutrition ? "translate-x-0" : "-translate-x-full"}`}
+          onClick={(e) => e.stopPropagation()} // empêche la fermeture si on clique dans la slide
         >
-          ❌ Fermer
-        </button>
-        <h3 className="text-xl font-semibold mb-4">🍏 Infos nutritionnelles</h3>
-        <ul className="space-y-2 text-sm">
-          <li><span className="font-semibold">Calories :</span> 520 kcal / part</li>
-          <li><span className="font-semibold">Protéines :</span> 22 g</li>
-          <li><span className="font-semibold">Lipides :</span> 18 g</li>
-          <li><span className="font-semibold">Glucides :</span> 65 g</li>
-          <li><span className="font-semibold">Fibres :</span> 3 g</li>
-          <li><span className="font-semibold">Sucres :</span> 2 g</li>
-          <li><span className="font-semibold">Sodium :</span> 500 mg</li>
-        </ul>
+          <button
+            className="mb-4 text-gray-600 hover:text-gray-900"
+            onClick={() => setShowNutrition(false)}
+          >
+            ❌ Fermer
+          </button>
+          <h3 className="text-xl font-semibold mb-4">🍏 Infos nutritionnelles</h3>
+          <ul className="space-y-2 text-sm">
+            <li><span className="font-semibold">Calories :</span> 520 kcal / part</li>
+            <li><span className="font-semibold">Protéines :</span> 22 g</li>
+            <li><span className="font-semibold">Lipides :</span> 18 g</li>
+            <li><span className="font-semibold">Glucides :</span> 65 g</li>
+            <li><span className="font-semibold">Fibres :</span> 3 g</li>
+            <li><span className="font-semibold">Sucres :</span> 2 g</li>
+            <li><span className="font-semibold">Sodium :</span> 500 mg</li>
+          </ul>
+        </div>
       </div>
+    )}
+
 
     </div>
 
