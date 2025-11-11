@@ -36,25 +36,33 @@ export default function RecipeCard({ recipe, onAddToMenu }) {
   const remaining = sortedTags.length - visibleTags.length;
 
   return (
-    <div className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white" onClick={() => navigate(`/recipe/${recipe.id}`)}>
-      <img
-        src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
-        alt={recipe.name}
-        className="w-full h-40 object-cover rounded-md mb-2"
-      />
+    <div
+      className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white"
+      onClick={() => navigate(`/recipe/${recipe.id}`)}
+    >
+      <div className="relative">
+        <img
+          src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
+          alt={recipe.name}
+          className="w-full h-40 object-cover rounded-md mb-2"
+        />
+
+        {/* Bouton positionné en haut à droite */}
+        <button
+          className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 bg-white/80 rounded-full p-1 shadow"
+          title="Ajouter au menu"
+          onClick={(e) => {
+            e.stopPropagation(); // ✅ Empêche le click de naviguer vers la recette
+            onAddToMenu(recipe);
+          }}
+        >
+          📝
+        </button>
+      </div>
 
       <h4 className="font-semibold text-lg truncate">{recipe.name}</h4>
 
-        <button
-          className="text-blue-600 hover:text-blue-800"
-          title="Ajouter au menu"
-          onClick={() => onAddToMenu(recipe)}
-        >
-          ➕
-        </button>
-
       {/* ✅ Afficher les tags uniquement s’il y en a */}
-      
       {visibleTags.length > 0 && (
         <div className="flex flex-wrap gap-1 mb-2 relative">
           {visibleTags.map((tag) => (
@@ -74,7 +82,7 @@ export default function RecipeCard({ recipe, onAddToMenu }) {
 
               {/* Tooltip */}
               <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                {hiddenTags.map(tag => tag.name).join(", ")}
+                {hiddenTags.map((tag) => tag.name).join(", ")}
               </div>
             </div>
           )}
@@ -87,10 +95,13 @@ export default function RecipeCard({ recipe, onAddToMenu }) {
           visibleTags.length > 0 ? "mt-2" : ""
         }`}
       >
-        <span>prep: {recipe.time_prep} min</span>
-        <span>|</span>
-        <span>cook: {recipe.time_cook} min</span>
+
+      {/* 🔹 timer => a remplacer par note */}
+      <span>prep: {recipe.time_prep} min</span>
+      <span>|</span>
+      <span>cook: {recipe.time_cook} min</span>
       </div>
     </div>
+
   );
 }

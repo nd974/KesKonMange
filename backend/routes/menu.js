@@ -134,6 +134,66 @@ router.post("/get-tags-for-menus", async (req, res) => {
   }
 });
 
+// ------------------- ADD RECIPE TO EXISTING MENU -------------------
+router.post("/add-recipe", async (req, res) => {
+  const { menu_id, recipe_id } = req.body;
+
+  if (!menu_id || !recipe_id) {
+    return res.status(400).json({ error: "menu_id et recipe_id sont requis" });
+  }
+
+  try {
+    await pool.query(
+      `INSERT INTO "menus_recipes" (menu_id, recipe_id)
+       VALUES ($1, $2)
+       ON CONFLICT (menu_id, recipe_id) DO NOTHING`,
+      [menu_id, recipe_id]
+    );
+
+    res.json({ success: true });
+  } catch (err) {
+    console.error("Erreur /menu/add-recipe:", err);
+    res.status(500).json({ error: "Erreur serveur lors de l'ajout de la recette" });
+  }
+});
+
+// ------------------- CREATE NEW MENU -------------------
+router.post("/create", async (req, res) => {
+  const { recipe_id, date, home_id, tag_id } = req.body;
+
+  console.log("HERE", recipe_id, date, home_id, tag_id);
+
+  if (!recipe_id || !date || !home_id || !tag_id) {
+    return res.status(400).json({ error: "recipe_id, date tag_id et home_id sont requis" });
+  }
+
+  try {
+    // Si tag_id non fourni, laisse null
+    const menuTagId = tag_id || null;
+
+    // 1️⃣ Crée le menu
+    const result = await pool.query(
+      `INSERT INTO "Menu" (datetime, home_id, tag_id)
+       VALUES ($1, $2, $3)
+       RETURNING id`,
+      [date, home_id, menuTagId]
+    );
+    const menuId = result.rows[0].id;
+
+    // 2️⃣ Ajoute la recette
+    await pool.query(
+      `INSERT INTO "menus_recipes" (menu_id, recipe_id)
+       VALUES ($1, $2)
+       ON CONFLICT (menu_id, recipe_id) DO NOTHING`,
+      [menuId, recipe_id]
+    );
+
+    res.json({ success: true, menuId });
+  } catch (err) {
+    console.error("Erreur /menu/create:", err);
+    res.status(500).json({ error: "Erreur serveur lors de la création du menu" });
+  }
+});
 
 
 export default router;

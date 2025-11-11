@@ -5,7 +5,7 @@ import RecipeCard from "../components/RecipeCard.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Recipes() {
+export default function Recipes({homeId}) {
   const [recipes, setRecipes] = useState([]);
   const [tagsFlat, setTagsFlat] = useState([]);
   const [search, setSearch] = useState("");
@@ -19,7 +19,7 @@ export default function Recipes() {
   const [menus, setMenus] = useState([]);
   const [selectedMenuId, setSelectedMenuId] = useState(null);
   const [menuDate, setMenuDate] = useState("");
-  const [menuHouseId, setMenuHouseId] = useState(null);
+  const [selectedMealTagId, setSelectedMealTagId] = useState([]);
 
   // ⚡ Charger les recettes et tags
   useEffect(() => {
@@ -101,7 +101,7 @@ export default function Recipes() {
   // Récupérer menus existants
   async function fetchMenus() {
     try {
-      const res = await fetch(`${API_URL}/menu/get-all`);
+      const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
       const data = await res.json();
       setMenus(data || []);
     } catch (err) {
@@ -113,10 +113,11 @@ export default function Recipes() {
     if (!selectedRecipe) return;
     const payload = selectedMenuId
       ? { menu_id: selectedMenuId, recipe_id: selectedRecipe.id }
-      : { recipe_id: selectedRecipe.id, date: menuDate, house_id: menuHouseId };
+      : { recipe_id: selectedRecipe.id, date: menuDate, home_id: homeId,  tag_id: selectedMealTagId};
 
     try {
       const url = selectedMenuId ? `${API_URL}/menu/add-recipe` : `${API_URL}/menu/create`;
+      console.log(payload);
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -128,7 +129,7 @@ export default function Recipes() {
       alert("Recette ajoutée au menu !");
     } catch (err) {
       console.error(err);
-      alert("Impossible d'ajouter la recette au menu.");
+      alert("Impossible d'ajouter la recette au menu.", err);
     }
   }
 
@@ -246,16 +247,26 @@ export default function Recipes() {
                   onChange={(e) => setMenuDate(e.target.value)}
                 />
 
-                <label className="block mb-2">Maison :</label>
-                <select
-                  className="w-full mb-4 p-2 border rounded"
-                  value={menuHouseId || ""}
-                  onChange={(e) => setMenuHouseId(e.target.value)}
-                >
-                  {(window.__HOUSES__ || []).map(h => (
-                    <option key={h.id} value={h.id}>{h.name}</option>
+                {/* ✅ Sélection d’un seul tag enfant de "Repas" */}
+                <label className="block mb-2 font-semibold">Type de repas :</label>
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {(tagsFlat
+                    .filter(t => t.parent_id === tagsFlat.find(tag => tag.name === "Repas")?.id)
+                    || []).map(tag => (
+                    <button
+                      key={tag.id}
+                      type="button"
+                      className={`px-3 py-1 rounded-full border ${
+                        selectedMealTagId === tag.id
+                          ? "bg-blue-600 text-white border-blue-600"
+                          : "bg-gray-100 text-gray-700 border-gray-300"
+                      }`}
+                      onClick={() => setSelectedMealTagId(tag.id)}
+                    >
+                      {tag.name}
+                    </button>
                   ))}
-                </select>
+                </div>
               </>
             )}
 
