@@ -8,7 +8,10 @@ import Recipes from "./pages/Recipes";
 import Calendar from "./pages/Calendar";
 import Stock from "./pages/Stock";
 import ShoppingList from "./pages/ShoppingList";
+
 import RecipeDetail from "./pages/RecipeDetails";
+import RecipeAdd from "./pages/RecipeAdd";
+
 import MobileNav from "./components/MobileNav";
 
 import {refreshHomeId } from "../session";
@@ -50,7 +53,12 @@ function AppRoutes() {
           <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} />} />
           <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
           <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id} />} />
+
           <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} />} />
+
+          <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>

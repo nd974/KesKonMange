@@ -55,7 +55,7 @@ export default function Stock({homeId}) {
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
       <Header homeId={homeId}/>
-      <h1 className="text-2xl font-bold mb-4">Garde-manger v2</h1>
+      <h1 className="text-2xl font-bold mb-4 py-8">Garde-manger (Test BarCodeScanner)</h1>
 
       <h2 className="text-lg font-semibold mb-2">Scanner un produit</h2>
       <BarCodeScanner onDetected={(code) => setScannedCode(code)} />

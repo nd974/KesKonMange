@@ -87,7 +87,7 @@ export default function ShoppingList({homeId}) {
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
       <Header homeId={homeId}/>
-      <h1 className="text-2xl font-bold mb-4">Uploader une image de recette 🍰</h1>
+      <h1 className="text-2xl font-bold mb-4 py-8">Liste de courses (Test upload image de recette dans CLOUD)</h1>
 
       <input type="file" ref={fileInputRef} accept="image/*" className="block mb-4" />
       <button

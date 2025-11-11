@@ -77,7 +77,6 @@ export default function RecipeCard({ recipe , homeId}) {
 
     try {
       const url = selectedMenuId ? `${API_URL}/menu/add-recipe` : `${API_URL}/menu/create`;
-      console.log(payload);
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -93,7 +92,6 @@ export default function RecipeCard({ recipe , homeId}) {
     }
   }
   
-  console.log(menus);
   return (
     <div
       className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white"

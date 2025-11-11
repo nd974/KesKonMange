@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import TagTree from "../components/TagTree.jsx";
 import RecipeCard from "../components/RecipeCard.jsx";
@@ -6,6 +7,8 @@ import RecipeCard from "../components/RecipeCard.jsx";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Recipes({homeId}) {
+  const navigate = useNavigate();
+
   const [recipes, setRecipes] = useState([]);
   const [tagsFlat, setTagsFlat] = useState([]);
   const [search, setSearch] = useState("");
@@ -96,29 +99,47 @@ export default function Recipes({homeId}) {
 
       <div className="content py-8">
         <div className="recipes-header">
-          <div className="controls flex gap-2 flex-wrap">
+          <div className="controls flex flex-wrap md:flex-nowrap items-center gap-2">
             <input
-              className="search-bar flex-1 p-2 border rounded"
+              className="search-bar flex-1 min-w-[150px] p-2 border rounded"
               type="text"
               placeholder="Rechercher une recette..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+
             <button
-              className="md:hidden px-3 py-2 bg-gray-100 rounded-lg shadow text-sm"
+              className="md:hidden px-3 py-2 bg-gray-100 rounded-lg shadow text-sm w-auto"
               onClick={() => setShowMobileTags(true)}
             >
               🔍 Filtrer
             </button>
+
             {selectedTagIds.length > 0 && (
               <button
-                className="hidden md:inline-block clear-filter px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+                className="hidden md:inline-block clear-filter px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 w-auto"
                 onClick={() => setSelectedTagIds([])}
                 title="Effacer filtre"
               >
                 Effacer filtre
               </button>
             )}
+
+            <button
+              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
+              onClick={() => navigate("/recipe/add")}
+              title="Ajouter recette"
+            >
+              {/* Icônes pour mobile */}
+              <span className="flex items-center gap-1 md:hidden">
+                ➕🍴
+              </span>
+
+              {/* Texte pour desktop */}
+              <span className="hidden md:inline">
+                Ajouter Recette
+              </span>
+            </button>
           </div>
 
           {selectedTagIds.length > 0 && (
@@ -143,6 +164,7 @@ export default function Recipes({homeId}) {
               tagTree={tagTree}
               selectedTagIds={selectedTagIds}
               setSelectedTagIds={setSelectedTagIds}
+              isOpen={false}
             />
           </aside>
 
@@ -189,6 +211,7 @@ export default function Recipes({homeId}) {
               tagTree={tagTree}
               selectedTagIds={selectedTagIds}
               setSelectedTagIds={setSelectedTagIds}
+              isOpen={false}
             />
             {selectedTagIds.length > 0 && (
               <button

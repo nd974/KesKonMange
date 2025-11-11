@@ -1,7 +1,25 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
-export default function TagTree({ tagsFlat, tagTree, selectedTagIds, setSelectedTagIds }) {
+export default function TagTree({ tagsFlat, tagTree, selectedTagIds, setSelectedTagIds, isOpen }) {
   const [expanded, setExpanded] = useState({});
+
+  // Ouvre tout l’arbre dès le chargement
+  if (isOpen) {
+    useEffect(() => {
+      if (tagTree?.length > 0) {
+        const expandAll = {};
+        function expand(node) {
+          expandAll[node.id] = true;
+          if (node.children && node.children.length > 0) {
+            node.children.forEach(expand);
+          }
+        }
+        tagTree.forEach(expand);
+        setExpanded(expandAll);
+      }
+    }, [tagTree])
+  }
+
 
   function toggleExpand(id) {
     setExpanded((prev) => ({ ...prev, [id]: !prev[id] }));
