@@ -26,6 +26,8 @@ app.use(cors({
   credentials: true
 }));
 
+
+
 app.use(express.json());
 
 
@@ -34,6 +36,11 @@ app.use("/profile", profileRoutes);
 app.use("/tag", tagRoutes);
 app.use("/recipe", recipeRoutes);
 app.use("/menu", menuRoutes);
+
+// Block cold start
+app.get("/ping", (req, res) => {
+  res.status(200).send("pong");
+});
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
