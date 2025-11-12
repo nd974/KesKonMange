@@ -1,95 +1,111 @@
 import { useState, useRef } from "react";
 import Header from "../components/Header";
-import { CLOUDINARY_API, CLOUDINARY_PRESET_RECIPE } from "../config/constants";
 
-export default function ShoppingList({homeId}) {
+export default function ShoppingList({ homeId }) {
   const fileInputRef = useRef(null);
   const [status, setStatus] = useState("");
   const [previewUrl, setPreviewUrl] = useState("");
+  const [dragOver, setDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  const resizeImageToExact = (file, width, height) => {
-    return new Promise((resolve, reject) => {
-      if (!file) return reject("Aucun fichier fourni");
-
-      const reader = new FileReader();
-      reader.readAsDataURL(file);
-
-      reader.onload = (event) => {
-        const img = new Image();
-        img.src = event.target.result;
-
-        img.onload = () => {
-          const canvas = document.createElement("canvas");
-          canvas.width = width;   // largeur exacte
-          canvas.height = height; // hauteur exacte
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, width, height); // déformation possible
-
-          canvas.toBlob(
-            (blob) => {
-              if (blob) {
-                const resizedFile = new File([blob], "image-resized.jpg", { type: "image/jpeg" });
-                resolve(resizedFile);
-              } else {
-                reject("Erreur lors de la conversion en Blob");
-              }
-            },
-            "image/jpeg",
-            0.9
-          );
-        };
-
-        img.onerror = () => reject("Erreur lors du chargement de l'image");
-      };
-
-      reader.onerror = () => reject("Erreur lors de la lecture du fichier");
-    });
+  const handleFiles = (file) => {
+    if (!file) {
+      setStatus("Choisis une image avant d'uploader.");
+      return;
+    }
+    setSelectedFile(file);
+    setStatus(`Fichier prêt : ${file.name}`);
   };
 
   const handleUpload = async () => {
-    const originalFile = fileInputRef.current?.files[0];
-    if (!originalFile) {
+    const fileToUpload = selectedFile || fileInputRef.current?.files[0];
+    if (!fileToUpload) {
       setStatus("Choisis une image avant d'uploader.");
       return;
     }
 
-    setStatus("Redimensionnement en cours...");
+    console.log(fileToUpload.name);
+    setStatus("Envoi en cours...");
 
     try {
-      const resizedFile = await resizeImageToExact(originalFile, 1870, 1250);
-
-      setStatus("Envoi en cours...");
-
       const formData = new FormData();
-      formData.append("file", resizedFile);
-      formData.append("upload_preset", CLOUDINARY_PRESET_RECIPE);
+      formData.append("file", fileToUpload);
+      formData.append("upload_preset", "Recettes");
+      formData.append("public_id", fileToUpload.name.split(".")[0]); // nom sans extension
 
-      const res = await fetch(`${CLOUDINARY_API}`, {
-        method: "POST",
-        body: formData,
-      });
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dz4ejk7r7/image/upload",
+        { method: "POST", body: formData }
+      );
 
       const data = await res.json();
       console.log("Réponse Cloudinary :", data);
 
       if (data.secure_url) {
-        setStatus("✅ Image uploadée avec succès !");
-        setPreviewUrl(data.secure_url); // cette image sera exactement 1870x1250
+        // Transformation Cloudinary pour redimensionner à 1870×1250
+        const transformedUrl = data.secure_url.replace(
+          "/upload/",
+          "/upload/w_1870,h_1250,c_fill/"
+        );
+
+        setStatus("✅ Image uploadée et redimensionnée avec succès !");
+        setPreviewUrl(transformedUrl);
       } else {
         setStatus("❌ Erreur : pas d'URL renvoyée.");
       }
     } catch (err) {
       console.error(err);
-      setStatus("❌ Erreur lors de l'upload : " + err);
+      setStatus("❌ Erreur lors de l'upload : " + err.message);
     }
   };
 
+  // Drag & Drop handlers
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    handleFiles(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => setDragOver(false);
+
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId}/>
-      <h1 className="text-2xl font-bold mb-4 py-8">Liste de courses (Test upload image de recette dans CLOUD)</h1>
+      <Header homeId={homeId} />
+      <h1 className="text-2xl font-bold mb-4 py-8">
+        Liste de courses (Test upload image de recette dans CLOUD)
+      </h1>
 
-      <input type="file" ref={fileInputRef} accept="image/*" className="block mb-4" />
+      {/* Image Upload avec Drag & Drop */}
+      <div
+        onDrop={handleDrop}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onClick={() => fileInputRef.current.click()}
+        className={`border-2 border-dashed rounded p-4 mb-6 cursor-pointer transition ${
+          dragOver ? "border-green-600 bg-green-50" : "border-gray-400"
+        } relative`} // <-- relative pour que l'input absolu soit contenu
+      >
+        <label className="block font-semibold mb-2">Image de la recette</label>
+        <p className="text-gray-500 mt-2">
+          Glisse et dépose ton image ici ou clique pour choisir un fichier
+        </p>
+        <input
+          type="file"
+          accept="image/*"
+          ref={fileInputRef}
+          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          onChange={(e) => handleFiles(e.target.files[0])}
+        />
+      </div>
+
+
+      {/* Bouton uploader */}
       <button
         onClick={handleUpload}
         className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
@@ -99,7 +115,16 @@ export default function ShoppingList({homeId}) {
 
       <p className="mt-4">{status}</p>
 
-      {previewUrl && <img src={previewUrl} alt="Preview" className="mt-4 max-w-full" />}
+      {previewUrl && (
+        <div className="mt-4">
+          <p className="text-gray-600 mb-2">Aperçu redimensionné (1870×1250) :</p>
+          <img
+            src={previewUrl}
+            alt="Preview"
+            className="max-w-full border rounded shadow-md"
+          />
+        </div>
+      )}
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useRef } from "react";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
 
@@ -8,6 +8,82 @@ export default function RecipeAdd({ homeId }) {
   const [recipeName, setRecipeName] = useState("");
   const [difficulty, setDifficulty] = useState("Facile");
   const [portions, setPortions] = useState(2);
+
+  
+
+  // -------------------- Image --------------------
+  const fileInputRef = useRef(null);
+  const [dragOver, setDragOver] = useState(false);
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [statusName, setstatusName] = useState("");
+  const [statusCSS, setstatusCSS] = useState("");
+
+  const handleFiles = (file) => {
+    if (!file) {
+      setstatusName("image non reconnu");
+      setstatusCSS("red");
+      return;
+    }
+    setSelectedFile(file);
+    setstatusName(`Fichier prêt : ${file.name}`);
+    setstatusCSS("green");
+  };
+
+  const handleUploadCloud = async (publicMameIdCloud, pictureNameDB) => {
+    const fileToUpload = selectedFile || fileInputRef.current?.files[0];
+
+    console.log(publicMameIdCloud);
+    setstatusName("Envoi en cours...");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+      formData.append("upload_preset", "Recettes");
+      formData.append("public_id", publicMameIdCloud);
+
+      const res = await fetch(
+        "https://api.cloudinary.com/v1_1/dz4ejk7r7/image/upload",
+        { method: "POST", body: formData }
+      );
+
+      const data = await res.json();
+      console.log("Réponse Cloudinary :", data);
+
+      if (data.secure_url) {
+        // Transformation Cloudinary pour redimensionner à 1870×1250
+        const transformedUrl = data.secure_url.replace(
+          "/upload/",
+          "/upload/w_1870,h_1250,c_fill/"
+        );
+
+        setstatusName("✅ Image uploadée");
+
+        const parts = transformedUrl.split("/upload/w_1870,h_1250,c_fill/");
+        pictureNameDB = parts[1];// "v1762944887/pates_carbonara.jpg"
+        console.log("here", pictureNameDB);
+      } else {
+        setstatusName("❌ Erreur : pas d'URL renvoyée.");
+      }
+    } catch (err) {
+      console.error(err);
+      setstatusName("❌ Erreur lors de l'upload : " + err.message);
+    }
+  };
+
+  // Drag & Drop handlers
+  const handleDrop = (e) => {
+    e.preventDefault();
+    setDragOver(false);
+    const file = e.dataTransfer.files[0];
+    handleFiles(file);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    setDragOver(true);
+  };
+
+  const handleDragLeave = () => setDragOver(false);
 
   // -------------------- Temps --------------------
   const [time, setTime] = useState({
@@ -106,7 +182,13 @@ export default function RecipeAdd({ homeId }) {
 
   // -------------------- Soumission --------------------
   const handleSubmit = (e) => {
+    const pictureName = null;
+
     e.preventDefault();
+
+    if (fileInputRef.current.files.length > 0){
+      handleUploadCloud(recipeName, pictureName);}
+    console.log("pictureNameDB = ", pictureName);
 
     const recipeData = {
       name: recipeName,
@@ -136,19 +218,35 @@ export default function RecipeAdd({ homeId }) {
         </h1>
 
         {/* Image Upload */}
-        <div className="mb-6">
-          <label className="block font-semibold mb-2">
-            Image de la recette
-          </label>
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => fileInputRef.current.click()} // seul déclencheur du clic
+          className={`border-2 border-dashed rounded p-4 cursor-pointer transition ${
+            dragOver ? "border-green-600 bg-green-50" : "border-gray-400"
+          }`}
+        >
+          <label className="block font-semibold mb-2">Image de la recette</label>
+          <p className="text-gray-500 mt-2">
+            Glisse et dépose ton image ici ou clique pour choisir un fichier
+          </p>
+          {/* Input complètement caché */}
           <input
             type="file"
             accept="image/*"
-            className="block w-full border rounded p-2 cursor-pointer"
+            ref={fileInputRef}
+            className="hidden"
+            onChange={(e) => handleFiles(e.target.files[0])}
           />
         </div>
 
+        <p className="mt-4 text-white" style={{ backgroundColor: statusCSS }}>
+          {statusName}
+        </p>
+
         {/* Nom */}
-        <div className="mb-6">
+        <div className="mb-6 py-8">
           <label className="block font-semibold mb-2">Nom de la recette</label>
           <input
             type="text"
