@@ -38,4 +38,13 @@ app.use("/recipe", recipeRoutes);
 app.use("/menu", menuRoutes);
 
 const PORT = process.env.PORT || 3000;
+
+
+
+
+
+app.get("/", (req, res) => {
+  res.status(200).send("p");
+});
+
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
