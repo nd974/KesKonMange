@@ -3,7 +3,7 @@ name: Ping Backend
 # Déclencheurs
 on:
   schedule:
-    - cron: '*/15 * * * *'  # toutes les 15 minutes (UTC)
+    - cron: '*/1 * * * *'  # toutes les 15 minutes (UTC)
   workflow_dispatch:         # permet de lancer manuellement
 
 jobs:
