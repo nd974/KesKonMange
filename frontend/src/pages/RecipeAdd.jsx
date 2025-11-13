@@ -143,8 +143,8 @@ export default function RecipeAdd({ homeId }) {
 
       const fetchSuggestions = async () => {
         try {
-          const res = await fetch(
-            `/api/openfoodfacts?q=${encodeURIComponent(debouncedName)}`
+          const res = await fetch(`
+            ${API_URL}/api/openfoodfacts?q=${encodeURIComponent(debouncedName)}`
           );
           const suggestions = await res.json();
 
