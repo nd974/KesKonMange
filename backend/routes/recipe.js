@@ -3,6 +3,50 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
+router.post("/create", async (req, res) => {
+  try {
+    const { recipeName, time, portions, difficulty, pictureName, selectedTagIds } = req.body;
+
+    // Vérification des champs requis
+    if (!recipeName, !time.preparation, !time.cuisson, !time.repos, !time.nettoyage, !portions, !difficulty) {
+      return res.status(400).json({
+        error: `Tous les champs obligatoires doivent être remplis. ${recipeName},${time}, ${portions},${difficulty}}`,
+        missing: { recipeName, time, portions, difficulty },
+      });
+    }
+
+    // Insertion de la recette
+    const resultRecipeCreate = await pool.query(
+      `
+      INSERT INTO "Recipe" (name, time_prep, time_cook, time_rest, time_clean, portion, level, picture) 
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+      RETURNING id
+      `,
+      [recipeName,time.preparation,time.cuisson,time.repos,time.nettoyage,portions,difficulty,pictureName]
+    );
+    const recipeId = resultRecipeCreate.rows[0].id;
+
+    // Insertion des liaisons avec les tags (si présents)
+    if (Array.isArray(selectedTagIds) && selectedTagIds.length > 0) {
+      const insertTagPromises = selectedTagIds.map((tagId) => {
+        return pool.query(
+          `
+          INSERT INTO "recipes_tags" (recipe_id, tag_id)
+          VALUES ($1, $2)
+          `,
+          [recipeId, tagId]
+        );
+      });
+      await Promise.all(insertTagPromises);
+    }
+
+    res.json({ ok: true, recipeId });
+  } catch (e) {
+    console.error("Erreur lors de la création de la recette :", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 /**
  * GET /recipe/get-all
  * Récupère toutes les recettes avec leurs tags

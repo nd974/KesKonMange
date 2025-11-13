@@ -1,12 +1,15 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function RecipeAdd({ homeId }) {
+  const navigate = useNavigate();
+
   const [recipeName, setRecipeName] = useState("");
-  const [difficulty, setDifficulty] = useState("Facile");
+  const [difficulty, setDifficulty] = useState(3);
   const [portions, setPortions] = useState(2);
 
   
@@ -46,7 +49,7 @@ export default function RecipeAdd({ homeId }) {
       formData.append("public_id", publicMameIdCloud);
 
       const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dz4ejk7r7/image/upload",
+        "https://api.cloudinary.com/v1_1/dsnaosp8u/image/upload",
         { method: "POST", body: formData }
       );
 
@@ -190,12 +193,11 @@ export default function RecipeAdd({ homeId }) {
 
   // -------------------- Soumission --------------------
   const handleSubmit = async (e) => {
-    
-
     e.preventDefault();
 
     const pictureName = await handleUploadCloud(recipeName);
 
+    // A SUPPRIMER
     const recipeData = {
       name: recipeName,
       difficulty,
@@ -206,9 +208,23 @@ export default function RecipeAdd({ homeId }) {
       steps: steps.filter((s) => s.trim() !== ""),
       tags: selectedTagIds,
     };
-
     console.log("🧾 Données de la recette :", recipeData);
-    alert("✅ Recette enregistrée dans la console !");
+
+    // CRéation de la recipe de base sans liaison
+    const resRecipeCreate = await fetch(`${API_URL}/recipe/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipeName, time, portions, difficulty, pictureName, selectedTagIds }),
+    });
+    const dataRecipeCreate = await resRecipeCreate.json();if (!dataRecipeCreate.ok){alert("❌ Erreur: " + dataRecipeCreate.error);return; }
+
+    console.log("resRecipeCreate", resRecipeCreate);
+    console.log("dataRecipeCreate", dataRecipeCreate);
+
+
+    alert("✅ Recette crée")
+    navigate(`/recipe/${dataRecipeCreate.recipeId}`, { replace: true });
+    
   };
 
   return (
@@ -301,6 +317,8 @@ export default function RecipeAdd({ homeId }) {
               </label>
               <input
                 type="number"
+                min="0"
+                max="999"
                 value={value}
                 onChange={(e) =>
                   setTime({ ...time, [key]: e.target.valueAsNumber || 0 })
@@ -317,14 +335,14 @@ export default function RecipeAdd({ homeId }) {
             <label className="block font-semibold mb-2">Difficulté</label>
             <select
               value={difficulty}
-              onChange={(e) => setDifficulty(e.target.value)}
+              onChange={(e) => setDifficulty(Number(e.target.value))}
               className="w-full border rounded p-2"
             >
-              <option>Très facile</option>
-              <option>Facile</option>
-              <option>Moyenne</option>
-              <option>Difficile</option>
-              <option>Très difficile</option>
+              <option value={1}>Très facile</option>
+              <option value={2}>Facile</option>
+              <option value={3}>Moyenne</option>
+              <option value={4}>Difficile</option>
+              <option value={5}>Très difficile</option>
             </select>
           </div>
 
@@ -333,8 +351,11 @@ export default function RecipeAdd({ homeId }) {
             <input
               type="number"
               min="1"
+              max="100"
               value={portions}
-              onChange={(e) => setPortions(e.target.value)}
+              onChange={(e) => 
+                setPortions(e.target.valueAsNumber || 0)
+              }
               className="w-full border rounded p-2"
             />
           </div>
@@ -375,8 +396,6 @@ export default function RecipeAdd({ homeId }) {
             + Ajouter un ustensile
           </button>
         </section>
-
-        {/* Ingrédients */}
 
 {/* Ingrédients */}
 <section className="mb-6">
