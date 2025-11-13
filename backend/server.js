@@ -3,11 +3,15 @@ dotenv.config({ path: "./.env" });
 
 import express from "express";
 import cors from "cors";
+
 import homeRoutes from "./routes/home.js";
 import profileRoutes from "./routes/profile.js";
 import tagRoutes from "./routes/tag.js";
 import recipeRoutes from "./routes/recipe.js";
 import menuRoutes from "./routes/menu.js";
+
+
+
 
 const app = express();
 
@@ -34,5 +38,10 @@ const PORT = process.env.PORT || 3000;
 app.get("/ping", (req, res) => {
   res.status(200).send("p");
 });
+
+// import edamamRoutes from "./routes/api/edamam.js";
+// app.use("/api/edamam", edamamRoutes);
+import openfoodfactsRoutes from "./routes/api/openfoodfacts.js";
+app.use("/api/openfoodfacts", openfoodfactsRoutes);
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));

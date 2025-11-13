@@ -116,23 +116,109 @@ export default function RecipeAdd({ homeId }) {
     setUstensiles(ustensiles.filter((_, index) => index !== i));
 
   // -------------------- Ingrédients --------------------
+
   const [ingredients, setIngredients] = useState([
-    { quantity: "", unit: "", name: "" },
+    { name: "", quantity: "", unit: "", suggestions: [], selected: false }
   ]);
 
+  const [debouncedNames, setDebouncedNames] = useState(
+    ingredients.map((ing) => ing.name)
+  );
+
+  const [focusedInput, setFocusedInput] = useState(null);
+
+  // Debounce global des noms d'ingrédients
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedNames(ingredients.map((ing) => ing.name));
+    }, 500); // tu peux ajuster le temps
+    return () => clearTimeout(handler);
+  }, [ingredients]);
+
+  // Fetch suggestions dès que les noms sont "debounced"
+  // et seulement si l'ingrédient n'est pas "selected"
+  useEffect(() => {
+    debouncedNames.forEach((debouncedName, index) => {
+      if (!debouncedName || ingredients[index]?.selected) return;
+
+      const fetchSuggestions = async () => {
+        try {
+          const res = await fetch(
+            `/api/openfoodfacts?q=${encodeURIComponent(debouncedName)}`
+          );
+          const suggestions = await res.json();
+
+          // Filtrer les additifs commençant par E et ne garder que ceux qui contiennent la recherche
+          const filteredSuggestions = (suggestions || [])
+            .filter(s => !/^E\d+/i.test(s)) // supprime additifs
+            .filter(s => s.toLowerCase().includes(debouncedName.toLowerCase())); // doit contenir la recherche
+
+          setIngredients((prev) => {
+            const updated = [...prev];
+            // seulement si l'input n'est pas sélectionné
+            if (!updated[index].selected) {
+              updated[index].suggestions = filteredSuggestions;
+            }
+            return updated;
+          });
+        } catch (err) {
+          console.error("Erreur fetch suggestions:", err);
+        }
+      };
+
+
+      fetchSuggestions();
+    });
+  }, [debouncedNames]);
+
+  // Au moment de changer l'input, on laisse tout passer
   const handleIngredientChange = (index, field, value) => {
-    const updated = [...ingredients];
-    updated[index][field] = value;
-    setIngredients(updated);
+    setIngredients((prev) =>
+      prev.map((ing, i) =>
+        i === index
+          ? { ...ing, [field]: value, ...(field === "name" ? { selected: false } : {}) }
+          : ing
+      )
+    );
+  };
+
+  // Au moment de sortir de l'input
+  const handleIngredientBlur = (index) => {
+    const ing = ingredients[index];
+    // Si la valeur n'est pas dans suggestions et n'a pas été sélectionnée
+    if (!ing.suggestions.includes(ing.name) && !ing.selected) {
+      setIngredients((prev) =>
+        prev.map((ing2, i) =>
+          i === index ? { ...ing2, name: "" } : ing2
+        )
+      );
+    }
+  };
+
+
+
+  // Lorsque l'utilisateur clique sur une suggestion
+  const selectSuggestion = (index, suggestion) => {
+    setIngredients((prev) =>
+      prev.map((ing, i) =>
+        i === index
+          ? { ...ing, name: suggestion, suggestions: [], selected: true }
+          : ing
+      )
+    );
   };
 
   const addIngredient = () => {
-    setIngredients([...ingredients, { quantity: "", unit: "", name: "" }]);
+    setIngredients((prev) => [
+      ...prev,
+      { quantity: "", unit: "", name: "", suggestions: [], selected: false },
+    ]);
   };
 
-  const removeIngredient = (index) => {
-    setIngredients(ingredients.filter((_, i) => i !== index));
-  };
+  function removeIngredient(index) {
+    setIngredients((prev) => prev.filter((_, i) => i !== index));
+  }
+
 
   // -------------------- Tags --------------------
   const [search, setSearch] = useState("");
@@ -300,12 +386,12 @@ export default function RecipeAdd({ homeId }) {
             />
           </div>
 
-          {selectedTagIds.length > 0 && (
+          {/* {selectedTagIds.length > 0 && (
             <div className="mt-3 text-sm text-gray-600">
               <span className="font-medium">Tags sélectionnés :</span>{" "}
               {selectedTagIds.join(", ")}
             </div>
-          )}
+          )} */}
         </div>
 
         {/* Temps */}
@@ -397,30 +483,95 @@ export default function RecipeAdd({ homeId }) {
           </button>
         </section>
 
-{/* Ingrédients */}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+        {/* Ingrédients */}
 <section className="mb-6">
-  <h2 className="text-xl font-semibold mb-2">
-    🥕 Ingrédients nécessaires
-  </h2>
+  <h2 className="text-xl font-semibold mb-2">🥕 Ingrédients nécessaires</h2>
 
   <div className="space-y-3">
     {ingredients.map((ing, i) => (
       <div
         key={i}
-        className="
-          flex items-center gap-2
-          lg:grid lg:grid-cols-3 lg:gap-3
-        "
+        className="flex items-center gap-2 lg:flex-row lg:items-center"
       >
         {/* Quantité */}
         <input
           type="number"
+          min="1"
+          step="0.01"
           placeholder="Qté"
           value={ing.quantity}
-          onChange={(e) =>
-            handleIngredientChange(i, 'quantity', e.target.value)
-          }
-          className="w-12 sm:w-20 border rounded p-2 flex-shrink-0 lg:w-full"
+          onChange={(e) => handleIngredientChange(i, 'quantity', e.target.valueAsNumber || 1)}
+
+          className="border rounded p-2 w-12 lg:w-1/3"
         />
 
         {/* Unité */}
@@ -428,47 +579,57 @@ export default function RecipeAdd({ homeId }) {
           type="text"
           placeholder="Unité"
           value={ing.unit}
-          onChange={(e) =>
-            handleIngredientChange(i, 'unit', e.target.value)
-          }
-          className="w-20 sm:w-24 border rounded p-2 flex-shrink-0 lg:w-full"
+          onChange={(e) => handleIngredientChange(i, 'unit', e.target.value)}
+          className="border rounded p-2 w-16 lg:w-1/3"
         />
 
-        {/* Ingrédient avec recherche */}
-        <div className="flex items-center gap-2 flex-1 lg:w-full">
+        {/* Nom ingrédient */}
+        <div className="relative w-full lg:w-1/3">
           <input
-            list="ingredient-list"
+            type="text"
             placeholder="Nom ingrédient"
             value={ing.name}
-            onChange={(e) =>
-              handleIngredientChange(i, 'name', e.target.value)
-            }
-            className="w-20 sm:w-24 flex-1 border rounded p-2 min-w-[120px] lg:w-full"
+            onChange={(e) => handleIngredientChange(i, 'name', e.target.value)}
+            onFocus={() => setFocusedInput(i)}
+            onBlur={() => handleIngredientBlur(i)}
+            className="border rounded p-2 w-full pr-8"
           />
-          {i > 0 && (
-            <button
-              type="button"
-              onClick={() => removeIngredient(i)}
-              className="text-red-500 text-lg flex-shrink-0"
-            >
-              ❌
-            </button>
+
+
+
+
+          {ing.suggestions && ing.suggestions.length > 0 && (
+            <ul className="absolute z-10 bg-white border rounded w-full mt-1 max-h-40 overflow-auto">
+              {ing.suggestions.map((s, j) => (
+                <li
+                  key={j}
+                  className="p-1 hover:bg-gray-200 cursor-pointer"
+                  onClick={() => selectSuggestion(i, s)}
+                >
+                  {s}
+                </li>
+              ))}
+            </ul>
           )}
+
+          {/* <button
+            type="button"
+            onClick={() => removeIngredient(i)}
+            className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500 text-lg"
+          >
+            ❌
+          </button> */}
+          
         </div>
+        <button
+            type="button"
+            onClick={() => removeIngredient(i)}
+          >
+            ❌
+        </button>
       </div>
     ))}
   </div>
-
-  {/* Liste d’ingrédients disponibles */}
-  <datalist id="ingredient-list">
-    <option value="Farine" />
-    <option value="Sucre" />
-    <option value="Beurre" />
-    <option value="Œufs" />
-    <option value="Lait" />
-    <option value="Sel" />
-    <option value="Huile d’olive" />
-  </datalist>
 
   <button
     type="button"
@@ -478,6 +639,10 @@ export default function RecipeAdd({ homeId }) {
     + Ajouter un ingrédient
   </button>
 </section>
+
+
+
+
 
 
 
