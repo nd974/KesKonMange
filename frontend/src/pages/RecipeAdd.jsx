@@ -29,8 +29,12 @@ export default function RecipeAdd({ homeId }) {
     setstatusCSS("green");
   };
 
-  const handleUploadCloud = async (publicMameIdCloud, pictureNameDB) => {
+  const handleUploadCloud = async (publicMameIdCloud) => {
     const fileToUpload = selectedFile || fileInputRef.current?.files[0];
+
+    if (!fileToUpload){
+      return null;
+    }
 
     console.log(publicMameIdCloud);
     setstatusName("Envoi en cours...");
@@ -59,14 +63,18 @@ export default function RecipeAdd({ homeId }) {
         setstatusName("✅ Image uploadée");
 
         const parts = transformedUrl.split("/upload/w_1870,h_1250,c_fill/");
-        pictureNameDB = parts[1];// "v1762944887/pates_carbonara.jpg"
-        console.log("here", pictureNameDB);
+        console.log(parts[1]);
+        return parts[1];
       } else {
         setstatusName("❌ Erreur : pas d'URL renvoyée.");
+        console.log("❌ Erreur : pas d'URL renvoyée.");
+        return null;
       }
     } catch (err) {
       console.error(err);
       setstatusName("❌ Erreur lors de l'upload : " + err.message);
+      console.log("❌ Erreur : pas d'URL renvoyée.");
+      return null;
     }
   };
 
@@ -181,14 +189,12 @@ export default function RecipeAdd({ homeId }) {
   );
 
   // -------------------- Soumission --------------------
-  const handleSubmit = (e) => {
-    const pictureName = null;
+  const handleSubmit = async (e) => {
+    
 
     e.preventDefault();
 
-    if (fileInputRef.current.files.length > 0){
-      handleUploadCloud(recipeName, pictureName);}
-    console.log("pictureNameDB = ", pictureName);
+    const pictureName = await handleUploadCloud(recipeName);
 
     const recipeData = {
       name: recipeName,
