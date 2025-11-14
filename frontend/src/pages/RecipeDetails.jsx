@@ -55,7 +55,7 @@ export default function RecipeDetail({homeId}) {
 
           {/* Image principale */}
           <img 
-            src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1762801940/pate_carbonara_dxp9jr.jpg" 
+            src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg" 
             alt="Pâtes à la carbonara"
             className="w-full h-80 object-cover rounded-md mb-6"
           />
@@ -183,21 +183,21 @@ export default function RecipeDetail({homeId}) {
           <ul className="space-y-3">
             <li>
               <a href="#" className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded">
-                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1762801940/pate_carbonara_dxp9jr.jpg"
+                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg"
                   alt="Spaghetti bolognaise" className="w-16 h-16 object-cover rounded-md"/>
                 <span>Spaghetti à la bolognaise</span>
               </a>
             </li>
             <li>
               <a href="#" className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded">
-                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1762801940/pate_carbonara_dxp9jr.jpg" 
+                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg" 
                   alt="Tagliatelles aux champignons" className="w-16 h-16 object-cover rounded-md"/>
                 <span>Tagliatelles aux champignons</span>
               </a>
             </li>
             <li>
               <a href="#" className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded">
-                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1762801940/pate_carbonara_dxp9jr.jpg" 
+                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg" 
                   alt="Pâtes au pesto" className="w-16 h-16 object-cover rounded-md" />
                 <span>Pâtes au pesto</span>
               </a>

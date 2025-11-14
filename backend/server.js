@@ -9,9 +9,8 @@ import profileRoutes from "./routes/profile.js";
 import tagRoutes from "./routes/tag.js";
 import recipeRoutes from "./routes/recipe.js";
 import menuRoutes from "./routes/menu.js";
-
-
-
+import unitRoutes from "./routes/unit.js";
+import utensilRoutes from "./routes/utensil.js";
 
 const app = express();
 
@@ -32,6 +31,8 @@ app.use("/profile", profileRoutes);
 app.use("/tag", tagRoutes);
 app.use("/recipe", recipeRoutes);
 app.use("/menu", menuRoutes);
+app.use("/unit", unitRoutes);
+app.use("/utensil", utensilRoutes);
 
 const PORT = process.env.PORT || 3000;
 

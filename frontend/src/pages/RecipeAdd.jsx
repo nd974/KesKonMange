@@ -115,6 +115,26 @@ export default function RecipeAdd({ homeId }) {
   const removeUstensile = (i) =>
     setUstensiles(ustensiles.filter((_, index) => index !== i));
 
+  // -------------------- Unités --------------------
+  const [units, setUnits] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/unit/get-all`)
+      .then(res => res.json())
+      .then(data => setUnits(data))
+      .catch(err => console.error("Erreur chargement unités:", err));
+  }, []);
+
+  // -------------------- Unités --------------------
+  const [utensils, setUtensils] = useState([]);
+
+  useEffect(() => {
+    fetch(`${API_URL}/utensil/get-all`)
+      .then(res => res.json())
+      .then(data => setUtensils(data))
+      .catch(err => console.error("Erreur chargement utensils:", err));
+  }, []);
+
   // -------------------- Ingrédients --------------------
 
   const [ingredients, setIngredients] = useState([
@@ -296,11 +316,11 @@ export default function RecipeAdd({ homeId }) {
     };
     console.log("🧾 Données de la recette :", recipeData);
 
-    // CRéation de la recipe de base sans liaison
+    // Création de la recette
     const resRecipeCreate = await fetch(`${API_URL}/recipe/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipeName, time, portions, difficulty, pictureName, selectedTagIds }),
+        body: JSON.stringify({ recipeName, time, portions, difficulty, pictureName, selectedTagIds ,ingredients, ustensiles}),
     });
     const dataRecipeCreate = await resRecipeCreate.json();if (!dataRecipeCreate.ok){alert("❌ Erreur: " + dataRecipeCreate.error);return; }
 
@@ -452,7 +472,9 @@ export default function RecipeAdd({ homeId }) {
           <h2 className="text-xl font-semibold mb-2">🧂 Ustensiles nécessaires</h2>
           {ustensiles.map((u, i) => (
             <div key={i} className="flex items-center gap-2 mb-2">
-              <input
+
+
+              {/* <input
                 type="text"
                 value={u}
                 onChange={(e) => {
@@ -462,8 +484,33 @@ export default function RecipeAdd({ homeId }) {
                 }}
                 placeholder={`Ustensile ${i + 1}`}
                 className="flex-1 border rounded p-2"
-              />
-              {i > 0 && (
+              /> */}
+              <select
+                value={u || ""}
+                onChange={(e) => {
+                  const updated = [...ustensiles];
+                  updated[i] = e.target.value;
+                  setUstensiles(updated);
+                }}
+                className={`flex-1 border rounded p-2 
+                ${ustensiles[0] ? "text-black" : "text-gray-500"}`}
+              >
+                <option value="" disabled>
+                  {`Ustensile ${i + 1}`}
+                </option>
+
+                {utensils.map((u) => (
+                  <option key={u.id} value={u.name}>
+                    {u.name}
+                  </option>
+                ))}
+              </select>
+
+
+
+
+
+              {/* {i > 0 && ( */}
                 <button
                   type="button"
                   onClick={() => removeUstensile(i)}
@@ -471,7 +518,7 @@ export default function RecipeAdd({ homeId }) {
                 >
                   ❌
                 </button>
-              )}
+              {/* )} */}
             </div>
           ))}
           <button
@@ -574,14 +621,23 @@ export default function RecipeAdd({ homeId }) {
           className="border rounded p-2 w-12 lg:w-1/3"
         />
 
-        {/* Unité */}
-        <input
-          type="text"
-          placeholder="Unité"
-          value={ing.unit}
-          onChange={(e) => handleIngredientChange(i, 'unit', e.target.value)}
-          className="border rounded p-2 w-16 lg:w-1/3"
-        />
+        {/* Unité (liste déroulante) */}
+        <select
+          value={ing.unit || ""}
+          onChange={(e) => handleIngredientChange(i, "unit", e.target.value)}
+          className={`border rounded p-2 w-20 lg:w-1/3 bg-white 
+            ${ing.unit ? "text-black" : "text-gray-500"}`}
+        >
+          <option value="" disabled>
+            (g, L, ...)
+          </option>
+
+          {units.map((u) => (
+            <option key={u.id} value={u.abbreviation}>
+              {u.abbreviation} ({u.name})
+            </option>
+          ))}
+        </select>
 
         {/* Nom ingrédient */}
         <div className="relative w-full lg:w-1/3">
