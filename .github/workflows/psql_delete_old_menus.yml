@@ -3,7 +3,7 @@ name: Delete old menus
 on:
   workflow_dispatch:
   schedule:
-    - cron: '*/1 * * * *'
+    - cron: '0 0 * * *'
 
 jobs:
   delete-menus:
