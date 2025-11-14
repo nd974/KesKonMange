@@ -11,4 +11,4 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Ping backend
-        run: curl -s https://keskonmange.onrender.com/ping
+        run: curl -s ${{ secrets.RENDER_URL }}

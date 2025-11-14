@@ -1,0 +1,23 @@
+name: Delete old menus
+
+# Déclenche tous les jours à minuit UTC
+on:
+  schedule:
+    - cron: '*/1 * * * *'
+
+jobs:
+  delete-menus:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Run SQL to delete old menus
+        env:
+          PGHOST: ${{ secrets.PGHOST }}
+          PGUSER: ${{ secrets.PGUSER }}
+          PGPASSWORD: ${{ secrets.PGPASSWORD }}
+          PGDATABASE: ${{ secrets.PGDATABASE }}
+          PGPORT: ${{ secrets.PGPORT }}
+        run: |
+          echo "DELETE FROM \"Menu\" WHERE datetime < CURRENT_DATE;" | psql

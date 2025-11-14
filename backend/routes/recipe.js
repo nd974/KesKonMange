@@ -5,7 +5,7 @@ const router = express.Router();
 
 router.post("/create", async (req, res) => {
   try {
-    const { recipeName, time, portions, difficulty, pictureName, selectedTagIds, ingredients, ustensiles } = req.body;
+    const { recipeName, time, portions, difficulty, selectedTagIds, ingredients, ustensiles } = req.body;
 
     // Vérification des champs requis
     if (!recipeName, !time.preparation, !time.cuisson, !time.repos, !time.nettoyage, !portions, !difficulty) {
@@ -22,7 +22,7 @@ router.post("/create", async (req, res) => {
       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
       RETURNING id
       `,
-      [recipeName,time.preparation,time.cuisson,time.repos,time.nettoyage,portions,difficulty,pictureName]
+      [recipeName,time.preparation,time.cuisson,time.repos,time.nettoyage,portions,difficulty,null]
     );
     const recipeId = resultRecipeCreate.rows[0].id;
 
@@ -114,6 +114,23 @@ router.post("/create", async (req, res) => {
     }
 
 
+    // Insertion des étapes si elles existent
+    const { steps } = req.body; // On suppose que steps est un tableau de chaînes "1. Faire cuire", "2. Ajouter les épices", etc.
+    if (Array.isArray(steps) && steps.length > 0) {
+      const insertStepsPromises = steps.map((step, index) => {
+        return pool.query(
+          `
+          INSERT INTO "recipes_steps" (recipe_id, step)
+          VALUES ($1, $2)
+          `,
+          [recipeId, step]
+        );
+      });
+      await Promise.all(insertStepsPromises);
+    }
+
+
+
     res.json({ ok: true, recipeId });
   } catch (e) {
     console.error("Erreur lors de la création de la recette :", e);
@@ -192,6 +209,7 @@ router.get("/get-one/:id", async (req, res) => {
 
     const recipe = recipeRes.rows[0];
 
+
     const tagRes = await pool.query(
       `SELECT t.id, t.name, t.parent_id
        FROM "recipes_tags" rt
@@ -199,13 +217,105 @@ router.get("/get-one/:id", async (req, res) => {
        WHERE rt.recipe_id = $1`,
       [id]
     );
-
     recipe.tags = tagRes.rows || [];
+
+    const utensilRes = await pool.query(
+      `SELECT u.id, u.name, u.picture
+       FROM "recipes_utensils" ru
+       JOIN "Utensil" u ON u.id = ru.utensil_id
+       WHERE ru.recipe_id = $1`,
+      [id]
+    );
+    recipe.utensils = utensilRes.rows || [];
+
+    const ingredientRes = await pool.query(
+      `SELECT 
+          i.id, 
+          i.name, 
+          ri.amount, 
+          u.abbreviation AS unit
+      FROM "recipes_ingredients" ri
+      JOIN "Ingredient" i ON i.id = ri.ingredient_id
+      LEFT JOIN "Unit" u ON u.id = ri.unit_id
+      WHERE ri.recipe_id = $1`,
+      [id]
+    );
+    recipe.ingredients = ingredientRes.rows || [];
+
+    const stepsRes = await pool.query(
+      `SELECT step FROM "recipes_steps" rs WHERE rs.recipe_id = $1 ORDER BY step ASC` ,[id]
+    );
+    recipe.steps = stepsRes.rows || [];
+
+
     res.json(recipe);
   } catch (err) {
     console.error("Erreur /recipe/get-one:", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+
+
+
+
+
+
+
+
+
+router.post("/setImage", async (req, res) => {
+  try {
+    const { recipeId, pictureName } = req.body;
+
+    if (!recipeId || !pictureName) {
+      return res.status(400).json({ error: "recipeId et pictureName sont requis" });
+    }
+
+    const result = await pool.query(
+      `UPDATE "Recipe" SET picture = $1 WHERE id = $2 RETURNING id, picture`,
+      [pictureName, recipeId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: "Recette non trouvée" });
+    }
+
+    res.json({ ok: true, recipe: result.rows[0] });
+  } catch (err) {
+    console.error("Erreur dans /recipe/setImage :", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
+
+router.delete("/delete/:id", async (req, res) => {
+  const recipeId = parseInt(req.params.id, 10);
+
+  if (isNaN(recipeId)) {
+    return res.status(400).json({ error: "ID de recette invalide" });
+  }
+
+  try {
+    // Supprime la recette (les étapes, ingrédients, tags et ustensiles associés seront supprimés automatiquement grâce à ON DELETE CASCADE)
+    const result = await pool.query(
+      `DELETE FROM "Recipe" WHERE id = $1 RETURNING id`,
+      [recipeId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Recette non trouvée" });
+    }
+
+    res.json({ ok: true, deletedRecipeId: recipeId });
+  } catch (e) {
+    console.error("Erreur lors de la suppression de la recette :", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
 
 export default router;

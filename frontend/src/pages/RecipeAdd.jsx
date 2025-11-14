@@ -301,7 +301,6 @@ export default function RecipeAdd({ homeId }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const pictureName = await handleUploadCloud(recipeName);
 
     // A SUPPRIMER
     const recipeData = {
@@ -320,9 +319,25 @@ export default function RecipeAdd({ homeId }) {
     const resRecipeCreate = await fetch(`${API_URL}/recipe/create`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipeName, time, portions, difficulty, pictureName, selectedTagIds ,ingredients, ustensiles}),
+        body: JSON.stringify({ recipeName, time, portions, difficulty, selectedTagIds ,ingredients, ustensiles, steps}),
     });
-    const dataRecipeCreate = await resRecipeCreate.json();if (!dataRecipeCreate.ok){alert("❌ Erreur: " + dataRecipeCreate.error);return; }
+
+    const dataRecipeCreate = await resRecipeCreate.json();
+    if (!dataRecipeCreate.ok){alert("❌ Erreur: " + dataRecipeCreate.error);return; }
+
+    const pictureName = await handleUploadCloud(recipeName);
+    const resRecipePicture = await fetch(`${API_URL}/recipe/setImage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        recipeId: dataRecipeCreate.recipeId, // clé explicite
+        pictureName: pictureName           // clé explicite
+      }),
+    });
+
+    const dataRecipeSetImage = await resRecipePicture.json();
+    console.log("Réponse setImage :", dataRecipeSetImage);
+
 
     console.log("resRecipeCreate", resRecipeCreate);
     console.log("dataRecipeCreate", dataRecipeCreate);
@@ -496,7 +511,7 @@ export default function RecipeAdd({ homeId }) {
                 ${ustensiles[0] ? "text-black" : "text-gray-500"}`}
               >
                 <option value="" disabled>
-                  {`Ustensile ${i + 1}`}
+                  
                 </option>
 
                 {utensils.map((u) => (
@@ -711,10 +726,10 @@ export default function RecipeAdd({ homeId }) {
             <div key={i} className="flex items-start gap-2 mb-2">
               <textarea
                 rows="2"
-                value={s}
+                value={s} // déjà stocké avec numéro
                 onChange={(e) => {
                   const updated = [...steps];
-                  updated[i] = e.target.value;
+                  updated[i] = `${i + 1}. ${e.target.value.replace(/^\d+\.\s*/, '')}`; 
                   setSteps(updated);
                 }}
                 placeholder={`Étape ${i + 1}`}
