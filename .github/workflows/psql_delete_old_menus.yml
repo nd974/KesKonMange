@@ -1,7 +1,7 @@
 name: Delete old menus
 
-# Déclenche tous les jours à minuit UTC
 on:
+  workflow_dispatch:
   schedule:
     - cron: '*/1 * * * *'
 
