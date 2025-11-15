@@ -2,6 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
+import {CLOUDINARY_API} from "../config/constants"
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -32,54 +33,131 @@ export default function RecipeAdd({ homeId }) {
     setstatusCSS("green");
   };
 
-  const handleUploadCloud = async (publicMameIdCloud) => {
-    const fileToUpload = selectedFile || fileInputRef.current?.files[0];
+  // const handleUploadCloud = async (publicMameIdCloud) => {
+  //   const fileToUpload = selectedFile || fileInputRef.current?.files[0];
 
-    if (!fileToUpload){
-      return null;
-    }
+  //   if (!fileToUpload){
+  //     return null;
+  //   }
 
-    console.log(publicMameIdCloud);
-    setstatusName("Envoi en cours...");
+  //   console.log(publicMameIdCloud);
+  //   setstatusName("Envoi en cours...");
 
-    try {
-      const formData = new FormData();
-      formData.append("file", fileToUpload);
-      formData.append("upload_preset", "Recettes");
-      formData.append("public_id", publicMameIdCloud);
+  //   try {
+  //     const formData = new FormData();
+  //     formData.append("file", fileToUpload);
+  //     formData.append("upload_preset", "Recettes");
+  //     formData.append("public_id", publicMameIdCloud);
 
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dsnaosp8u/image/upload",
-        { method: "POST", body: formData }
+  //     const res = await fetch(
+  //       "https://api.cloudinary.com/v1_1/dsnaosp8u/image/upload",
+  //       { method: "POST", body: formData }
+  //     );
+
+  //     const data = await res.json();
+  //     console.log("Réponse Cloudinary :", data);
+
+  //     if (data.secure_url) {
+  //       // Transformation Cloudinary pour redimensionner à 1870×1250
+  //       const transformedUrl = data.secure_url.replace(
+  //         "/upload/",
+  //         "/upload/w_1870,h_1250,c_fill/"
+  //       );
+
+  //       setstatusName("✅ Image uploadée");
+
+  //       const parts = transformedUrl.split("/upload/w_1870,h_1250,c_fill/");
+  //       console.log(parts[1]);
+  //       return parts[1];
+  //     } else {
+  //       setstatusName("❌ Erreur : pas d'URL renvoyée.");
+  //       console.log("❌ Erreur : pas d'URL renvoyée.");
+  //       return null;
+  //     }
+  //   } catch (err) {
+  //     console.error(err);
+  //     setstatusName("❌ Erreur lors de l'upload : " + err.message);
+  //     console.log("❌ Erreur : pas d'URL renvoyée.");
+  //     return null;
+  //   }
+  // };
+const handleUploadCloud = async (publicMameIdCloud) => {
+  let fileToUpload = selectedFile || fileInputRef.current?.files[0];
+
+  if (!fileToUpload) {
+    return null;
+  }
+
+  console.log(publicMameIdCloud);
+  setstatusName("Envoi en cours...");
+
+  // 🔵 Compression côté client
+  const compressImage = (file, maxWidth = 1200, quality = 0.7) => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+
+      img.onload = () => {
+        const ratio = Math.min(maxWidth / img.width, 1);
+        const canvas = document.createElement("canvas");
+        canvas.width = img.width * ratio;
+        canvas.height = img.height * ratio;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+
+        canvas.toBlob(
+          (blob) => resolve(blob),
+          "image/jpeg", // ou "image/webp"
+          quality
+        );
+      };
+    });
+  };
+
+  // 🔹 Appliquer compression
+  fileToUpload = await compressImage(fileToUpload, 1200, 0.7);
+
+  try {
+    const formData = new FormData();
+    formData.append("file", fileToUpload);
+    formData.append("upload_preset", "Recettes");
+    formData.append("public_id", publicMameIdCloud);
+
+    const res = await fetch(
+      `${CLOUDINARY_API}`,
+      { method: "POST", body: formData }
+    );
+
+    const data = await res.json();
+    console.log("Réponse Cloudinary :", data);
+
+    if (data.secure_url) {
+      // Transformation Cloudinary pour redimensionner à 1870×1250
+      const transformedUrl = data.secure_url.replace(
+        "/upload/",
+        "/upload/w_1200,c_fill,f_webp,q_auto/"
       );
 
-      const data = await res.json();
-      console.log("Réponse Cloudinary :", data);
+      setstatusName("✅ Image uploadée");
 
-      if (data.secure_url) {
-        // Transformation Cloudinary pour redimensionner à 1870×1250
-        const transformedUrl = data.secure_url.replace(
-          "/upload/",
-          "/upload/w_1870,h_1250,c_fill/"
-        );
-
-        setstatusName("✅ Image uploadée");
-
-        const parts = transformedUrl.split("/upload/w_1870,h_1250,c_fill/");
-        console.log(parts[1]);
-        return parts[1];
-      } else {
-        setstatusName("❌ Erreur : pas d'URL renvoyée.");
-        console.log("❌ Erreur : pas d'URL renvoyée.");
-        return null;
-      }
-    } catch (err) {
-      console.error(err);
-      setstatusName("❌ Erreur lors de l'upload : " + err.message);
+      const parts = transformedUrl.split("/upload/w_1200,c_fill,f_webp,q_auto/");
+      console.log(parts[1]);
+      return parts[1];
+    } else {
+      setstatusName("❌ Erreur : pas d'URL renvoyée.");
       console.log("❌ Erreur : pas d'URL renvoyée.");
       return null;
     }
-  };
+  } catch (err) {
+    console.error(err);
+    setstatusName("❌ Erreur lors de l'upload : " + err.message);
+    console.log("❌ Erreur : pas d'URL renvoyée.");
+    return null;
+  }
+};
+
+
 
   // Drag & Drop handlers
   const handleDrop = (e) => {
@@ -326,6 +404,10 @@ export default function RecipeAdd({ homeId }) {
     if (!dataRecipeCreate.ok){alert("❌ Erreur: " + dataRecipeCreate.error);return; }
 
     const pictureName = await handleUploadCloud(recipeName);
+
+    console.log("dataRecipeCreate.recipeId", dataRecipeCreate.recipeId);
+    console.log("pictureName", pictureName);
+
     const resRecipePicture = await fetch(`${API_URL}/recipe/setImage`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },

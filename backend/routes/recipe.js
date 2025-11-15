@@ -1,5 +1,6 @@
 import express from "express";
 import { pool } from "../db.js";
+import cloudinary from "cloudinary";
 
 const router = express.Router();
 
@@ -290,6 +291,20 @@ router.post("/setImage", async (req, res) => {
 
 
 
+// Configuration Cloudinary
+cloudinary.v2.config({
+  cloud_name: `${process.env.CLOUDINARY_NAME}`,
+  api_key: `${process.env.CLOUDINARY_KEY}`,
+  api_secret: `${process.env.CLOUDINARY_SECRET}`,
+});
+
+cloudinary.v2.api.usage((error, result) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log("Usage actuel :", result);
+  }
+});
 
 
 router.delete("/delete/:id", async (req, res) => {
@@ -300,19 +315,43 @@ router.delete("/delete/:id", async (req, res) => {
   }
 
   try {
-    // Supprime la recette (les étapes, ingrédients, tags et ustensiles associés seront supprimés automatiquement grâce à ON DELETE CASCADE)
-    const result = await pool.query(
+    // 1️⃣ Récupérer le publicId de l'image liée à la recette
+    const imageResult = await pool.query(
+      `SELECT name FROM "Recipe" WHERE id = $1`,
+      [recipeId]
+    );
+
+    if (imageResult.rowCount === 0) {
+      return res.status(404).json({ error: "Recette non trouvée" });
+    }
+
+    const publicId = imageResult.rows[0].name;
+
+    // 2️⃣ Supprimer la recette
+    const deleteRecipeResult = await pool.query(
       `DELETE FROM "Recipe" WHERE id = $1 RETURNING id`,
       [recipeId]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Recette non trouvée" });
+    // 3️⃣ Si une image existe, on la supprime sur Cloudinary
+    if (publicId) {
+      try {
+        const cloudDelete = await cloudinary.v2.uploader.destroy(publicId);
+        console.log("Cloudinary:", cloudDelete);
+      } catch (err) {
+        console.error("⚠️ Erreur suppression Cloudinary :", err);
+        // On ne bloque pas la suppression de la recette si Cloudinary échoue
+      }
     }
 
-    res.json({ ok: true, deletedRecipeId: recipeId });
+    res.json({
+      ok: true,
+      deletedRecipeId: recipeId,
+      deletedImagePublicId: publicId || null,
+    });
+
   } catch (e) {
-    console.error("Erreur lors de la suppression de la recette :", e);
+    console.error("Erreur lors de la suppression de la recette/image :", e);
     res.status(500).json({ error: e.message });
   }
 });

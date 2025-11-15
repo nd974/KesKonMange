@@ -100,11 +100,15 @@ export default function Header({homeId}) {
       </nav>
 
       {/* 🔸 Sélecteur de Home */}
-      <div className="ml-auto flex items-center gap-3">
+      <div className="ml-auto flex items-center gap-3 relative">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
+          🏠
+        </span>
+
         <select
           value={selectedHome?.id || ""}
           onChange={handleChangeHome}
-          className="bg-softBeige px-3 py-1 rounded-xl text-sm sm:block"
+          className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
         >
           {homes.map((home) => (
             <option key={home.id} value={home.id}>
@@ -113,6 +117,7 @@ export default function Header({homeId}) {
           ))}
         </select>
       </div>
+
 
       {/* 🔸 Profil */}
       <div

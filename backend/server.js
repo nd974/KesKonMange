@@ -40,8 +40,6 @@ app.get("/ping", (req, res) => {
   res.status(200).send("p");
 });
 
-// import edamamRoutes from "./routes/api/edamam.js";
-// app.use("/api/edamam", edamamRoutes);
 import openfoodfactsRoutes from "./routes/api/openfoodfacts.js";
 app.use("/api/openfoodfacts", openfoodfactsRoutes);
 
