@@ -136,12 +136,12 @@ const handleUploadCloud = async (publicMameIdCloud) => {
       // Transformation Cloudinary pour redimensionner à 1870×1250
       const transformedUrl = data.secure_url.replace(
         "/upload/",
-        "/upload/w_1200,c_fill,f_webp,q_auto/"
+        "/upload/a_auto,w_1200,h_800,c_fill,f_webp,q_auto/"
       );
 
       setstatusName("✅ Image uploadée");
 
-      const parts = transformedUrl.split("/upload/w_1200,c_fill,f_webp,q_auto/");
+      const parts = transformedUrl.split("/upload/a_auto,w_1200,h_800,c_fill,f_webp,q_auto/");
       console.log(parts[1]);
       return parts[1];
     } else {
@@ -215,6 +215,12 @@ const handleUploadCloud = async (publicMameIdCloud) => {
 
   // -------------------- Ingrédients --------------------
 
+  const [modalVisible, setModalVisible] = useState(false);
+  const [invalidIngredient, setInvalidIngredient] = useState("");
+  const [clickingSuggestion, setClickingSuggestion] = useState(false);
+
+
+
   const [ingredients, setIngredients] = useState([
     { name: "", quantity: "", unit: "", suggestions: [], selected: false }
   ]);
@@ -283,20 +289,30 @@ const handleUploadCloud = async (publicMameIdCloud) => {
   // Au moment de sortir de l'input
   const handleIngredientBlur = (index) => {
     const ing = ingredients[index];
-    // Si la valeur n'est pas dans suggestions et n'a pas été sélectionnée
-    if (!ing.suggestions.includes(ing.name) && !ing.selected) {
-      setIngredients((prev) =>
-        prev.map((ing2, i) =>
-          i === index ? { ...ing2, name: "" } : ing2
-        )
-      );
+
+    // Si on clique sur une suggestion, ne rien faire
+    if (clickingSuggestion) {
+      setClickingSuggestion(false);
+      return;
+    }
+
+    if (!ing.suggestions.includes(ing.name) && !ing.selected && ing.name.trim() !== "") {
+      setInvalidIngredient(ing.name);
+      setModalVisible(true);
     }
   };
 
 
+  // Fermeture de la modal
+  const confirmIngredient = () => {
+    setModalVisible(false);
+    setInvalidIngredient("");
+  };
+
 
   // Lorsque l'utilisateur clique sur une suggestion
   const selectSuggestion = (index, suggestion) => {
+    setClickingSuggestion(true); // signaler qu’on clique sur une suggestion
     setIngredients((prev) =>
       prev.map((ing, i) =>
         i === index
@@ -305,6 +321,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
       )
     );
   };
+
 
   const addIngredient = () => {
     setIngredients((prev) => [
@@ -757,7 +774,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
                 <li
                   key={j}
                   className="p-1 hover:bg-gray-200 cursor-pointer"
-                  onClick={() => selectSuggestion(i, s)}
+                  onMouseDown={() => selectSuggestion(i, s)}
                 >
                   {s}
                 </li>
@@ -791,6 +808,56 @@ const handleUploadCloud = async (publicMameIdCloud) => {
   >
     + Ajouter un ingrédient
   </button>
+
+{modalVisible && (
+  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
+    <div className="bg-white p-6 rounded shadow-md w-96">
+      <p className="mb-2">
+        L'ingrédient <span className="font-bold text-red-600">{invalidIngredient}</span> n'est pas dans les suggestions.
+      </p>
+      <p className="mb-4">
+        Le calcul des valeurs nutritionnelles de la recette ne prendra pas en compte cet ingrédient et il n'aura pas non plus d'image dédiée.
+      </p>
+      <p className="mb-4">
+        Voulez-vous continuer ?
+      </p>
+      <div className="flex justify-end gap-4">
+        <button
+          onClick={() => {
+            // Annuler : remettre l'ingrédient à vide
+            setIngredients((prev) =>
+              prev.map((ing) =>
+                ing.name === invalidIngredient
+                  ? { ...ing, name: "" }
+                  : ing
+              )
+            );
+            setModalVisible(false);
+            setInvalidIngredient("");
+          }}
+          className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+        >
+          Annuler
+        </button>
+        <button
+          onClick={() => {
+            // Valider : on laisse tel quel
+            setModalVisible(false);
+            setInvalidIngredient("");
+          }}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+        >
+          Valider
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
+
+
+
 </section>
 
 

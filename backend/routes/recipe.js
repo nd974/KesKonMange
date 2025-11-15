@@ -44,7 +44,7 @@ router.post("/create", async (req, res) => {
     // Insertion des ingrédients
     if (Array.isArray(ingredients) && ingredients.length > 0) {
       const insertIngPromises = ingredients.map(async (ing) => {
-        const { name, quantity, unit } = ing;
+        const { name, quantity, unit, selected } = ing;
 
         // 1. Vérifier si l’ingrédient existe
         let ingredientResult = await pool.query(
@@ -56,8 +56,8 @@ router.post("/create", async (req, res) => {
         if (ingredientResult.rows.length === 0) {
           // → L’ingrédient n'existe pas, on le crée
           let insertIngredient = await pool.query(
-            `INSERT INTO "Ingredient" (name) VALUES ($1) RETURNING id`,
-            [name]
+            `INSERT INTO "Ingredient" (name, selected) VALUES ($1, $2) RETURNING id`,
+            [name, selected]
           );
           ingredientId = insertIngredient.rows[0].id;
         } else {
@@ -327,20 +327,47 @@ router.delete("/delete/:id", async (req, res) => {
 
     const publicId = imageResult.rows[0].name;
 
-    // 2️⃣ Supprimer la recette
-    const deleteRecipeResult = await pool.query(
-      `DELETE FROM "Recipe" WHERE id = $1 RETURNING id`,
+    // 2️⃣ Récupérer les ingrédients liés à cette recette avant suppression
+    const ingredientsResult = await pool.query(
+      `SELECT ingredient_id FROM recipes_ingredients WHERE recipe_id = $1`,
       [recipeId]
     );
 
-    // 3️⃣ Si une image existe, on la supprime sur Cloudinary
+    const ingredientIds = ingredientsResult.rows.map(row => row.ingredient_id);
+
+    // 3️⃣ Supprimer la recette
+    await pool.query(
+      `DELETE FROM "Recipe" WHERE id = $1`,
+      [recipeId]
+    );
+
+    // 4️⃣ Supprimer les relations dans recipes_ingredients
+    await pool.query(
+      `DELETE FROM recipes_ingredients WHERE recipe_id = $1`,
+      [recipeId]
+    );
+
+    // 5️⃣ Supprimer les ingrédients non utilisés par d'autres recettes
+    for (const ingId of ingredientIds) {
+      await pool.query(
+        `
+        DELETE FROM "Ingredient"
+        WHERE id = $1
+          AND NOT EXISTS (
+            SELECT 1 FROM recipes_ingredients ri WHERE ri.ingredient_id = $1
+          )
+        `,
+        [ingId]
+      );
+    }
+
+    // 6️⃣ Supprimer l'image sur Cloudinary si elle existe
     if (publicId) {
       try {
         const cloudDelete = await cloudinary.v2.uploader.destroy(publicId);
         console.log("Cloudinary:", cloudDelete);
       } catch (err) {
         console.error("⚠️ Erreur suppression Cloudinary :", err);
-        // On ne bloque pas la suppression de la recette si Cloudinary échoue
       }
     }
 
@@ -355,6 +382,7 @@ router.delete("/delete/:id", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
 
 
 export default router;
