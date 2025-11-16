@@ -6,15 +6,36 @@ const router = express.Router();
 
 router.post("/create", async (req, res) => {
   try {
-    const { recipeName, time, portions, difficulty, selectedTagIds, ingredients, ustensiles } = req.body;
+      const { recipeName, time, portions, difficulty, selectedTagIds, ingredients, ustensiles, steps } = req.body;
 
-    // Vérification des champs requis
-    if (!recipeName, !time.preparation, !time.cuisson, !time.repos, !time.nettoyage, !portions, !difficulty) {
-      return res.status(400).json({
-        error: `Tous les champs obligatoires doivent être remplis. ${recipeName},${time}, ${portions},${difficulty}}`,
-        missing: { recipeName, time, portions, difficulty },
-      });
-    }
+      const missingFields = [];
+
+      // Vérifier string vide ou absent
+      if (!recipeName || recipeName.trim() === '') missingFields.push('Nom de la recette manquant');
+
+      // Vérifier sous-champs de time
+      if (!time || time.nettoyage === "") missingFields.push('Temps de préparation manquant');
+      if (!time || time.nettoyage === "") missingFields.push('Temps de cuisson manquant');
+      if (!time || time.nettoyage === "") missingFields.push('Temps de repos manquant');
+      if (!time || time.nettoyage === "") missingFields.push('Temps de nettoyage manquant');
+
+      // Autres champs
+
+      if (!portions) missingFields.push('Nombre de portions manquant');
+      if (!difficulty) missingFields.push('Difficulté manquante');
+      if (!ingredients || ingredients[0].name==="" || ingredients[0].quantity==="") missingFields.push('Liste d’ingrédients vide ou invalide');
+      if (!ustensiles || ustensiles[0]==="") missingFields.push('Liste d’ustensiles vide ou invalide');
+      if (!steps || steps[0]==="") missingFields.push('Liste des étapes vide ou invalide');
+
+      // Si un ou plusieurs champs manquent, renvoyer la liste
+      if (missingFields.length > 0) {
+        return res.status(400).json({
+          error: 'Champs manquants',
+          details: missingFields
+        });
+      }
+
+
 
     // Insertion de la recette
     const resultRecipeCreate = await pool.query(
@@ -116,7 +137,6 @@ router.post("/create", async (req, res) => {
 
 
     // Insertion des étapes si elles existent
-    const { steps } = req.body; // On suppose que steps est un tableau de chaînes "1. Faire cuire", "2. Ajouter les épices", etc.
     if (Array.isArray(steps) && steps.length > 0) {
       const insertStepsPromises = steps.map((step, index) => {
         return pool.query(
@@ -124,7 +144,7 @@ router.post("/create", async (req, res) => {
           INSERT INTO "recipes_steps" (recipe_id, step)
           VALUES ($1, $2)
           `,
-          [recipeId, step]
+          [recipeId, `${index+1}. ${step}`]
         );
       });
       await Promise.all(insertStepsPromises);

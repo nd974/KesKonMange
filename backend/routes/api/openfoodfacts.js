@@ -1,20 +1,35 @@
 import express from "express";
-import fetch from "node-fetch"; // si Node <18, sinon global fetch
+import fetch from "node-fetch";
 
 const router = express.Router();
 
-// GET /api/openfoodfacts?q=farine
 router.get("/", async (req, res) => {
   try {
-    const query = req.query.q;
-    if (!query) return res.status(400).json({ error: "Missing query" });
+    const queryFR = req.query.q;
+    if (!queryFR) return res.status(400).json({ error: "Missing query" });
 
-    const url = `https://world.openfoodfacts.org/cgi/suggest.pl?tagtype=ingredients&string=${encodeURIComponent(query)}&json=1&lc=fr`;
+    const queryEN = queryFR.toLowerCase() === "pomme de terre" ? "potato" : queryFR;
 
-    const response = await fetch(url);
-    const data = await response.json();
+    const urls = [
+      `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(queryFR)}&search_simple=1&json=1`,
+      `https://us.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(queryEN)}&search_simple=1&json=1`
+    ];
 
-    res.json(data); // renvoie directement un array de suggestions
+    const [resFR, resEN] = await Promise.all(urls.map(u => fetch(u)));
+    const [dataFR, dataEN] = await Promise.all([resFR.json(), resEN.json()]);
+
+    const extractNames = (list) =>
+      list
+        .map(p => p.product_name || p.generic_name || p.ingredients_text || null)
+        .filter(n => typeof n === "string" && n.trim() !== "")
+        .map(n => n.trim());
+
+    const namesFR = extractNames(dataFR.products || []);
+    const namesEN = extractNames(dataEN.products || []).filter(n => !namesFR.includes(n));
+
+    const suggestions = [...new Set([...namesFR, ...namesEN])];
+
+    res.json(suggestions);
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

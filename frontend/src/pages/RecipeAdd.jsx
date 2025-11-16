@@ -11,7 +11,7 @@ export default function RecipeAdd({ homeId }) {
 
   const [recipeName, setRecipeName] = useState("");
   const [difficulty, setDifficulty] = useState(3);
-  const [portions, setPortions] = useState(2);
+  const [portions, setPortions] = useState(null);
 
   
 
@@ -176,10 +176,10 @@ const handleUploadCloud = async (publicMameIdCloud) => {
 
   // -------------------- Temps --------------------
   const [time, setTime] = useState({
-    preparation: 10,
-    cuisson: 15,
-    repos: 0,
-    nettoyage: 5,
+    preparation: "",
+    cuisson: "",
+    repos: "",
+    nettoyage: "",
   });
 
   // -------------------- Étapes --------------------
@@ -203,7 +203,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
       .catch(err => console.error("Erreur chargement unités:", err));
   }, []);
 
-  // -------------------- Unités --------------------
+  // -------------------- Utensils --------------------
   const [utensils, setUtensils] = useState([]);
 
   useEffect(() => {
@@ -418,7 +418,15 @@ const handleUploadCloud = async (publicMameIdCloud) => {
     });
 
     const dataRecipeCreate = await resRecipeCreate.json();
-    if (!dataRecipeCreate.ok){alert("❌ Erreur: " + dataRecipeCreate.error);return; }
+      if (!dataRecipeCreate.ok) {
+        if (dataRecipeCreate.details && Array.isArray(dataRecipeCreate.details)) {
+          alert("❌ Champs manquants :\n" + dataRecipeCreate.details.join("\n"));
+        } else {
+          alert("❌ Erreur: " + dataRecipeCreate.error);
+        }
+        return;
+      }
+
 
     const pictureName = await handleUploadCloud(recipeName);
 
@@ -541,7 +549,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
                 max="999"
                 value={value}
                 onChange={(e) =>
-                  setTime({ ...time, [key]: e.target.valueAsNumber || 0 })
+                  setTime({ ...time, [key]: e.target.valueAsNumber })
                 }
                 className="w-full border rounded p-2"
               />
@@ -574,7 +582,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
               max="100"
               value={portions}
               onChange={(e) => 
-                setPortions(e.target.valueAsNumber || 0)
+                setPortions(e.target.valueAsNumber)
               }
               className="w-full border rounded p-2"
             />
@@ -726,11 +734,11 @@ const handleUploadCloud = async (publicMameIdCloud) => {
         {/* Quantité */}
         <input
           type="number"
-          min="1"
+          min="0.01"
           step="0.01"
           placeholder="Qté"
           value={ing.quantity}
-          onChange={(e) => handleIngredientChange(i, 'quantity', e.target.valueAsNumber || 1)}
+          onChange={(e) => handleIngredientChange(i, 'quantity', e.target.valueAsNumber)}
 
           className="border rounded p-2 w-12 lg:w-1/3"
         />
@@ -869,22 +877,21 @@ const handleUploadCloud = async (publicMameIdCloud) => {
 
 
         {/* Étapes */}
-        <section className="mb-6">
+        <section className="mb-6 items-center" >
           <h2 className="text-xl font-semibold mb-2">👨‍🍳 Étapes de préparation</h2>
           {steps.map((s, i) => (
-            <div key={i} className="flex items-start gap-2 mb-2">
+            <div key={i} className="flex items-start gap-2 mb-2 items-center">
               <textarea
                 rows="2"
                 value={s} // déjà stocké avec numéro
                 onChange={(e) => {
                   const updated = [...steps];
-                  updated[i] = `${i + 1}. ${e.target.value.replace(/^\d+\.\s*/, '')}`; 
+                  updated[i] = e.target.value; 
                   setSteps(updated);
                 }}
                 placeholder={`Étape ${i + 1}`}
                 className="flex-1 border rounded p-2"
               ></textarea>
-              {i > 0 && (
                 <button
                   type="button"
                   onClick={() => removeStep(i)}
@@ -892,7 +899,6 @@ const handleUploadCloud = async (publicMameIdCloud) => {
                 >
                   ❌
                 </button>
-              )}
             </div>
           ))}
           <button
