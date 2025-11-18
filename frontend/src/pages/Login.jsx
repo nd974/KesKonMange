@@ -74,9 +74,9 @@ export default function Login() {
       </button>
 
       <input className="w-64 mb-5 p-2 rounded text-black" type="name" placeholder="Nom Maison" value={name} onChange={(e)=>setName(e.target.value)} />
-      <button onClick={handleCreateHome} className="bg-pink-200 text-black px-6 py-2 rounded font-semibold">
+      {/* <button onClick={handleCreateHome} className="bg-pink-200 text-black px-6 py-2 rounded font-semibold">
         Créer un compte
-      </button>
+      </button> */}
 
       {message && <p className="mt-4">{message}</p>}
     </div>

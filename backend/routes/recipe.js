@@ -105,33 +105,46 @@ router.post("/create", async (req, res) => {
       await Promise.all(insertIngPromises);
     }
 
-    // Ajout dans recipes_utensils(recipe_id, utensi_id)
+    // Ajout dans recipes_utensils(recipe_id, utensil_id)
     if (Array.isArray(ustensiles) && ustensiles.length > 0) {
+
       const insertUtensilPromises = ustensiles.map(async (u) => {
         const name = u.trim();
 
-        // 1. Récupérer l’ID de l’ustensile
-        const utensilResult = await pool.query(
-          `SELECT id FROM "Utensil" WHERE name = $1`,
-          [name]
-        );
+        if (!name) return; // skip vide
 
-        if (utensilResult.rows.length === 0) {
-          throw new Error(`Ustensile '${name}' non trouvé dans Utensil`);
+        try {
+          // 1. Récupérer l’ID de l’ustensile
+          const utensilResult = await pool.query(
+            `SELECT id FROM "Utensil" WHERE name = $1`,
+            [name]
+          );
+
+          // ⚠️ Si l’ustensile n'existe pas → on skip simplement
+          if (utensilResult.rows.length === 0) {
+            console.warn(`Ustensile ignoré (non trouvé) : '${name}'`);
+            return; // skip propre
+          }
+
+          const utensilId = utensilResult.rows[0].id;
+
+          // 2. Insérer dans la relation N-N
+          await pool.query(
+            `
+            INSERT INTO "recipes_utensils" (recipe_id, utensil_id)
+            VALUES ($1, $2)
+            `,
+            [recipeId, utensilId]
+          );
+
+        } catch (err) {
+          console.error(`Erreur lors du traitement de l’ustensile '${name}':`, err);
+          // ⚠️ On skip aussi en cas d’erreur SQL sur cet élément.
+          return;
         }
-
-        const utensilId = utensilResult.rows[0].id;
-
-        // 2. Insérer dans la relation N-N
-        await pool.query(
-          `
-          INSERT INTO "recipes_utensils" (recipe_id, utensil_id)
-          VALUES ($1, $2)
-          `,
-          [recipeId, utensilId]
-        );
       });
 
+      // Attendre que tout soit fini
       await Promise.all(insertUtensilPromises);
     }
 

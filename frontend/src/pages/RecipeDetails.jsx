@@ -5,10 +5,12 @@ import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeDetail({homeId}) {
+export default function RecipeDetail({homeId, id:idProp}) {
   const navigate = useNavigate();
 
-  const { id } = useParams();
+  const { id: idFromUrl } = useParams();
+  const id = idProp ?? idFromUrl; // prend la prop si passée, sinon l’URL
+
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -36,56 +38,60 @@ export default function RecipeDetail({homeId}) {
 
   return (
   <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8 relative">
-      <Header homeId={homeId}/>
+      {!idProp && <Header homeId={homeId} /> }
 
-      <div className="lg:flex lg:gap-6 py-8">
+      <div  className={`lg:flex lg:gap-6 ${!idProp ? "py-8" : ""}`}>
         
+        {!idProp && (
+          // === Colonne gauche : Nutrition desktop ===
+          <aside className="hidden lg:block w-1/4 bg-white p-4 rounded-lg shadow">
+            <h3 className="text-xl font-semibold mb-4">🍏 Infos nutritionnelles</h3>
+            <ul className="space-y-2 text-sm">
+              <li><span className="font-semibold">Calories :</span> 520 kcal / part</li>
+              <li><span className="font-semibold">Protéines :</span> 22 g</li>
+              <li><span className="font-semibold">Lipides :</span> 18 g</li>
+              <li><span className="font-semibold">Glucides :</span> 65 g</li>
+              <li><span className="font-semibold">Fibres :</span> 3 g</li>
+              <li><span className="font-semibold">Sucres :</span> 2 g</li>
+              <li><span className="font-semibold">Sodium :</span> 500 mg</li>
+            </ul>
+          </aside>
+        )}
 
-        {/* === Colonne gauche : Nutrition desktop === */}
-        <aside className="hidden lg:block w-1/4 bg-white p-4 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">🍏 Infos nutritionnelles</h3>
-          <ul className="space-y-2 text-sm">
-            <li><span className="font-semibold">Calories :</span> 520 kcal / part</li>
-            <li><span className="font-semibold">Protéines :</span> 22 g</li>
-            <li><span className="font-semibold">Lipides :</span> 18 g</li>
-            <li><span className="font-semibold">Glucides :</span> 65 g</li>
-            <li><span className="font-semibold">Fibres :</span> 3 g</li>
-            <li><span className="font-semibold">Sucres :</span> 2 g</li>
-            <li><span className="font-semibold">Sodium :</span> 500 mg</li>
-          </ul>
-        </aside>
 
         {/* === Colonne centrale : Contenu principal === */}
-        <main className="flex-1 bg-white shadow rounded-lg overflow-hidden p-6 relative">
-
-            <div className="flex justify-center mt-6 mb-6">
-              <button
-                className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                onClick={async () => {
-                  if (!recipe.id) return;
-                  if (confirm("Voulez-vous vraiment supprimer cette recette ?")) {
-                    try {
-                      const res = await fetch(`${API_URL}/recipe/delete/${recipe.id}`, {
-                        method: "DELETE",
-                      });
-                      const data = await res.json();
-                      if (data.ok) {
-                        alert("Recette supprimée !");
-                        navigate("/recipes");
-                        // Rediriger ou mettre à jour l'état
-                      } else {
-                        alert("Erreur : " + data.error);
+        <main className={`flex-1 bg-white p-6 relative ${!idProp ? "shadow rounded-lg overflow-hidden" : ""}`}>
+            {!idProp && 
+              <div className="flex justify-center mt-6 mb-6">
+                <button
+                  className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+                  onClick={async () => {
+                    if (!recipe.id) return;
+                    if (confirm("Voulez-vous vraiment supprimer cette recette ?")) {
+                      try {
+                        const res = await fetch(`${API_URL}/recipe/delete/${recipe.id}`, {
+                          method: "DELETE",
+                        });
+                        const data = await res.json();
+                        if (data.ok) {
+                          alert("Recette supprimée !");
+                          navigate("/recipes");
+                          // Rediriger ou mettre à jour l'état
+                        } else {
+                          alert("Erreur : " + data.error);
+                        }
+                      } catch (e) {
+                        console.error(e);
+                        alert("Erreur lors de la suppression");
                       }
-                    } catch (e) {
-                      console.error(e);
-                      alert("Erreur lors de la suppression");
                     }
-                  }
-                }}
-              >
-                Supprimer la recette entiere
-              </button>
-            </div>
+                  }}
+                >
+                  Supprimer la recette entiere
+                </button>
+              </div>
+            }
+            
 
           {/* Image principale */}
           <img 
@@ -129,17 +135,32 @@ export default function RecipeDetail({homeId}) {
           </div>
 
           {/* Note moyenne + 🍏 pour mobile */}
+
+          {/* Note moyenne + 🍏 pour mobile ou si idProp pas défini */}
           <div className="flex items-center gap-2 mt-2 text-yellow-500">
             ⭐⭐⭐⭐☆
             <span className="text-gray-600 text-sm">(4.2 / 5 sur 128 votes)</span>
-            {/* Mobile only 🍏 */}
-            <span 
-              className="ml-2 cursor-pointer lg:hidden" 
-              onClick={() => setShowNutrition(true)}
-            >
-              🍏
-            </span>
+
+            {( idProp ) ? (
+              // idProp non défini → toujours visible
+              <span
+                className="ml-2 cursor-pointer"
+                onClick={() => setShowNutrition(true)}
+              >
+                🍏
+              </span>
+            ) : (
+              // idProp défini → mobile seulement
+              <span
+                className="ml-2 cursor-pointer lg:hidden"
+                onClick={() => setShowNutrition(true)}
+              >
+                🍏
+              </span>
+            )}
           </div>
+
+
 
           {/* Infos générales */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 text-sm py-4">
@@ -196,7 +217,7 @@ export default function RecipeDetail({homeId}) {
                   {/* Image si disponible */}
                   {utensil.picture ? (
                     <img
-                      src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg" 
+                      src={`${CLOUDINARY_RES}${utensil.picture}`}
                       alt={utensil.name}
                       className="w-8 h-8 object-contain ml-3"
                     />
@@ -270,7 +291,9 @@ export default function RecipeDetail({homeId}) {
 
         </main>
 
-        {/* === Colonne droite : Recettes similaires === */}
+
+        {!idProp && 
+        //* === Colonne droite : Recettes similaires === *//
         <aside className="hidden lg:block w-1/4 bg-white p-4 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">🍝 Recettes similaires</h3>
           <ul className="space-y-3">
@@ -297,6 +320,7 @@ export default function RecipeDetail({homeId}) {
             </li>
           </ul>
         </aside>
+        }
 
       </div>
 

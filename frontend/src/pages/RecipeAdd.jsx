@@ -188,10 +188,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
   const removeStep = (i) => setSteps(steps.filter((_, index) => index !== i));
 
   // -------------------- Ustensiles --------------------
-  const [ustensiles, setUstensiles] = useState([""]);
-  const addUstensile = () => setUstensiles([...ustensiles, ""]);
-  const removeUstensile = (i) =>
-    setUstensiles(ustensiles.filter((_, index) => index !== i));
+
 
   // -------------------- Unités --------------------
   const [units, setUnits] = useState([]);
@@ -205,6 +202,20 @@ const handleUploadCloud = async (publicMameIdCloud) => {
 
   // -------------------- Utensils --------------------
   const [utensils, setUtensils] = useState([]);
+  const [ustensiles, setUstensiles] = useState([""]);
+  const [queries, setQueries] = useState([""]);
+  const [openIndex, setOpenIndex] = useState(null);
+
+  const addUstensile = () => {
+    setUstensiles([...ustensiles, ""]);
+    setQueries([...queries, ""]);
+  };
+  const removeUstensile = (i) => {
+    setUstensiles(ustensiles.filter((_, index) => index !== i));
+    setQueries(queries.filter((_, index) => index !== i));
+  };
+
+
 
   useEffect(() => {
     fetch(`${API_URL}/utensil/get-all`)
@@ -592,57 +603,81 @@ const handleUploadCloud = async (publicMameIdCloud) => {
         {/* Ustensiles */}
         <section className="mb-6">
           <h2 className="text-xl font-semibold mb-2">🧂 Ustensiles nécessaires</h2>
-          {ustensiles.map((u, i) => (
-            <div key={i} className="flex items-center gap-2 mb-2">
 
+          {ustensiles.map((u, i) => {
+            const query = queries[i] || "";
+            const isValid = utensils.some(item => item.name.toLowerCase() === query.toLowerCase());
 
-              {/* <input
-                type="text"
-                value={u}
-                onChange={(e) => {
-                  const updated = [...ustensiles];
-                  updated[i] = e.target.value;
-                  setUstensiles(updated);
-                }}
-                placeholder={`Ustensile ${i + 1}`}
-                className="flex-1 border rounded p-2"
-              /> */}
-              <select
-                value={u || ""}
-                onChange={(e) => {
-                  const updated = [...ustensiles];
-                  updated[i] = e.target.value;
-                  setUstensiles(updated);
-                }}
-                className={`flex-1 border rounded p-2 
-                ${ustensiles[0] ? "text-black" : "text-gray-500"}`}
-              >
-                <option value="" disabled>
-                  
-                </option>
+            const filtered = utensils.filter(item =>
+              item.name.toLowerCase().includes(query.toLowerCase())
+            );
 
-                {utensils.map((u) => (
-                  <option key={u.id} value={u.name}>
-                    {u.name}
-                  </option>
-                ))}
-              </select>
+            return (
+              <div key={i} className="flex flex-col mb-4 relative">
 
+                {/* Barre de recherche */}
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={query}
+                    onFocus={() => setOpenIndex(i)}
+                    onChange={(e) => {
+                      const newQueries = [...queries];
+                      newQueries[i] = e.target.value;
+                      setQueries(newQueries);
+
+                      const updated = [...ustensiles];
+                      updated[i] = e.target.value;
+                      setUstensiles(updated);
+
+                      setOpenIndex(i);
+                    }}
+                    placeholder={`Ustensile ${i + 1}`}
+                    className={`flex-1 border rounded p-2 
+                      ${query !== "" && !isValid ? "border-red-500 border-2" : ""}`}
+                  />
 
 
 
+                  <button
+                    type="button"
+                    onClick={() => removeUstensile(i)}
+                    className="text-red-500 text-lg"
+                  >
+                    ❌
+                  </button>
+                </div>
 
-              {/* {i > 0 && ( */}
-                <button
-                  type="button"
-                  onClick={() => removeUstensile(i)}
-                  className="text-red-500 text-lg"
-                >
-                  ❌
-                </button>
-              {/* )} */}
-            </div>
-          ))}
+                {/* Liste filtrée */}
+                {openIndex === i && query && filtered.length > 0 && (
+                  <ul className="absolute left-0 right-0 top-full bg-white border rounded shadow-lg z-50">
+                    {filtered.map((item) => (
+                      <li
+                        key={item.id}
+                        onMouseDown={(e) => {
+                          e.preventDefault(); // ← empêche la perte de focus avant le clic
+
+                          const updatedUstensiles = [...ustensiles];
+                          updatedUstensiles[i] = item.name;
+                          setUstensiles(updatedUstensiles);
+
+                          const updatedQueries = [...queries];
+                          updatedQueries[i] = item.name;
+                          setQueries(updatedQueries);
+
+                          setOpenIndex(null); // ← on ferme la liste
+                        }}
+                        className="p-2 hover:bg-gray-100 cursor-pointer"
+                      >
+                        {item.name}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
+
           <button
             type="button"
             onClick={addUstensile}
@@ -651,6 +686,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
             + Ajouter un ustensile
           </button>
         </section>
+
 
 
 

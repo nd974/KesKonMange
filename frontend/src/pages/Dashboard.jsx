@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
+import { Route, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Menus from "../components/Menus";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
+import RecipeDetail from "./RecipeDetails";
 
 dayjs.locale("fr");
 
@@ -17,6 +19,7 @@ export default function Dashboard({homeId}) {
   const [selectedDay, setSelectedDay] = useState(null);
   const [menus, setMenus] = useState([]);
   const [todayMenus, setTodayMenus] = useState([]);
+  const navigate = useNavigate();
   // const [homeId, setHomeId] = useState(Number(localStorage.getItem("home_id")));
 
   // 🔁 Charger les menus depuis le backend PostgreSQL
@@ -170,127 +173,122 @@ export default function Dashboard({homeId}) {
                 {/* Dropdown menu for mobile */}
                 <div className="ml-auto hidden sm:block flex gap-2">
                     {selectedMenusForDay?.map((m, i) => (
-                    <button
-                        key={m.id || `${m.menuId}-${m.tagId}-${i}`}
-                        onClick={() => setActiveMenuIndex(i)}
-                        className={`px-3 py-1 rounded-xl text-sm font-medium ${
-                        i === activeMenuIndex
-                            ? "bg-accentGreen text-white shadow-soft"
-                            : "bg-white/70"
-                        }`}
-                    >
-                        {m.tagName}
-                    </button>
+                      <button
+                          key={m.id || `${m.menuId}-${m.tagId}-${i}`}
+                          onClick={() => setActiveMenuIndex(i)}
+                          className={`px-3 py-1 rounded-xl text-sm font-medium ${
+                          i === activeMenuIndex
+                              ? "bg-accentGreen text-white shadow-soft"
+                              : "bg-white/70"
+                          }`}
+                      >
+                          {m.tagName}
+                      </button>
                     ))}
                 </div>
 
                 {/* Mobile dropdown (visible on small screens) */}
                 <div className="ml-auto sm:hidden">
                     <select
-                    onChange={(e) => setActiveMenuIndex(Number(e.target.value))}
-                    className="bg-accentGreen text-white px-3 py-1 rounded-full text-sm font-semibold"
-                    value={activeMenuIndex}
-                    >
-                    {selectedMenusForDay?.map((m, i) => (
-                        <option key={m.id || `${m.menuId}-${m.tagId}-${i}`} value={i}>
-                        {m.tagName}
-                        </option>
-                    ))}
+                      onChange={(e) => setActiveMenuIndex(Number(e.target.value))}
+                      className="bg-accentGreen text-white px-3 py-1 rounded-full text-sm font-semibold"
+                      value={activeMenuIndex}
+                      >
+                      {selectedMenusForDay?.map((m, i) => (
+                          <option key={m.id || `${m.menuId}-${m.tagId}-${i}`} value={i}>
+                          {m.tagName}
+                          </option>
+                      ))}
                     </select>
                 </div>
                 </>
             )}
         </div>
 
-          <div className="soft-card p-6 md:p-8 rounded-lg shadow-soft">
-            {selectedRecipe ? (
-              <>
-                <div className="flex items-start gap-4">
-                    <div className="w-100 h-100 rounded-full bg-lightGreen flex items-center justify-center font-semibold text-green-900">
-                        {selectedRecipe?.picture ? (
-                        <img
-                            src={`${CLOUDINARY_RES}${selectedRecipe.picture}`}
-                            alt={selectedRecipe.name || "Recette"}
-                            className="object-cover rounded-lg"
-                            style={{ height: 100, width: 100 }} // ou utiliser w-24 h-24
-                        />
-                        ) : (
-                        <div className="w-100 h-100 rounded-full bg-gray-100 flex items-center justify-center text-gray-400">
-                        <img
-                            src={`${CLOUDINARY_RES}${CLOUDINARY_RECETTE_NOTFOUND}`}
-                            alt="Image Not Found"
-                            className="object-cover rounded-lg"
-                            style={{ height: 100, width: 100 }} // ou utiliser w-24 h-24
-                        />
-                        </div>
-                        )}
-                    </div>
+        <div className="soft-card rounded-lg shadow-soft relative">
+          {selectedRecipe ? (
+            <div className="flex flex-col lg:flex-row items-center relative">
+              
+              {/* Desktop: flèches à gauche et droite */}
+              {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+                <button
+                  onClick={showPrev}
+                  disabled={recipeIndex <= 0}
+                  className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
+                    recipeIndex > 0
+                      ? "hover:shadow cursor-pointer"
+                      : "bg-white/60 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  ◀
+                </button>
+              )}
 
+              <div className="flex-1 mx-0 lg:mx-8">
+                <RecipeDetail homeId={homeId} id={selectedRecipe.id} />
+              </div>
 
-                  <div className="flex-1">
-                    <h2 className="text-2xl md:text-3xl font-bold text-gray-800">
-                      {selectedRecipe.name}
-                    </h2>
-                    <div className="mt-3 text-sm text-gray-600 flex gap-6">
-                      <div>{selectedRecipe.time_prep} min</div>
-                      <div>{selectedRecipe.portion} personnes</div>
-                    </div>
-                  </div>
-
-                  {/* {selectedRecipe?.picture ? (
-                    <img
-                      src={`${CLOUDINARY_RES}${selectedRecipe.picture}`}
-                      alt={selectedRecipe.name || "Recette"}
-                      className="object-round center"
-                      style={{ height: 150, width: 200 }}
-                    />
-                  ) : (
-                    <div className="w-24 h-24 rounded-md bg-gray-100 flex items-center justify-center text-gray-400">
-                      📷
-                    </div>
-                  )} */}
+              {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+                <button
+                  onClick={showNext}
+                  disabled={recipeIndex >= selectedMenusForDay[activeMenuIndex].recipes.length - 1}
+                  className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
+                    recipeIndex <
+                    selectedMenusForDay[activeMenuIndex].recipes.length - 1
+                      ? "cursor-pointer"
+                      : "bg-white/60 opacity-50 cursor-not-allowed"
+                  }`}
+                >
+                  ▶
+                </button>
+              )}
+              {/* Mobile: flèches en haut */}
+              {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+                <div className="flex justify-center gap-4 mb-4 lg:hidden">
+                  <button
+                    onClick={showPrev}
+                    disabled={recipeIndex <= 0}
+                    className={`px-3 py-1 rounded-md ${
+                      recipeIndex > 0
+                        ? "hover:shadow cursor-pointer"
+                        : "bg-white/60 opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    ◀
+                  </button>
+                  <button
+                    onClick={showNext}
+                    disabled={recipeIndex >= selectedMenusForDay[activeMenuIndex].recipes.length - 1}
+                    className={`px-3 py-1 rounded-md ${
+                      recipeIndex <
+                      selectedMenusForDay[activeMenuIndex].recipes.length - 1
+                        ? "cursor-pointer"
+                        : "bg-white/60 opacity-50 cursor-not-allowed"
+                    }`}
+                  >
+                    ▶
+                  </button>
                 </div>
+              )}
+            </div>
+            
+          ) : (
+            <p className="text-gray-500 text-center py-10">
+              Choisir un jour avec menu(s) enregistré(s).
+            </p>
+          )}
 
-                {/* flèches de navigation */}
-                {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                  <div className="mt-4 relative">
-                    <button
-                      onClick={showPrev}
-                      disabled={recipeIndex <= 0}
-                      className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md ${
-                        recipeIndex > 0
-                          ? "hover:shadow cursor-pointer"
-                          : "bg-white/60 opacity-50 cursor-not-allowed"
-                      }`}
-                    >
-                      ◀
-                    </button>
+          {/* Pagination textuelle */}
+          {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+            <div className="text-sm text-gray-600 text-center mt-4">
+              {recipeIndex + 1} / {selectedMenusForDay[activeMenuIndex].recipes.length}
+            </div>
+          )}
+        </div>
 
-                    <div className="text-sm text-gray-600 text-center">
-                      {recipeIndex + 1} / {selectedMenusForDay[activeMenuIndex].recipes.length}
-                    </div>
 
-                    <button
-                      onClick={showNext}
-                      disabled={recipeIndex >= selectedMenusForDay[activeMenuIndex].recipes.length - 1}
-                      className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md ${
-                        recipeIndex <
-                        selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                          ? "cursor-pointer"
-                          : "bg-white/60 opacity-50 cursor-not-allowed"
-                      }`}
-                    >
-                      ▶
-                    </button>
-                  </div>
-                )}
-              </>
-            ) : (
-              <p className="text-gray-500 text-center py-10">
-                Choisir un jour avec menu(s) enregistré(s).
-              </p>
-            )}
-          </div>
+
+
         </section>
 
         {/* Right: menus à venir */}
