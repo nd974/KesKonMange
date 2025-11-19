@@ -418,4 +418,113 @@ router.delete("/delete/:id", async (req, res) => {
 
 
 
+
+
+
+// Fonction pour récupérer TOUTE la hiérarchie : parent → enfant
+async function getTagHierarchy(tagIds) {
+  // 1) On récupère les parents
+  const parents = await pool.query(
+    `SELECT parent_id 
+     FROM "Tag"
+     WHERE id = ANY($1::int[]) AND parent_id IS NOT NULL`,
+    [tagIds]
+  );
+  
+  const parentIds = parents.rows.map(r => r.parent_id);
+
+  // 2) On récupère les enfants
+  const children = await pool.query(
+    `SELECT id
+     FROM "Tag"
+     WHERE parent_id = ANY($1::int[])`,
+    [tagIds]
+  );
+
+  const childIds = children.rows.map(r => r.id);
+
+  // On combine tout : tags + parents + enfants (sans doublons)
+  return [...new Set([...tagIds, ...parentIds, ...childIds])];
+}
+
+router.get("/getSimilar/:id", async (req, res) => {
+  const recipeId = req.params.id;
+
+  try {
+    // 1️⃣ Récupérer les tags de la recette
+    const baseTagsRes = await pool.query(
+      `SELECT tag_id FROM recipes_tags WHERE recipe_id = $1`,
+      [recipeId]
+    );
+
+    const baseTags = baseTagsRes.rows.map(t => t.tag_id);
+    if (baseTags.length === 0) return res.json([]);
+
+    // 2️⃣ Récupérer les parents (récursion vers le haut)
+    const parentRes = await pool.query(
+      `
+      WITH RECURSIVE parents AS (
+        SELECT id, parent_id
+        FROM "Tag"
+        WHERE id = ANY($1)
+
+        UNION ALL
+
+        SELECT t.id, t.parent_id
+        FROM "Tag" t
+        JOIN parents p ON t.id = p.parent_id
+        WHERE t.parent_id IS NOT NULL
+      )
+      SELECT id FROM parents;
+      `,
+      [baseTags]
+    );
+
+    const parentTags = parentRes.rows.map(t => t.id);
+
+    // 3️⃣ Récupérer les enfants (récursion vers le bas)
+    const childRes = await pool.query(
+      `
+      WITH RECURSIVE children AS (
+        SELECT id, parent_id
+        FROM "Tag"
+        WHERE id = ANY($1)
+
+        UNION ALL
+
+        SELECT t.id, t.parent_id
+        FROM "Tag" t
+        JOIN children c ON t.parent_id = c.id
+      )
+      SELECT id FROM children;
+      `,
+      [baseTags]
+    );
+
+    const childTags = childRes.rows.map(t => t.id);
+
+    // 4️⃣ Fusionner les tags sans doublon
+    const allTagIds = [...new Set([...baseTags, ...parentTags, ...childTags])];
+
+    // 5️⃣ Récupérer les recettes similaires
+    const similarRecipes = await pool.query(
+      `
+      SELECT DISTINCT r.*
+      FROM "Recipe" r
+      JOIN recipes_tags rt ON rt.recipe_id = r.id
+      WHERE rt.tag_id = ANY($1)
+      AND r.id != $2
+      `,
+      [allTagIds, recipeId]
+    );
+
+    res.json(similarRecipes.rows);
+
+  } catch (err) {
+    console.error("❌ SQL error:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
 export default router;
