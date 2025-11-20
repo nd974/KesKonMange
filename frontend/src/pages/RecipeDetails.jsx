@@ -16,6 +16,14 @@ export default function RecipeDetail({homeId, id:idProp}) {
 
   const [showNutrition, setShowNutrition] = useState(false);
 
+  const [similar, setSimilar] = useState([]);
+  useEffect(() => {
+  fetch(`${API_URL}/recipe/getSimilar/${id}`)
+    .then(res => res.json())
+    .then(data => setSimilar(data));
+}, [id]);
+
+
   useEffect(() => {
     async function fetchRecipe() {
       try {
@@ -296,29 +304,28 @@ export default function RecipeDetail({homeId, id:idProp}) {
         //* === Colonne droite : Recettes similaires === *//
         <aside className="hidden lg:block w-1/4 bg-white p-4 rounded-lg shadow">
           <h3 className="text-xl font-semibold mb-4">🍝 Recettes similaires</h3>
-          <ul className="space-y-3">
-            <li>
-              <a href="#" className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded">
-                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg"
-                  alt="Spaghetti bolognaise" className="w-16 h-16 object-cover rounded-md"/>
-                <span>Spaghetti à la bolognaise</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded">
-                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg" 
-                  alt="Tagliatelles aux champignons" className="w-16 h-16 object-cover rounded-md"/>
-                <span>Tagliatelles aux champignons</span>
-              </a>
-            </li>
-            <li>
-              <a href="#" className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded">
-                <img src="https://res.cloudinary.com/dsnaosp8u/image/upload/v1763041681/Pates%20test.jpg" 
-                  alt="Pâtes au pesto" className="w-16 h-16 object-cover rounded-md" />
-                <span>Pâtes au pesto</span>
-              </a>
-            </li>
-          </ul>
+
+          {similar.length === 0 ? (
+            <p className="text-gray-500 text-sm">Aucune recette similaire trouvée.</p>
+          ) : (
+            <ul className="space-y-3">
+              {similar.slice(0, 5).map(recipe => (
+                <li key={recipe.id}>
+                  <a
+                    href={`/recipe/${recipe.id}`}
+                    className="flex items-center gap-2 hover:bg-gray-50 p-2 rounded"
+                  >
+                    <img
+                      src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
+                      alt={recipe.name}
+                      className="w-16 h-16 object-cover rounded-md"
+                    />
+                    <span>{recipe.name}</span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          )}
         </aside>
         }
 
