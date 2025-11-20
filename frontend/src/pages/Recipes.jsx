@@ -147,8 +147,22 @@ export default function Recipes({homeId}) {
               {selectedTagIds.map((id) => {
                 const tag = tagsFlat.find((t) => t.id === id);
                 return (
-                  <span key={id} className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm">
+                  <span
+                    key={id}
+                    className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm"
+                  >
                     {tag?.name || "Tag"}
+
+                    {/* Croix rouge */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedTagIds((prev) => prev.filter((t) => t !== id))
+                      }
+                      className="text-red-500 hover:text-red-700 text-xs font-bold ml-1"
+                    >
+                      ×
+                    </button>
                   </span>
                 );
               })}

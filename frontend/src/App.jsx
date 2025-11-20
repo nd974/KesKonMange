@@ -57,6 +57,7 @@ function AppRoutes() {
           <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} />} />
 
           <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+          <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
 
 
           <Route path="*" element={<Navigate to="/" replace />} />

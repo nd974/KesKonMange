@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
 import {CLOUDINARY_API} from "../config/constants"
@@ -7,6 +7,7 @@ import {CLOUDINARY_API} from "../config/constants"
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function RecipeAdd({ homeId }) {
+  const { recipe_id } = useParams();
   const navigate = useNavigate();
 
   const [recipeName, setRecipeName] = useState("");
@@ -404,67 +405,139 @@ const handleUploadCloud = async (publicMameIdCloud) => {
   );
 
   // -------------------- Soumission --------------------
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+const handleSubmit = async (e) => {
+  e.preventDefault();
 
+  const payload = {
+    recipeName,
+    time,
+    portions,
+    difficulty,
+    selectedTagIds,
+    ingredients,
+    ustensiles,
+    steps,
+  };
 
-    // A SUPPRIMER
-    const recipeData = {
-      name: recipeName,
-      difficulty,
-      portions,
-      time,
-      ustensiles: ustensiles.filter((u) => u.trim() !== ""),
-      ingredients: ingredients.filter((i) => i.name.trim() !== ""),
-      steps: steps.filter((s) => s.trim() !== ""),
-      tags: selectedTagIds,
-    };
-    console.log("🧾 Données de la recette :", recipeData);
+  let recipeId = recipe_id;
 
-    // Création de la recette
+  if (!recipe_id) {
+    // 📌 Création
     const resRecipeCreate = await fetch(`${API_URL}/recipe/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ recipeName, time, portions, difficulty, selectedTagIds ,ingredients, ustensiles, steps}),
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
     });
 
     const dataRecipeCreate = await resRecipeCreate.json();
-      if (!dataRecipeCreate.ok) {
-        if (dataRecipeCreate.details && Array.isArray(dataRecipeCreate.details)) {
-          alert("❌ Champs manquants :\n" + dataRecipeCreate.details.join("\n"));
-        } else {
-          alert("❌ Erreur: " + dataRecipeCreate.error);
-        }
+    if (!dataRecipeCreate.ok) {
+      if (dataRecipeCreate.details && Array.isArray(dataRecipeCreate.details)) {
+        alert("❌ Champs manquants :\n" + dataRecipeCreate.details.join("\n"));
+      } else {
+        alert("❌ Erreur: " + dataRecipeCreate.error);
+      }
+      return;
+    }
+
+    recipeId = dataRecipeCreate.recipeId;
+  } else {
+    // ✏️ Modification
+    const res = await fetch(`${API_URL}/recipe/${recipe_id}/update`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+
+    const data = await res.json();
+    if (!data.ok) return alert(data.error);
+  }
+
+  // Upload image si nouvelle image sélectionnée
+  let pictureName = null;
+  if (selectedFile) {
+    pictureName = await handleUploadCloud(recipeName);
+
+    await fetch(`${API_URL}/recipe/setImage`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ recipeId, pictureName }),
+    });
+  }
+
+  alert(recipe_id ? "Recette modifiée" : "✅Recette créée");
+  navigate(`/recipe/${recipeId}`);
+};
+
+
+  //
+  // Charger recette si modification
+useEffect(() => {
+  if (!recipe_id) return;
+
+  const loadRecipe = async () => {
+    try {
+      const res = await fetch(`${API_URL}/recipe/get-one/${recipe_id}`);
+      if (!res.ok) {
+        console.error("Erreur serveur :", res.status);
         return;
       }
 
+      const r = await res.json();
 
-    const pictureName = await handleUploadCloud(recipeName);
+      console.log("Recette chargée :", r);
 
-    console.log("dataRecipeCreate.recipeId", dataRecipeCreate.recipeId);
-    console.log("pictureName", pictureName);
+      // Nom
+      setRecipeName(r.name);
 
-    const resRecipePicture = await fetch(`${API_URL}/recipe/setImage`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        recipeId: dataRecipeCreate.recipeId, // clé explicite
-        pictureName: pictureName           // clé explicite
-      }),
-    });
+      // Difficulté
+      setDifficulty(r.level);
 
-    const dataRecipeSetImage = await resRecipePicture.json();
-    console.log("Réponse setImage :", dataRecipeSetImage);
+      // Portions
+      setPortions(r.portion);
 
+      // Temps
+      setTime({
+        preparation: r.time_prep ?? "",
+        cuisson: r.time_cook ?? "",
+        repos: r.time_rest ?? "",
+        nettoyage: r.time_clean ?? "",
+      });
 
-    console.log("resRecipeCreate", resRecipeCreate);
-    console.log("dataRecipeCreate", dataRecipeCreate);
+      // Étapes
+      setSteps(
+      r.steps.map(s => 
+          s.step?.length > 3 
+            ? s.step.substring(3) 
+            : s.step // si trop court
+        ) || [""]
+      );
 
+      // Tags = tableau d'objets → on garde seulement l'ID
+      setSelectedTagIds(r.tags.map(t => t.id));
 
-    alert("✅ Recette crée")
-    navigate(`/recipe/${dataRecipeCreate.recipeId}`, { replace: true });
-    
+      // Ustensiles
+      setUstensiles(r.utensils.map(u => u.name));
+      setQueries(r.utensils.map(u => u.name));
+
+      // Ingrédients
+      setIngredients(
+        r.ingredients.map(ing => ({
+          name: ing.name,
+          quantity: ing.amount,
+          unit: ing.unit,
+          suggestions: [],
+          selected: true,
+        }))
+      );
+
+    } catch (err) {
+      console.error("Erreur chargement recette :", err);
+    }
   };
+
+  loadRecipe();
+}, [recipe_id]);
+
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8 relative bg-gray-50">
@@ -475,7 +548,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
         className="max-w-4xl mx-auto bg-white shadow-lg rounded-xl p-8 mt-6"
       >
         <h1 className="text-3xl font-bold mb-6 text-gray-800">
-          ➕ Ajouter une nouvelle recette
+          {recipe_id ? "✏️ Modifier la recette" : "➕ Ajouter une nouvelle recette"}
         </h1>
 
         {/* Image Upload */}
@@ -539,12 +612,32 @@ const handleUploadCloud = async (publicMameIdCloud) => {
             />
           </div>
 
-          {/* {selectedTagIds.length > 0 && (
-            <div className="mt-3 text-sm text-gray-600">
-              <span className="font-medium">Tags sélectionnés :</span>{" "}
-              {selectedTagIds.join(", ")}
+          {selectedTagIds.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-2">
+              {selectedTagIds.map((id) => {
+                const tag = tagsFlat.find((t) => t.id === id);
+                return (
+                  <span
+                    key={id}
+                    className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm"
+                  >
+                    {tag?.name || "Tag"}
+
+                    {/* Croix rouge */}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedTagIds((prev) => prev.filter((t) => t !== id))
+                      }
+                      className="text-red-500 hover:text-red-700 text-xs font-bold ml-1"
+                    >
+                      ×
+                    </button>
+                  </span>
+                );
+              })}
             </div>
-          )} */}
+          )}
         </div>
 
         {/* Temps */}
@@ -952,7 +1045,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
             type="submit"
             className="bg-green-600 text-white font-semibold px-6 py-3 rounded-lg hover:bg-green-700 transition"
           >
-            ✅ Ajouter la recette
+            {recipe_id ? "✏️ Modifier la recette" : "✅ Ajouter la recette"}
           </button>
         </div>
       </form>

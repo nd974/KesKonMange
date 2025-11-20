@@ -14,13 +14,12 @@ router.post("/create", async (req, res) => {
       if (!recipeName || recipeName.trim() === '') missingFields.push('Nom de la recette manquant');
 
       // Vérifier sous-champs de time
-      if (!time || time.nettoyage === "") missingFields.push('Temps de préparation manquant');
-      if (!time || time.nettoyage === "") missingFields.push('Temps de cuisson manquant');
-      if (!time || time.nettoyage === "") missingFields.push('Temps de repos manquant');
+      if (!time || time.preparation === "") missingFields.push('Temps de préparation manquant');
+      if (!time || time.cuisson === "") missingFields.push('Temps de cuisson manquant');
+      if (!time || time.repos === "") missingFields.push('Temps de repos manquant');
       if (!time || time.nettoyage === "") missingFields.push('Temps de nettoyage manquant');
 
       // Autres champs
-
       if (!portions) missingFields.push('Nombre de portions manquant');
       if (!difficulty) missingFields.push('Difficulté manquante');
       if (!ingredients || ingredients[0].name==="" || ingredients[0].quantity==="") missingFields.push('Liste d’ingrédients vide ou invalide');
@@ -421,31 +420,6 @@ router.delete("/delete/:id", async (req, res) => {
 
 
 
-// Fonction pour récupérer TOUTE la hiérarchie : parent → enfant
-async function getTagHierarchy(tagIds) {
-  // 1) On récupère les parents
-  const parents = await pool.query(
-    `SELECT parent_id 
-     FROM "Tag"
-     WHERE id = ANY($1::int[]) AND parent_id IS NOT NULL`,
-    [tagIds]
-  );
-  
-  const parentIds = parents.rows.map(r => r.parent_id);
-
-  // 2) On récupère les enfants
-  const children = await pool.query(
-    `SELECT id
-     FROM "Tag"
-     WHERE parent_id = ANY($1::int[])`,
-    [tagIds]
-  );
-
-  const childIds = children.rows.map(r => r.id);
-
-  // On combine tout : tags + parents + enfants (sans doublons)
-  return [...new Set([...tagIds, ...parentIds, ...childIds])];
-}
 
 router.get("/getSimilar/:id", async (req, res) => {
   const recipeId = req.params.id;

@@ -23,6 +23,27 @@ export default function RecipeDetail({homeId, id:idProp}) {
     .then(data => setSimilar(data));
 }, [id]);
 
+  const deleteValidate = async () => {
+    if (!recipe.id) return;
+      if (confirm("Voulez-vous vraiment supprimer cette recette ?")) {
+        try {
+          const res = await fetch(`${API_URL}/recipe/delete/${recipe.id}`, {
+            method: "DELETE",
+          });
+          const data = await res.json();
+          if (data.ok) {
+            alert("Recette supprimée !");
+            navigate("/recipes");
+            // Rediriger ou mettre à jour l'état
+          } else {
+            alert("Erreur : " + data.error);
+          }
+        } catch (e) {
+          console.error(e);
+          alert("Erreur lors de la suppression");
+        }
+    }
+  }
 
   useEffect(() => {
     async function fetchRecipe() {
@@ -70,32 +91,18 @@ export default function RecipeDetail({homeId, id:idProp}) {
         {/* === Colonne centrale : Contenu principal === */}
         <main className={`flex-1 bg-white p-6 relative ${!idProp ? "shadow rounded-lg overflow-hidden" : ""}`}>
             {!idProp && 
-              <div className="flex justify-center mt-6 mb-6">
+              <div className="flex justify-center mt-6 mb-6 space-x-4">
                 <button
                   className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
-                  onClick={async () => {
-                    if (!recipe.id) return;
-                    if (confirm("Voulez-vous vraiment supprimer cette recette ?")) {
-                      try {
-                        const res = await fetch(`${API_URL}/recipe/delete/${recipe.id}`, {
-                          method: "DELETE",
-                        });
-                        const data = await res.json();
-                        if (data.ok) {
-                          alert("Recette supprimée !");
-                          navigate("/recipes");
-                          // Rediriger ou mettre à jour l'état
-                        } else {
-                          alert("Erreur : " + data.error);
-                        }
-                      } catch (e) {
-                        console.error(e);
-                        alert("Erreur lors de la suppression");
-                      }
-                    }
-                  }}
+                  onClick={deleteValidate}
                 >
-                  Supprimer la recette entiere
+                  🗑️ Supprimer la recette
+                </button>
+                <button
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                  onClick={() => navigate(`/recipe/edit/${recipe.id}`)}
+                >
+                  ✏️ Modifier la recette
                 </button>
               </div>
             }
