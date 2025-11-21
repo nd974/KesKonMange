@@ -171,6 +171,179 @@ router.post("/create", async (req, res) => {
   }
 });
 
+router.put("/update/:id", async (req, res) => {
+  try {
+    const recipeId = req.params.id;
+
+    const { recipeName, time, portions, difficulty, selectedTagIds, ingredients, ustensiles, steps } = req.body;
+
+    const missingFields = [];
+
+    // Vérifier string vide ou absent
+    if (!recipeName || recipeName.trim() === '') missingFields.push('Nom de la recette manquant');
+
+    // Vérifier sous-champs de time
+    if (!time || time.preparation === null) missingFields.push('Temps de préparation manquant');
+    if (!time || time.cuisson === null) missingFields.push('Temps de cuisson manquant');
+    if (!time || time.repos === null) missingFields.push('Temps de repos manquant');
+    if (!time || time.nettoyage === null) missingFields.push('Temps de nettoyage manquant');
+
+    // Autres champs
+    if (!portions) missingFields.push('Nombre de portions manquant');
+    if (!difficulty) missingFields.push('Difficulté manquante');
+    if (!ingredients || ingredients[0].name==='' || ingredients[0].quantity===null) 
+      missingFields.push('Liste d’ingrédients vide ou invalide');
+    if (!ustensiles || ustensiles[0]==='') 
+      missingFields.push('Liste d’ustensiles vide ou invalide');
+    if (!steps || steps[0]==='') 
+      missingFields.push('Liste des étapes vide ou invalide');
+
+    if (missingFields.length > 0) {
+      return res.status(400).json({
+        error: 'Champs manquants',
+        details: missingFields
+      });
+    }
+
+    // --------------------------------------
+    // 🚀 1. UPDATE base de la recette
+    // --------------------------------------
+    await pool.query(
+      `
+      UPDATE "Recipe"
+      SET name=$1, time_prep=$2, time_cook=$3, time_rest=$4, time_clean=$5,
+          portion=$6, level=$7
+      WHERE id=$8
+      `,
+      [recipeName, time.preparation, time.cuisson, time.repos, time.nettoyage, portions, difficulty, recipeId]
+    );
+
+    // --------------------------------------
+    // 🚀 2. RESET + INSERT TAGS
+    // --------------------------------------
+    await pool.query(`DELETE FROM recipes_tags WHERE recipe_id=$1`, [recipeId]);
+
+    if (Array.isArray(selectedTagIds) && selectedTagIds.length > 0) {
+      const tagPromises = selectedTagIds.map(tagId => {
+        return pool.query(
+          `INSERT INTO recipes_tags (recipe_id, tag_id) VALUES ($1, $2)`,
+          [recipeId, tagId]
+        );
+      });
+      await Promise.all(tagPromises);
+    }
+
+    // --------------------------------------
+    // 🚀 3. RESET + INSERT INGRÉDIENTS
+    // --------------------------------------
+    await pool.query(`DELETE FROM recipes_ingredients WHERE recipe_id=$1`, [recipeId]);
+
+    if (Array.isArray(ingredients) && ingredients.length > 0) {
+      const ingPromises = ingredients.map(async (ing) => {
+        const { name, quantity, unit, selected } = ing;
+
+        // Vérifier si l’ingrédient existe
+        let ingredientResult = await pool.query(`SELECT id FROM "Ingredient" WHERE name=$1`, [name]);
+
+        let ingredientId;
+        if (ingredientResult.rows.length === 0) {
+          let insertIng = await pool.query(
+            `INSERT INTO "Ingredient" (name, selected) VALUES ($1, $2) RETURNING id`,
+            [name, selected]
+          );
+          ingredientId = insertIng.rows[0].id;
+        } else {
+          ingredientId = ingredientResult.rows[0].id;
+        }
+
+        // Récupérer l’unité
+        const unitResult = await pool.query(
+          `SELECT id FROM "Unit" WHERE abbreviation=$1`,
+          [unit]
+        );
+
+        const unitId = unitResult.rows.length > 0 ? unitResult.rows[0].id : null;
+
+        // Insérer la relation
+        await pool.query(
+          `
+          INSERT INTO recipes_ingredients (recipe_id, ingredient_id, amount, unit_id)
+          VALUES ($1, $2, $3, $4)
+          `,
+          [recipeId, ingredientId, quantity, unitId]
+        );
+      });
+
+      await Promise.all(ingPromises);
+    }
+
+    // --------------------------------------
+    // 🚀 4. RESET + INSERT USTENSILES
+    // --------------------------------------
+    await pool.query(`DELETE FROM recipes_utensils WHERE recipe_id=$1`, [recipeId]);
+
+    if (Array.isArray(ustensiles) && ustensiles.length > 0) {
+      const utensilPromises = ustensiles.map(async (u) => {
+        const name = u.trim();
+        if (!name) return;
+
+        try {
+          const utensilResult = await pool.query(
+            `SELECT id FROM "Utensil" WHERE name=$1`,
+            [name]
+          );
+
+          if (utensilResult.rows.length === 0) {
+            console.warn(`Ustensile ignoré : '${name}'`);
+            return;
+          }
+
+          const utensilId = utensilResult.rows[0].id;
+
+          await pool.query(
+            `
+            INSERT INTO recipes_utensils (recipe_id, utensil_id)
+            VALUES ($1, $2)
+            `,
+            [recipeId, utensilId]
+          );
+        } catch (err) {
+          console.error(`Erreur ustensile '${name}' :`, err);
+          return;
+        }
+      });
+
+      await Promise.all(utensilPromises);
+    }
+
+    // --------------------------------------
+    // 🚀 5. RESET + INSERT ÉTAPES
+    // --------------------------------------
+    await pool.query(`DELETE FROM recipes_steps WHERE recipe_id=$1`, [recipeId]);
+
+    if (Array.isArray(steps) && steps.length > 0) {
+      const stepsPromises = steps.map((step, index) => {
+        return pool.query(
+          `
+          INSERT INTO recipes_steps (recipe_id, step)
+          VALUES ($1, $2)
+          `,
+          [recipeId, `${index + 1}. ${step}`]
+        );
+      });
+
+      await Promise.all(stepsPromises);
+    }
+
+    res.json({ ok: true, recipeId });
+
+  } catch (e) {
+    console.error("Erreur lors de l’update :", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 /**
  * GET /recipe/get-all
  * Récupère toutes les recettes avec leurs tags
@@ -335,6 +508,22 @@ cloudinary.v2.api.usage((error, result) => {
     console.error(error);
   } else {
     console.log("Usage actuel :", result);
+  }
+});
+
+router.delete("/delete-image/:publicId", async (req, res) => {
+  const { publicId } = req.params;
+
+  if (!publicId) {
+    return res.status(400).json({ error: "publicId manquant" });
+  }
+
+  try {
+    const result = await cloudinary.v2.uploader.destroy(publicId);
+    res.json({ success: true, cloudinary: result });
+  } catch (err) {
+    console.error("Erreur Cloudinary :", err);
+    res.status(500).json({ error: err.message });
   }
 });
 

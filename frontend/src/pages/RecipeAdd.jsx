@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
-import {CLOUDINARY_API} from "../config/constants"
+import { CLOUDINARY_RES, CLOUDINARY_API } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -11,6 +11,7 @@ export default function RecipeAdd({ homeId }) {
   const navigate = useNavigate();
 
   const [recipeName, setRecipeName] = useState("");
+  const [recipePicture, setRecipePicture] = useState("");
   const [difficulty, setDifficulty] = useState(3);
   const [portions, setPortions] = useState(null);
 
@@ -82,6 +83,18 @@ export default function RecipeAdd({ homeId }) {
   //     return null;
   //   }
   // };
+const handleDeletePicture = async () => {
+  try {
+    await fetch(`${API_URL}/recipe/delete-image/${recipeName}`, {
+      method: "DELETE",
+    });
+
+    setRecipePicture(null);
+  } catch (e) {
+    console.error("Erreur suppression image :", e);
+  }
+};
+
 const handleUploadCloud = async (publicMameIdCloud) => {
   let fileToUpload = selectedFile || fileInputRef.current?.files[0];
 
@@ -442,14 +455,21 @@ const handleSubmit = async (e) => {
     recipeId = dataRecipeCreate.recipeId;
   } else {
     // ✏️ Modification
-    const res = await fetch(`${API_URL}/recipe/${recipe_id}/update`, {
+    const resRecipeEdit = await fetch(`${API_URL}/recipe/update/${recipe_id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
     });
 
-    const data = await res.json();
-    if (!data.ok) return alert(data.error);
+    const dataRecipeEdit = await resRecipeEdit.json();
+    if (!dataRecipeEdit.ok) {
+      if (dataRecipeEdit.details && Array.isArray(dataRecipeEdit.details)) {
+        alert("❌ Champs manquants :\n" + dataRecipeEdit.details.join("\n"));
+      } else {
+        alert("❌ Erreur: " + dataRecipeEdit.error);
+      }
+      return;
+    }
   }
 
   // Upload image si nouvelle image sélectionnée
@@ -494,6 +514,9 @@ useEffect(() => {
 
       // Portions
       setPortions(r.portion);
+
+      // Image
+      setRecipePicture(r.picture);
 
       // Temps
       setTime({
@@ -551,33 +574,55 @@ useEffect(() => {
           {recipe_id ? "✏️ Modifier la recette" : "➕ Ajouter une nouvelle recette"}
         </h1>
 
-        {/* Image Upload */}
-        <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onClick={() => fileInputRef.current.click()} // seul déclencheur du clic
-          className={`border-2 border-dashed rounded p-4 cursor-pointer transition ${
-            dragOver ? "border-green-600 bg-green-50" : "border-gray-400"
-          }`}
-        >
-          <label className="block font-semibold mb-2">Image de la recette</label>
-          <p className="text-gray-500 mt-2">
-            Glisse et dépose ton image ici ou clique pour choisir un fichier
-          </p>
-          {/* Input complètement caché */}
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            className="hidden"
-            onChange={(e) => handleFiles(e.target.files[0])}
-          />
-        </div>
+        {recipePicture ? (
+          <div className="relative w-full">
+            <img 
+              src={`${CLOUDINARY_RES}${recipePicture}`}
+              alt="recipeName"
+              className="w-full h-80 object-cover rounded-md mb-6"
+            />
 
+            {/* Bouton poubelle */}
+            <button
+              type="button"
+              onClick={handleDeletePicture}
+              className="absolute top-3 right-3 bg-red-600 text-white p-2 rounded-full shadow hover:bg-red-700 transition"
+            >
+              🗑️
+            </button>
+          </div>
+        ) : (
+          <div
+            onDrop={handleDrop}
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onClick={() => fileInputRef.current.click()}
+            className={`border-2 border-dashed rounded p-4 cursor-pointer transition ${
+              dragOver ? "border-green-600 bg-green-50" : "border-gray-400"
+            }`}
+          >
+            <label className="block font-semibold mb-2">Image de la recette</label>
+            <p className="text-gray-500 mt-2">
+              Glisse et dépose ton image ici ou clique pour choisir un fichier
+            </p>
+
+            {/* Input caché */}
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files[0])}
+            />
+          </div>
+        )}
+
+        {/* 🔥 Ici ton p > il doit être en dehors du ternaire */}
         <p className="mt-4 text-white" style={{ backgroundColor: statusCSS }}>
           {statusName}
         </p>
+
+
 
         {/* Nom */}
         <div className="mb-6 py-8">
