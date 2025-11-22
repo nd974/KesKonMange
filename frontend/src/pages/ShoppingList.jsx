@@ -1,128 +1,123 @@
-import { useState, useRef } from "react";
+import { useState, useEffect } from "react";
 import Header from "../components/Header";
+import BarCodeScanner from "../components/BarCodeScanner";
 
-export default function ShoppingList({ homeId }) {
-  const fileInputRef = useRef(null);
-  const [status, setStatus] = useState("");
-  const [previewUrl, setPreviewUrl] = useState("");
-  const [dragOver, setDragOver] = useState(false);
-  const [selectedFile, setSelectedFile] = useState(null);
+export default function ShoppingList({homeId}) {
+  const [scannedCode, setScannedCode] = useState("");
+  const [product, setProduct] = useState(null);
+  const [error, setError] = useState(null);
 
-  const handleFiles = (file) => {
-    if (!file) {
-      setStatus("Choisis une image avant d'uploader.");
-      return;
-    }
-    setSelectedFile(file);
-    setStatus(`Fichier prêt : ${file.name}`);
-  };
+  // Popin pour la date de péremption
+  const [showExpirationPopin, setShowExpirationPopin] = useState(false);
+  const [expirationDate, setExpirationDate] = useState("");
 
-  const handleUpload = async () => {
-    const fileToUpload = selectedFile || fileInputRef.current?.files[0];
-    if (!fileToUpload) {
-      setStatus("Choisis une image avant d'uploader.");
-      return;
-    }
+  useEffect(() => {
+    if (!scannedCode) return;
 
-    console.log(fileToUpload.name);
-    setStatus("Envoi en cours...");
-
-    try {
-      const formData = new FormData();
-      formData.append("file", fileToUpload);
-      formData.append("upload_preset", "Recettes");
-      formData.append("public_id", fileToUpload.name.split(".")[0]); // nom sans extension
-
-      const res = await fetch(
-        "https://api.cloudinary.com/v1_1/dz4ejk7r7/image/upload",
-        { method: "POST", body: formData }
-      );
-
-      const data = await res.json();
-      console.log("Réponse Cloudinary :", data);
-
-      if (data.secure_url) {
-        // Transformation Cloudinary pour redimensionner à 1870×1250
-        const transformedUrl = data.secure_url.replace(
-          "/upload/",
-          "/upload/w_1870,h_1250,c_fill/"
+    async function fetchProduct() {
+      setError(null);
+      setProduct(null);
+      try {
+        const response = await fetch(
+          `https://world.openfoodfacts.org/api/v2/product/${scannedCode}.json`
         );
+        const data = await response.json();
 
-        setStatus("✅ Image uploadée et redimensionnée avec succès !");
-        setPreviewUrl(transformedUrl);
-      } else {
-        setStatus("❌ Erreur : pas d'URL renvoyée.");
+        if (data.status === 0) {
+          setError("Produit non trouvé dans la base OpenFoodFacts 😕");
+          return;
+        }
+
+        const p = data.product;
+        setProduct({
+          name: p.product_name || "Nom inconnu",
+          quantity: p.quantity || "Inconnu",
+          brand: p.brands || "Marque inconnue",
+          nutriments: p.nutriments || {},
+          image: p.image_small_url || p.image_front_url || null
+        });
+
+        // Afficher la popin pour la date de péremption
+        setShowExpirationPopin(true);
+      } catch (err) {
+        console.error(err);
+        setError("Erreur lors de la récupération du produit");
       }
-    } catch (err) {
-      console.error(err);
-      setStatus("❌ Erreur lors de l'upload : " + err.message);
     }
-  };
 
-  // Drag & Drop handlers
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setDragOver(false);
-    const file = e.dataTransfer.files[0];
-    handleFiles(file);
-  };
+    fetchProduct();
+  }, [scannedCode]);
 
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setDragOver(true);
+  const handleConfirmExpiration = () => {
+    setShowExpirationPopin(false);
   };
-
-  const handleDragLeave = () => setDragOver(false);
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId} />
-      <h1 className="text-2xl font-bold mb-4 py-8">
-        Liste de courses (Test upload image de recette dans CLOUD)
-      </h1>
+      <Header homeId={homeId}/>
+      <h1 className="text-2xl font-bold mb-4 py-8">Garde-manger (Test BarCodeScanner)</h1>
 
-      {/* Image Upload avec Drag & Drop */}
-      <div
-        onDrop={handleDrop}
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onClick={() => fileInputRef.current.click()}
-        className={`border-2 border-dashed rounded p-4 mb-6 cursor-pointer transition ${
-          dragOver ? "border-green-600 bg-green-50" : "border-gray-400"
-        } relative`} // <-- relative pour que l'input absolu soit contenu
-      >
-        <label className="block font-semibold mb-2">Image de la recette</label>
-        <p className="text-gray-500 mt-2">
-          Glisse et dépose ton image ici ou clique pour choisir un fichier
+      <h2 className="text-lg font-semibold mb-2">Scanner un produit</h2>
+      <BarCodeScanner onDetected={(code) => setScannedCode(code)} />
+
+      {scannedCode && (
+        <p className="mt-4">
+          Code-barres détecté : <strong>{scannedCode}</strong>
         </p>
-        <input
-          type="file"
-          accept="image/*"
-          ref={fileInputRef}
-          className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-          onChange={(e) => handleFiles(e.target.files[0])}
-        />
-      </div>
+      )}
 
+      {error && <p style={{ color: "red" }}>{error}</p>}
 
-      {/* Bouton uploader */}
-      <button
-        onClick={handleUpload}
-        className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
-      >
-        Uploader
-      </button>
+      {product && (
+        <div className="mt-6 p-4 border rounded-lg bg-gray-50">
+          <h3 className="text-xl font-semibold mb-2">{product.name}</h3>
+          {product.image && (
+            <img src={product.image} alt={product.name} className="w-32 mb-2" />
+          )}
+          <p><strong>Marque :</strong> {product.brand}</p>
+          <p><strong>Quantité :</strong> {product.quantity}</p>
 
-      <p className="mt-4">{status}</p>
+          {product.nutriments && (
+            <div className="mt-2">
+              <h4 className="font-semibold mb-1">Valeurs nutritionnelles (pour 100g)</h4>
+              <ul className="text-sm">
+                <li>Énergie : {product.nutriments["energy-kcal_100g"] || "?"} kcal</li>
+                <li>Protéines : {product.nutriments.proteins_100g || "?"} g</li>
+                <li>Glucides : {product.nutriments.carbohydrates_100g || "?"} g</li>
+                <li>Dont sucres : {product.nutriments.sugars_100g || "?"} g</li>
+                <li>Matières grasses : {product.nutriments.fat_100g || "?"} g</li>
+                <li>Sel : {product.nutriments.salt_100g || "?"} g</li>
+              </ul>
+            </div>
+          )}
 
-      {previewUrl && (
-        <div className="mt-4">
-          <p className="text-gray-600 mb-2">Aperçu redimensionné (1870×1250) :</p>
-          <img
-            src={previewUrl}
-            alt="Preview"
-            className="max-w-full border rounded shadow-md"
-          />
+          {expirationDate && (
+            <p className="mt-2"><strong>Date de péremption :</strong> {expirationDate}</p>
+          )}
+        </div>
+      )}
+
+      {/* Popin pour la saisie manuelle */}
+      {showExpirationPopin && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-lg w-80">
+            <h3 className="text-lg font-semibold mb-2">Date de péremption</h3>
+            <p className="mb-2">Veuillez saisir la date de péremption :</p>
+
+            <input
+              type="date"
+              value={expirationDate}
+              onChange={(e) => setExpirationDate(e.target.value)}
+              className="border p-2 w-full mb-4"
+            />
+
+            <button
+              onClick={handleConfirmExpiration}
+              className="bg-green-500 text-white p-2 rounded w-full"
+            >
+              Valider
+            </button>
+          </div>
         </div>
       )}
     </div>

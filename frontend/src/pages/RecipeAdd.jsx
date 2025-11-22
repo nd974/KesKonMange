@@ -35,7 +35,6 @@ export default function RecipeAdd({ homeId }) {
     setstatusCSS("green");
   };
 
-  // const handleUploadCloud = async (publicMameIdCloud) => {
   //   const fileToUpload = selectedFile || fileInputRef.current?.files[0];
 
   //   if (!fileToUpload){
@@ -197,8 +196,11 @@ const handleUploadCloud = async (publicMameIdCloud) => {
   });
 
   // -------------------- Étapes --------------------
-  const [steps, setSteps] = useState([""]);
-  const addStep = () => setSteps([...steps, ""]);
+  const [steps, setSteps] = useState([
+  { text: "", level: 0, time: null },
+]);
+const addStep = () =>
+  setSteps([...steps, { text: "", level: 0, time: 0 }]);
   const removeStep = (i) => setSteps(steps.filter((_, index) => index !== i));
 
   // -------------------- Ustensiles --------------------
@@ -240,124 +242,140 @@ const handleUploadCloud = async (publicMameIdCloud) => {
 
   // -------------------- Ingrédients --------------------
 
-  const [modalVisible, setModalVisible] = useState(false);
-  const [invalidIngredient, setInvalidIngredient] = useState("");
-  const [clickingSuggestion, setClickingSuggestion] = useState(false);
+// -------------------- Ingrédients --------------------
+const [ingredients, setIngredients] = useState([
+  { name: "", quantity: "", unit: "", suggestions: [], selected: false, warning: false }
+]);
 
 
 
-  const [ingredients, setIngredients] = useState([
-    { name: "", quantity: "", unit: "", suggestions: [], selected: false }
-  ]);
+const [loadingIngredient, setLoadingIngredient] = useState(null);
+const [warningIndex, setWarningIndex] = useState(null);
 
-  const [debouncedNames, setDebouncedNames] = useState(
-    ingredients.map((ing) => ing.name)
-  );
+function useDebounce(value, delay) {
+  const [debounced, setDebounced] = useState(value);
 
-  const [focusedInput, setFocusedInput] = useState(null);
-
-  // Debounce global des noms d'ingrédients
   useEffect(() => {
-    const handler = setTimeout(() => {
-      setDebouncedNames(ingredients.map((ing) => ing.name));
-    }, 500); // tu peux ajuster le temps
-    return () => clearTimeout(handler);
-  }, [ingredients]);
+    const timer = setTimeout(() => setDebounced(value), delay);
+    return () => clearTimeout(timer);
+  }, [value, delay]);
 
-  // Fetch suggestions dès que les noms sont "debounced"
-  // et seulement si l'ingrédient n'est pas "selected"
-  useEffect(() => {
-    debouncedNames.forEach((debouncedName, index) => {
-      if (!debouncedName || ingredients[index]?.selected) return;
+  return debounced;
+}
 
-      const fetchSuggestions = async () => {
-        try {
-          const res = await fetch(`
-            ${API_URL}/api/openfoodfacts?q=${encodeURIComponent(debouncedName)}`
-          );
-          const suggestions = await res.json();
-
-          // Filtrer les additifs commençant par E et ne garder que ceux qui contiennent la recherche
-          const filteredSuggestions = (suggestions || [])
-            .filter(s => !/^E\d+/i.test(s)) // supprime additifs
-            .filter(s => s.toLowerCase().includes(debouncedName.toLowerCase())); // doit contenir la recherche
-
-          setIngredients((prev) => {
-            const updated = [...prev];
-            // seulement si l'input n'est pas sélectionné
-            if (!updated[index].selected) {
-              updated[index].suggestions = filteredSuggestions;
-            }
-            return updated;
-          });
-        } catch (err) {
-          console.error("Erreur fetch suggestions:", err);
-        }
-      };
+function debounce(func, wait) {
+  let timeout;
+  return (...args) => {
+    clearTimeout(timeout);
+    timeout = setTimeout(() => func(...args), wait);
+  };
+}
 
 
-      fetchSuggestions();
+// const debouncedName = useDebounce(ing.name, 500);
+// Dans ton composant RecipeAdd
+const debounceSearchIngredient = useRef(
+  debounce((index, value) => searchIngredient(index, value), 500)
+).current;
+
+
+// useEffect(() => {
+//   if (!debouncedName) return;
+
+//   let active = true;
+
+//   setLoadingIngredient(i);
+
+//   fetch(
+//     `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(
+//       debouncedName
+//     )}&search_simple=1&json=1&page_size=20`
+//   )
+//     .then(res => res.json())
+//     .then(data => {
+//       if (!active) return;
+
+//       let suggestions = (data.products || [])
+//         .map(p => p.product_name || p.generic_name || p.ingredients_text)
+//         .filter(Boolean)
+//         .map(s => s.trim())
+//         .filter(s => !/^E\d+/i.test(s))
+//         .filter(s => s.toLowerCase().includes(debouncedName.toLowerCase()));
+
+//       if (suggestions.length === 0) suggestions.push(debouncedName);
+
+//       setIngredients(prev => {
+//         const updated = [...prev];
+//         updated[i].suggestions = suggestions;
+//         updated[i].selected = false;
+//         return updated;
+//       });
+//     })
+//     .catch(console.error)
+//     .finally(() => setLoadingIngredient(null));
+
+//   return () => {
+//     active = false;
+//   };
+// }, [debouncedName]);
+
+
+// 🔍 Fonction de recherche manuelle sur clic
+
+
+const searchIngredient = async (index, nameOverride) => {
+  const name = nameOverride || ingredients[index].name.trim();
+  if (!name) return;
+
+  setLoadingIngredient(index);
+
+  try {
+    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(name)}&fields=product_name&json=1&page_size=10`);
+    const data = await res.json();
+
+    const suggestions = (data.products || [])
+      .map(p => p.product_name)
+      .filter(Boolean)
+      .map(s => s.trim())
+      .filter(s => !/^E\d+/i.test(s))
+      .filter(s => s.toLowerCase().includes(name.toLowerCase()));
+
+    setIngredients(prev => {
+      const updated = [...prev];
+      updated[index].suggestions = suggestions;
+      updated[index].selected = false;
+      updated[index].warning = suggestions.length === 0;
+      return updated;
     });
-  }, [debouncedNames]);
-
-  // Au moment de changer l'input, on laisse tout passer
-  const handleIngredientChange = (index, field, value) => {
-    setIngredients((prev) =>
-      prev.map((ing, i) =>
-        i === index
-          ? { ...ing, [field]: value, ...(field === "name" ? { selected: false } : {}) }
-          : ing
-      )
-    );
-  };
-
-  // Au moment de sortir de l'input
-  const handleIngredientBlur = (index) => {
-    const ing = ingredients[index];
-
-    // Si on clique sur une suggestion, ne rien faire
-    if (clickingSuggestion) {
-      setClickingSuggestion(false);
-      return;
-    }
-
-    if (!ing.suggestions.includes(ing.name) && !ing.selected && ing.name.trim() !== "") {
-      setInvalidIngredient(ing.name);
-      setModalVisible(true);
-    }
-  };
-
-
-  // Fermeture de la modal
-  const confirmIngredient = () => {
-    setModalVisible(false);
-    setInvalidIngredient("");
-  };
-
-
-  // Lorsque l'utilisateur clique sur une suggestion
-  const selectSuggestion = (index, suggestion) => {
-    setClickingSuggestion(true); // signaler qu’on clique sur une suggestion
-    setIngredients((prev) =>
-      prev.map((ing, i) =>
-        i === index
-          ? { ...ing, name: suggestion, suggestions: [], selected: true }
-          : ing
-      )
-    );
-  };
-
-
-  const addIngredient = () => {
-    setIngredients((prev) => [
-      ...prev,
-      { quantity: "", unit: "", name: "", suggestions: [], selected: false },
-    ]);
-  };
-
-  function removeIngredient(index) {
-    setIngredients((prev) => prev.filter((_, i) => i !== index));
+  } catch (err) {
+    console.error("Erreur OpenFoodFacts :", err);
   }
+
+  setLoadingIngredient(null);
+};
+
+
+// Sélection d'une suggestion
+const selectSuggestion = (index, suggestion) => {
+  setIngredients(prev => {
+    const updated = [...prev];
+    updated[index] = {
+      ...updated[index],
+      name: suggestion,
+      selected: true,
+      suggestions: [], 
+      error: false
+    };
+    return updated;
+  });
+};
+
+// Ajout / suppression
+const addIngredient = () =>
+  setIngredients(prev => [...prev, { name: "", quantity: "", unit: "", suggestions: [], selected: false }]);
+
+const removeIngredient = (index) =>
+  setIngredients(prev => prev.filter((_, i) => i !== index));
 
 
   // -------------------- Tags --------------------
@@ -528,11 +546,14 @@ useEffect(() => {
 
       // Étapes
       setSteps(
-      r.steps.map(s => 
-          s.step?.length > 3 
-            ? s.step.substring(3) 
-            : s.step // si trop court
-        ) || [""]
+        r.steps
+          ?.sort((a, b) => a.number - b.number) // au cas où ce n’est pas trié
+          .map(s => ({
+            text: s.description || "",
+            level: s.level ?? 0,
+            time: s.time ?? 0,
+            number: s.number ?? 1
+          }))
       );
 
       // Tags = tableau d'objets → on garde seulement l'ID
@@ -561,6 +582,24 @@ useEffect(() => {
   loadRecipe();
 }, [recipe_id]);
 
+
+const StarRating = ({ value, onChange }) => {
+  return (
+    <div className="flex gap-1">
+      {[1,2,3,4,5].map((n) => (
+        <span
+          key={n}
+          onClick={() => onChange(n)}
+          className={`cursor-pointer text-xl ${
+            n <= value ? "text-yellow-500" : "text-gray-300"
+          }`}
+        >
+          ★
+        </span>
+      ))}
+    </div>
+  );
+};
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8 relative bg-gray-50">
@@ -626,13 +665,21 @@ useEffect(() => {
 
         {/* Nom */}
         <div className="mb-6 py-8">
-          <label className="block font-semibold mb-2">Nom de la recette</label>
+          <label className="block font-semibold mb-2">
+            Nom de la recette{" "}
+            {recipe_id && recipePicture && (
+              <span className="font-bold text-red-600">
+                (pas modifiable : recharger l'image)
+              </span>
+            )}
+          </label>
           <input
             type="text"
             value={recipeName}
             onChange={(e) => setRecipeName(e.target.value)}
             placeholder="Ex: Pâtes à la carbonara"
             className="w-full border rounded p-2"
+            disabled={!!recipe_id && recipePicture}
           />
         </div>
 
@@ -698,8 +745,9 @@ useEffect(() => {
                 max="999"
                 value={value}
                 onChange={(e) =>
-                  setTime({ ...time, [key]: e.target.valueAsNumber })
+                  setTime({ ...time, [key]: e.target.value ? e.target.valueAsNumber : "" })
                 }
+
                 className="w-full border rounded p-2"
               />
             </div>
@@ -896,151 +944,168 @@ useEffect(() => {
 
 
         {/* Ingrédients */}
+{/* Ingrédients */}
 <section className="mb-6">
   <h2 className="text-xl font-semibold mb-2">🥕 Ingrédients nécessaires</h2>
 
-  <div className="space-y-3">
-    {ingredients.map((ing, i) => (
-      <div
-        key={i}
-        className="flex items-center gap-2 lg:flex-row lg:items-center"
-      >
-        {/* Quantité */}
-        <input
-          type="number"
-          min="0.01"
-          step="0.01"
-          placeholder="Qté"
-          value={ing.quantity}
-          onChange={(e) => handleIngredientChange(i, 'quantity', e.target.valueAsNumber)}
+{ingredients.map((ing, i) => (
+  <div key={i} className="flex items-center gap-2 mb-3">
 
-          className="border rounded p-2 w-12 lg:w-1/3"
-        />
+    {/* Quantité */}
+    <input
+      type="number"
+      min="0"
+      step="0.01"
+      value={ing.quantity}
+      onChange={(e) =>
+        setIngredients(prev => {
+          const updated = [...prev];
+          updated[i].quantity = e.target.value;
+          return updated;
+        })
+      }
+      className="border rounded p-2 w-20"
+      placeholder="Qté"
+    />
 
-        {/* Unité (liste déroulante) */}
-        <select
-          value={ing.unit || ""}
-          onChange={(e) => handleIngredientChange(i, "unit", e.target.value)}
-          className={`border rounded p-2 w-20 lg:w-1/3 bg-white 
-            ${ing.unit ? "text-black" : "text-gray-500"}`}
-        >
-          <option value="" disabled>
-            (g, L, ...)
-          </option>
+    {/* Unité */}
+    <select
+      value={ing.unit}
+      onChange={(e) =>
+        setIngredients(prev => {
+          const updated = [...prev];
+          updated[i].unit = e.target.value;
+          return updated;
+        })
+      }
+      className="border rounded p-2 w-24 bg-white"
+    >
+      <option value="">-</option>
+      {units.map((u) => (
+        <option key={u.id} value={u.abbreviation}>
+          {u.abbreviation}
+        </option>
+      ))}
+    </select>
 
-          {units.map((u) => (
-            <option key={u.id} value={u.abbreviation}>
-              {u.abbreviation} ({u.name})
-            </option>
-          ))}
-        </select>
+    {/* Nom + Loupe */}
+    <div className="relative flex-1">
 
-        {/* Nom ingrédient */}
-        <div className="relative w-full lg:w-1/3">
-          <input
-            type="text"
-            placeholder="Nom ingrédient"
-            value={ing.name}
-            onChange={(e) => handleIngredientChange(i, 'name', e.target.value)}
-            onFocus={() => setFocusedInput(i)}
-            onBlur={() => handleIngredientBlur(i)}
-            className="border rounded p-2 w-full pr-8"
-          />
+<input
+  type="text"
+  value={ing.name}
+  onChange={(e) => {
+    const inputValue = e.target.value;
+    setIngredients(prev => {
+      const updated = [...prev];
+      updated[i].name = inputValue;
+      updated[i].selected = false;
 
+      const nameLower = inputValue.trim().toLowerCase();
+      updated[i].warning =
+        (updated[i].suggestions.length > 0 &&
+         !updated[i].suggestions.map(s => s.toLowerCase()).includes(nameLower)) ||
+        (updated[i].suggestions.length === 0 && nameLower.length > 0);
 
+      return updated;
+    });
 
+    // Lancer la recherche avec debounce
+    debounceSearchIngredient(i, inputValue); 
+  }}
+        className={`border rounded p-2 w-full pr-16 ${
+          ing.warning ? "border-orange-400 border-2" : "border-gray-300"
+        }`}
+        placeholder="Nom ingrédient"
+      />
 
-          {ing.suggestions && ing.suggestions.length > 0 && (
-            <ul className="absolute z-10 bg-white border rounded w-full mt-1 max-h-40 overflow-auto">
-              {ing.suggestions.map((s, j) => (
-                <li
-                  key={j}
-                  className="p-1 hover:bg-gray-200 cursor-pointer"
-                  onMouseDown={() => selectSuggestion(i, s)}
-                >
-                  {s}
-                </li>
-              ))}
-            </ul>
-          )}
-
-          {/* <button
-            type="button"
-            onClick={() => removeIngredient(i)}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-red-500 text-lg"
-          >
-            ❌
-          </button> */}
-          
-        </div>
+      {/* 🟧 Icône warning */}
+      {ing.warning && (
         <button
-            type="button"
-            onClick={() => removeIngredient(i)}
-          >
-            ❌
+          type="button"
+          onClick={() => setWarningIndex(i)}
+          className="absolute right-10 top-1/2 -translate-y-1/2 text-orange-500 font-bold"
+        >
+          i
         </button>
-      </div>
-    ))}
+      )}
+
+      {/* 🔍 Loupe */}
+      <button
+        type="button"
+        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600"
+        onClick={() => searchIngredient(i)}
+      >
+        {loadingIngredient === i ? "⏳" : "🔍"}
+      </button>
+
+      {/* Suggestions */}
+      {ing.suggestions.length > 0 && (
+        <ul className="absolute bg-white border rounded shadow w-full mt-1 z-50 max-h-40 overflow-auto">
+          {ing.suggestions.map((s, j) => (
+            <li
+              key={j}
+              className="p-2 hover:bg-gray-100 cursor-pointer"
+              onMouseDown={() => selectSuggestion(i, s)}
+            >
+              {s}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+
+    {/* Supprimer l’ingrédient */}
+    <button
+      className="text-red-500"
+      type="button"
+      onClick={() => removeIngredient(i)}
+    >
+      ❌
+    </button>
   </div>
+))}
 
   <button
     type="button"
     onClick={addIngredient}
-    className="text-blue-600 text-sm hover:underline mt-3 block"
+    className="text-blue-600 hover:underline mt-3"
   >
     + Ajouter un ingrédient
   </button>
 
-{modalVisible && (
-  <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-    <div className="bg-white p-6 rounded shadow-md w-96">
-      <p className="mb-2">
-        L'ingrédient <span className="font-bold text-red-600">{invalidIngredient}</span> n'est pas dans les suggestions.
+{/* ⚠️ Popin warning pour l’ingrédient */}
+{warningIndex !== null && (
+  <div
+    className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+    onClick={() => setWarningIndex(null)} // clic en dehors ferme la popin
+  >
+    <div
+      className="bg-white rounded-lg p-6 max-w-sm w-full relative"
+      onClick={(e) => e.stopPropagation()} // empêche fermeture si clic à l'intérieur
+    >
+      <h3 className="text-lg font-semibold text-orange-500 mb-2">
+        ⚠️ Attention
+      </h3>
+      <p className="text-gray-700">
+        L’ingrédient que vous avez saisi n’est pas reconnu ou n’a pas de suggestions valides.
       </p>
-      <p className="mb-4">
-        Le calcul des valeurs nutritionnelles de la recette ne prendra pas en compte cet ingrédient et il n'aura pas non plus d'image dédiée.
-      </p>
-      <p className="mb-4">
-        Voulez-vous continuer ?
-      </p>
-      <div className="flex justify-end gap-4">
+      <div className="text-right mt-4">
         <button
-          onClick={() => {
-            // Annuler : remettre l'ingrédient à vide
-            setIngredients((prev) =>
-              prev.map((ing) =>
-                ing.name === invalidIngredient
-                  ? { ...ing, name: "" }
-                  : ing
-              )
-            );
-            setModalVisible(false);
-            setInvalidIngredient("");
-          }}
-          className="bg-gray-300 text-gray-800 px-4 py-2 rounded hover:bg-gray-400"
+          className="bg-orange-500 text-white px-4 py-2 rounded hover:bg-orange-600"
+          onClick={() => setWarningIndex(null)}
         >
-          Annuler
-        </button>
-        <button
-          onClick={() => {
-            // Valider : on laisse tel quel
-            setModalVisible(false);
-            setInvalidIngredient("");
-          }}
-          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-        >
-          Valider
+          OK
         </button>
       </div>
     </div>
   </div>
 )}
 
-
-
-
-
 </section>
+
+
+
 
 
 
@@ -1053,28 +1118,70 @@ useEffect(() => {
         {/* Étapes */}
         <section className="mb-6 items-center" >
           <h2 className="text-xl font-semibold mb-2">👨‍🍳 Étapes de préparation</h2>
-          {steps.map((s, i) => (
-            <div key={i} className="flex items-start gap-2 mb-2 items-center">
-              <textarea
-                rows="2"
-                value={s} // déjà stocké avec numéro
-                onChange={(e) => {
-                  const updated = [...steps];
-                  updated[i] = e.target.value; 
-                  setSteps(updated);
-                }}
-                placeholder={`Étape ${i + 1}`}
-                className="flex-1 border rounded p-2"
-              ></textarea>
-                <button
-                  type="button"
-                  onClick={() => removeStep(i)}
-                  className="text-red-500 text-lg mt-1"
-                >
-                  ❌
-                </button>
-            </div>
-          ))}
+{steps.map((step, i) => (
+  <div
+    key={i}
+    className="flex flex-col gap-3 p-3 mb-4 border rounded bg-gray-50"
+  >
+    {/* Texte de l'étape */}
+    <textarea
+      rows="2"
+      value={step.text}
+      onChange={(e) => {
+        const updated = [...steps];
+        updated[i].text = e.target.value;
+        setSteps(updated);
+      }}
+      placeholder={`Étape ${i + 1}`}
+      className="w-full border rounded p-2"
+    ></textarea>
+
+    {/* Level + Temps */}
+    <div className="flex items-center gap-6">
+
+      {/* Level ⭐ */}
+      <div>
+        <label className="font-semibold text-sm">Difficulté</label>
+        <StarRating
+          value={step.level}
+          onChange={(lvl) => {
+            const updated = [...steps];
+            updated[i].level = lvl;
+            setSteps(updated);
+          }}
+        />
+      </div>
+
+      {/* Time (min) */}
+      <div>
+        <label className="font-semibold text-sm">Temps (min)</label>
+        <input
+          type="number"
+          min="0"
+          max="9999"
+          value={step.time}
+          onChange={(e) => {
+            const updated = [...steps];
+            updated[i].time = e.target.valueAsNumber;
+            setSteps(updated);
+          }}
+          className="border rounded p-2 w-20"
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => removeStep(i)}
+        className="text-red-500 text-lg ml-auto"
+      >
+        ❌
+      </button>
+
+    </div>
+  </div>
+))}
+
+
           <button
             type="button"
             onClick={addStep}

@@ -11,7 +11,7 @@ router.get("/get", async (req, res) => {
 
     const result = await pool.query(
       `SELECT p.id, p.name, p.avatar
-       FROM Profile p
+       FROM "Profile" p
        JOIN homes_profiles ahp ON ahp.profile_id = p.id
        WHERE ahp.home_id = $1`,
       [homeId]
@@ -32,7 +32,7 @@ router.post("/create", async (req, res) => {
 
     // créer le profil et récupérer l'id
     const profileResult = await pool.query(
-      `INSERT INTO Profile (username, password, name, avatar, role_id)
+      `INSERT INTO "Profile" (username, password, name, avatar, role_id)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id`,
       [username, password, name, avatar || null, role_id || 1]
@@ -63,7 +63,7 @@ router.post("/transfer", async (req, res) => {
 
     // Vérifier si le profil existe
     const profileResult = await pool.query(
-      "SELECT id FROM Profile WHERE username = $1 AND password = $2 LIMIT 1",
+      `SELECT id FROM "Profile" WHERE username = $1 AND password = $2 LIMIT 1`,
       [username, password]
     );
 

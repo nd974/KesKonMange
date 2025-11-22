@@ -3,6 +3,14 @@ import fetch from "node-fetch";
 
 const router = express.Router();
 
+const fetchWithTimeout = (url, ms = 1200) =>
+  Promise.race([
+    fetch(url),
+    new Promise((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout " + url)), ms)
+    )
+  ]);
+
 router.get("/", async (req, res) => {
   try {
     const queryFR = req.query.q;
@@ -15,8 +23,22 @@ router.get("/", async (req, res) => {
       `https://us.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(queryEN)}&search_simple=1&json=1`
     ];
 
-    const [resFR, resEN] = await Promise.all(urls.map(u => fetch(u)));
-    const [dataFR, dataEN] = await Promise.all([resFR.json(), resEN.json()]);
+    let dataFR = { products: [] };
+    let dataEN = { products: [] };
+
+    try {
+      const resFR = await fetchWithTimeout(urls[0]);
+      dataFR = await resFR.json();
+    } catch (e) {
+      console.warn("⚠️ OFF FR timeout");
+    }
+
+    try {
+      const resEN = await fetchWithTimeout(urls[1]);
+      dataEN = await resEN.json();
+    } catch (e) {
+      console.warn("⚠️ OFF US timeout : ignoré");
+    }
 
     const extractNames = (list) =>
       list
@@ -30,6 +52,7 @@ router.get("/", async (req, res) => {
     const suggestions = [...new Set([...namesFR, ...namesEN])];
 
     res.json(suggestions);
+
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: "Server error" });

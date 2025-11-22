@@ -148,19 +148,35 @@ router.post("/create", async (req, res) => {
     }
 
 
-    // Insertion des étapes si elles existent
-    if (Array.isArray(steps) && steps.length > 0) {
-      const insertStepsPromises = steps.map((step, index) => {
-        return pool.query(
-          `
-          INSERT INTO "recipes_steps" (recipe_id, step)
-          VALUES ($1, $2)
-          `,
-          [recipeId, `${index+1}. ${step}`]
-        );
-      });
-      await Promise.all(insertStepsPromises);
-    }
+  // Insertion des étapes si elles existent
+  if (Array.isArray(steps) && steps.length > 0) {
+    const insertStepsPromises = steps.map(async (step, index) => {
+
+      // 1. Créer la ligne dans "Step"
+      const stepRes = await pool.query(
+        `
+        INSERT INTO "Step" ("number", description, time, level)
+        VALUES ($1, $2, $3, $4)
+        RETURNING id
+        `,
+        [index + 1, step.text, step.time || 0, step.level || 0]
+      );
+
+      const stepId = stepRes.rows[0].id;
+
+      // 2. Lier avec la recette
+      await pool.query(
+        `
+        INSERT INTO "recipes_steps" (recipe_id, step_id)
+        VALUES ($1, $2)
+        `,
+        [recipeId, stepId]
+      );
+
+    });
+
+    await Promise.all(insertStepsPromises);
+  }
 
 
 
@@ -319,21 +335,54 @@ router.put("/update/:id", async (req, res) => {
     // --------------------------------------
     // 🚀 5. RESET + INSERT ÉTAPES
     // --------------------------------------
+
+    // 1. Récupérer les anciens step_id pour suppression
+    const oldSteps = await pool.query(
+      `SELECT step_id FROM recipes_steps WHERE recipe_id=$1`,
+      [recipeId]
+    );
+
+    // 2. Supprimer relations
     await pool.query(`DELETE FROM recipes_steps WHERE recipe_id=$1`, [recipeId]);
 
+    // 3. Supprimer les Steps orphelins
+    if (oldSteps.rows.length > 0) {
+      const ids = oldSteps.rows.map(r => r.step_id);
+      await pool.query(
+        `DELETE FROM "Step" WHERE id = ANY($1)`,
+        [ids]
+      );
+    }
+
+    // 4. Réinsérer les steps
     if (Array.isArray(steps) && steps.length > 0) {
-      const stepsPromises = steps.map((step, index) => {
-        return pool.query(
+      const stepsPromises = steps.map(async (step, index) => {
+
+        // Créer step
+        const stepRes = await pool.query(
           `
-          INSERT INTO recipes_steps (recipe_id, step)
+          INSERT INTO "Step" ("number", description, time, level)
+          VALUES ($1, $2, $3, $4)
+          RETURNING id
+          `,
+          [index + 1, step.text, step.time || 0, step.level || 0]
+        );
+
+        const stepId = stepRes.rows[0].id;
+
+        // Lier
+        await pool.query(
+          `
+          INSERT INTO recipes_steps (recipe_id, step_id)
           VALUES ($1, $2)
           `,
-          [recipeId, `${index + 1}. ${step}`]
+          [recipeId, stepId]
         );
       });
 
       await Promise.all(stepsPromises);
     }
+
 
     res.json({ ok: true, recipeId });
 
@@ -449,9 +498,23 @@ router.get("/get-one/:id", async (req, res) => {
     recipe.ingredients = ingredientRes.rows || [];
 
     const stepsRes = await pool.query(
-      `SELECT step FROM "recipes_steps" rs WHERE rs.recipe_id = $1 ORDER BY step ASC` ,[id]
+      `
+      SELECT 
+        s.id,
+        s.number,
+        s.description,
+        s.time,
+        s.level
+      FROM recipes_steps rs
+      JOIN "Step" s ON s.id = rs.step_id
+      WHERE rs.recipe_id = $1
+      ORDER BY s.number ASC
+      `,
+      [id]
     );
+
     recipe.steps = stepsRes.rows || [];
+
 
 
     res.json(recipe);
@@ -536,7 +599,7 @@ router.delete("/delete/:id", async (req, res) => {
   }
 
   try {
-    // 1️⃣ Récupérer le publicId de l'image liée à la recette
+    // 1️⃣ Récupérer le publicId (image)
     const imageResult = await pool.query(
       `SELECT name FROM "Recipe" WHERE id = $1`,
       [recipeId]
@@ -548,41 +611,69 @@ router.delete("/delete/:id", async (req, res) => {
 
     const publicId = imageResult.rows[0].name;
 
-    // 2️⃣ Récupérer les ingrédients liés à cette recette avant suppression
+    // 2️⃣ Récupérer les ingrédients liés avant suppression
     const ingredientsResult = await pool.query(
       `SELECT ingredient_id FROM recipes_ingredients WHERE recipe_id = $1`,
       [recipeId]
     );
 
-    const ingredientIds = ingredientsResult.rows.map(row => row.ingredient_id);
+    const ingredientIds = ingredientsResult.rows.map(r => r.ingredient_id);
 
-    // 3️⃣ Supprimer la recette
+    // 3️⃣ Récupérer les steps liés avant suppression
+    const stepsResult = await pool.query(
+      `SELECT step_id FROM recipes_steps WHERE recipe_id = $1`,
+      [recipeId]
+    );
+
+    const stepIds = stepsResult.rows.map(r => r.step_id);
+
+    // 4️⃣ Supprimer la recette
     await pool.query(
       `DELETE FROM "Recipe" WHERE id = $1`,
       [recipeId]
     );
 
-    // 4️⃣ Supprimer les relations dans recipes_ingredients
+    // 5️⃣ Supprimer les relations dans recipes_ingredients
     await pool.query(
       `DELETE FROM recipes_ingredients WHERE recipe_id = $1`,
       [recipeId]
     );
 
-    // 5️⃣ Supprimer les ingrédients non utilisés par d'autres recettes
+    // 6️⃣ Supprimer les ingrédients orphelins
     for (const ingId of ingredientIds) {
       await pool.query(
         `
         DELETE FROM "Ingredient"
         WHERE id = $1
-          AND NOT EXISTS (
-            SELECT 1 FROM recipes_ingredients ri WHERE ri.ingredient_id = $1
-          )
+        AND NOT EXISTS (
+          SELECT 1 FROM recipes_ingredients ri WHERE ri.ingredient_id = $1
+        )
         `,
         [ingId]
       );
     }
 
-    // 6️⃣ Supprimer l'image sur Cloudinary si elle existe
+    // 7️⃣ Supprimer les relations dans recipes_steps
+    await pool.query(
+      `DELETE FROM recipes_steps WHERE recipe_id = $1`,
+      [recipeId]
+    );
+
+    // 8️⃣ Supprimer les steps orphelins
+    if (stepIds.length > 0) {
+      await pool.query(
+        `
+        DELETE FROM "Step"
+        WHERE id = ANY($1)
+        AND NOT EXISTS (
+          SELECT 1 FROM recipes_steps rs WHERE rs.step_id = ANY($1)
+        )
+        `,
+        [stepIds]
+      );
+    }
+
+    // 9️⃣ Supprimer l'image Cloudinary
     if (publicId) {
       try {
         const cloudDelete = await cloudinary.v2.uploader.destroy(publicId);
@@ -595,14 +686,15 @@ router.delete("/delete/:id", async (req, res) => {
     res.json({
       ok: true,
       deletedRecipeId: recipeId,
-      deletedImagePublicId: publicId || null,
+      deletedImagePublicId: publicId || null
     });
 
   } catch (e) {
-    console.error("Erreur lors de la suppression de la recette/image :", e);
+    console.error("Erreur lors de la suppression :", e);
     res.status(500).json({ error: e.message });
   }
 });
+
 
 
 

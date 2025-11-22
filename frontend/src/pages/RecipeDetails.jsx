@@ -276,10 +276,28 @@ export default function RecipeDetail({homeId, id:idProp}) {
           {/* Préparation */}
           <section className="mt-8">
             <h2 className="text-xl font-semibold mb-2">👨‍🍳 Préparation</h2>
-              <ol className="list-decimal list-inside space-y-2">
-                {recipe.steps.map((s, i) => (
-                  <li key={i}>{s.step.replace(/^\d+\.\s*/, '')}</li> // supprime "1. ", "2. ", etc.
+              <ol className="list-inside space-y-2">
+                {recipe.steps.map((s) => (
+                  <li key={s.id}>
+                    <div className="font-medium">{s.number}. {s.description}</div>
+
+                    {/* Temps de l'étape */}
+                    {s.time > 0 && (
+                      <div className="text-sm text-gray-500">
+                        ⏱️ {s.time} min
+                      </div>
+                    )}
+
+                    {/* Niveau de difficulté */}
+                    {s.level > 0 && (
+                      <div className="text-yellow-500 text-sm">
+                        {"★".repeat(Math.round(s.level)) + "☆".repeat(5 - Math.round(s.level))}
+                      </div>
+                    )}
+
+                  </li>
                 ))}
+
               </ol>
           </section>
 

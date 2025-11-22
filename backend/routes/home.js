@@ -10,7 +10,7 @@ router.post("/create", async (req, res) => {
     if (!email || !password || !name) return res.status(400).json({ error: "missing fields" });
 
     const result = await pool.query(
-      "INSERT INTO Home (email, password, name) VALUES ($1, $2, $3) RETURNING id",
+      `INSERT INTO "Home" (email, password, name) VALUES ($1, $2, $3) RETURNING id`,
       [email, password, name]
     );
 
@@ -31,7 +31,7 @@ router.post("/login", async (req, res) => {
 
     // PostgreSQL : pool.query() renvoie un objet { rows, rowCount, ... }
     const result = await pool.query(
-      "SELECT id FROM Home WHERE email = $1 AND password = $2 LIMIT 1",
+      `SELECT id FROM "Home" WHERE email = $1 AND password = $2 LIMIT 1`,
       [email, password]
     );
 
@@ -52,7 +52,7 @@ router.get("/homes-get/:profileId", async (req, res) => {
 
     const query = `
       SELECT h.id, h.name, h.email
-      FROM Home h
+      FROM "Home" h
       JOIN homes_profiles hp ON hp.home_id = h.id
       WHERE hp.profile_id = $1
     `;
@@ -73,7 +73,7 @@ router.get("/get/:profileId", async (req, res) => {
 
     const query = `
       SELECT id, username, name, avatar, role_id
-      FROM Profile
+      FROM "Profile"
       WHERE id = $1
     `;
 
