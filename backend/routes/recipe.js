@@ -781,5 +781,161 @@ router.get("/getSimilar/:id", async (req, res) => {
   }
 });
 
+router.post("/getStats", async (req, res) => {
+  try {
+    const { recipeId, profileId } = req.body;
+
+    if (!recipeId || !profileId) {
+      return res.status(400).json({ error: "recipeId et profileId sont requis" });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT note, comment, usage_count
+      FROM recipes_stats
+      WHERE recipe_id = $1 AND profile_id = $2
+      `,
+      [recipeId, profileId]
+    );
+
+    res.json({ ok: true, stats: result.rows[0] || null });
+  } catch (err) {
+    console.error("Erreur dans /recipe/getStats :", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+router.post("/setStats", async (req, res) => {
+  try {
+    const { recipeId, profileId, note, comment } = req.body;
+
+    if (!recipeId || !profileId) {
+      return res.status(400).json({ error: "recipeId et profileId sont requis" });
+    }
+
+    if (note < 0 || note > 5) {
+      return res.status(400).json({ error: "note doit être entre 0 et 5" });
+    }
+
+    await pool.query(
+      `
+      INSERT INTO recipes_stats (recipe_id, profile_id, note, comment)
+      VALUES ($1, $2, $3, $4)
+      ON CONFLICT (recipe_id, profile_id)
+      DO UPDATE SET
+        note    = EXCLUDED.note,
+        comment = EXCLUDED.comment
+      `,
+      [recipeId, profileId, note, comment]
+    );
+
+    res.json({ ok: true });
+  } catch (err) {
+    console.error("Erreur dans /recipe/setStats :", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/getComments", async (req, res) => {
+  try {
+    const { recipeId, profileId } = req.body;
+
+    if (!recipeId) {
+      return res.status(400).json({ error: "recipeId est requis" });
+    }
+
+    if (!profileId) {
+      return res.status(400).json({ error: "profileId est requis" });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT 
+        rs.comment, 
+        rs.note, 
+        p.name AS username   -- TODO name->username prod
+      FROM recipes_stats rs
+      JOIN "Profile" p ON p.id = rs.profile_id
+      WHERE rs.recipe_id = $1
+        AND rs.profile_id <> $2      -- exclut le commentaire du profil connecté
+        AND rs.comment IS NOT NULL
+        AND rs.comment <> ''
+      ORDER BY rs.note DESC, rs.profile_id ASC
+      LIMIT 5;
+      `,
+      [recipeId, profileId]
+    );
+
+    res.json({ ok: true, comments: result.rows });
+  } catch (err) {
+    console.error("❌ Erreur dans /recipe/getComments:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+router.post("/getRating", async (req, res) => {
+  try {
+    const { recipeId } = req.body;
+
+    if (!recipeId) {
+      return res.status(400).json({ error: "recipeId est requis" });
+    }
+
+    const result = await pool.query(
+      `
+      SELECT 
+        ROUND(AVG(note)::numeric, 1) AS average_note,
+        COUNT(note) AS votes_count
+      FROM recipes_stats
+      WHERE recipe_id = $1
+        AND note IS NOT NULL
+      `,
+      [recipeId]
+    );
+
+    const { average_note, votes_count } = result.rows[0];
+
+    res.json({ ok: true, averageNote: average_note || 0, votesCount: parseInt(votes_count) || 0 });
+  } catch (err) {
+    console.error("❌ Erreur dans /recipe/getRating:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// DELETE /recipe/deleteStats
+router.post("/deleteStats", async (req, res) => {
+  try {
+    const { recipeId, profileId } = req.body;
+
+    if (!recipeId || !profileId) {
+      return res.status(400).json({ error: "recipeId et profileId sont requis" });
+    }
+
+    const result = await pool.query(
+      `
+      DELETE FROM recipes_stats
+      WHERE recipe_id = $1 AND profile_id = $2
+      RETURNING recipe_id, profile_id
+      `,
+      [recipeId, profileId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({ ok: false, error: "Aucune entrée trouvée pour ce profil et cette recette" });
+    }
+
+    res.json({ ok: true, deleted: result.rows[0] });
+  } catch (err) {
+    console.error("❌ Erreur dans /recipe/deleteStats:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+
+
+
 
 export default router;

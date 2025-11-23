@@ -1,50 +1,41 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useParams, Link } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeDetail({homeId, id:idProp}) {
+export default function RecipeDetail({ homeId, id: idProp }) {
   const navigate = useNavigate();
-
   const { id: idFromUrl } = useParams();
-  const id = idProp ?? idFromUrl; // prend la prop si passée, sinon l’URL
+  const id = idProp ?? idFromUrl;
+
+  const [profileId, setProfileId] = useState(null);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("profile_id");
+    if (stored) setProfileId(JSON.parse(stored));
+  }, []);
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const [showNutrition, setShowNutrition] = useState(false);
 
+  const [myNote, setMyNote] = useState(null);
+  const [myComment, setMyComment] = useState("");
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  const [comments, setComments] = useState([]);
+  const [averageNote, setAverageNote] = useState(0);
+  const [votesCount, setVotesCount] = useState(0);
+  const [statsSaved, setStatsSaved] = useState(false);
+
+
   const [similar, setSimilar] = useState([]);
-  useEffect(() => {
-  fetch(`${API_URL}/recipe/getSimilar/${id}`)
-    .then(res => res.json())
-    .then(data => setSimilar(data));
-}, [id]);
 
-  const deleteValidate = async () => {
-    if (!recipe.id) return;
-      if (confirm("Voulez-vous vraiment supprimer cette recette ?")) {
-        try {
-          const res = await fetch(`${API_URL}/recipe/delete/${recipe.id}`, {
-            method: "DELETE",
-          });
-          const data = await res.json();
-          if (data.ok) {
-            alert("Recette supprimée !");
-            navigate("/recipes");
-            // Rediriger ou mettre à jour l'état
-          } else {
-            alert("Erreur : " + data.error);
-          }
-        } catch (e) {
-          console.error(e);
-          alert("Erreur lors de la suppression");
-        }
-    }
-  }
 
+  // === Fetch recette ===
   useEffect(() => {
     async function fetchRecipe() {
       try {
@@ -60,13 +51,169 @@ export default function RecipeDetail({homeId, id:idProp}) {
     fetchRecipe();
   }, [id]);
 
+  // === Fetch stats utilisateur ===
+  useEffect(() => {
+    if (!profileId) return;
+    async function fetchStats() {
+      try {
+        const res = await fetch(`${API_URL}/recipe/getStats`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId: id, profileId }),
+        });
+        const data = await res.json();
+        if (data.ok && data.stats) {
+          setMyNote(data.stats.note);
+          setMyComment(data.stats.comment || "");
+          setStatsSaved(data.stats.note !== null || !!data.stats.comment);
+        }
+      } catch (e) {
+        console.error("Erreur chargement stats:", e);
+      } finally {
+        setLoadingStats(false);
+      }
+    }
+    fetchStats();
+  }, [id, profileId]);
+
+  // === Fetch commentaires publics (exclut celui du profil actuel) ===
+  useEffect(() => {
+    if (!profileId) return;
+    async function loadComments() {
+      try {
+        const res = await fetch(`${API_URL}/recipe/getComments`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ recipeId: id, profileId }),
+        });
+        const data = await res.json();
+        if (data.ok) {
+          const filtered = data.comments
+            .filter(c => c.profile_id !== profileId)
+            .slice(0, 5); // max 5 commentaires
+          setComments(filtered);
+        }
+      } catch (e) {
+        console.error("Erreur chargement commentaires:", e);
+      }
+    }
+    loadComments();
+  }, [id, profileId]);
+
+  // Fonction pour récupérer la note moyenne
+  async function loadRating() {
+    if (!id) return;
+    try {
+      const res = await fetch(`${API_URL}/recipe/getRating`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipeId: id }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setAverageNote(data.averageNote);
+        setVotesCount(data.votesCount);
+      }
+    } catch (e) {
+      console.error("Erreur loadRating:", e);
+    }
+  }
+
+  // === useEffect initial pour charger la note moyenne ===
+  useEffect(() => {
+    loadRating();
+  }, [id]);
+
+  // === Fetch recettes similaires ===
+  useEffect(() => {
+    async function fetchSimilar() {
+      try {
+        const res = await fetch(`${API_URL}/recipe/getSimilar/${id}`);
+        const data = await res.json();
+        setSimilar(data.slice(0, 5)); // max 5
+      } catch (e) {
+        console.error("Erreur fetch recettes similaires:", e);
+      }
+    }
+    fetchSimilar();
+  }, [id]);
+
+  const deleteValidate = async () => {
+    if (!recipe?.id) return;
+    if (confirm("Voulez-vous vraiment supprimer cette recette ?")) {
+      try {
+        const res = await fetch(`${API_URL}/recipe/delete/${recipe.id}`, { method: "DELETE" });
+        const data = await res.json();
+        if (data.ok) {
+          alert("Recette supprimée !");
+          navigate("/recipes");
+        } else {
+          alert("Erreur : " + data.error);
+        }
+      } catch (e) {
+        console.error(e);
+        alert("Erreur lors de la suppression");
+      }
+    }
+  };
+
+  // Fonction pour supprimer le commentaire/note
+  async function deleteMyComment() {
+    if (!profileId) return;
+    if (!confirm("Voulez-vous vraiment supprimer votre avis ?")) return;
+
+    try {
+      const res = await fetch(`${API_URL}/recipe/deleteStats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipeId: id, profileId }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setMyNote(null);
+        setMyComment("");
+        setStatsSaved(false); // <- ajouter ça
+        alert("Votre avis a été supprimé !");
+        loadRating();
+      } else {
+        alert("Erreur : " + data.error);
+      }
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de la suppression de votre avis");
+    }
+  }
+
+
+  async function saveStats(e) {
+    e.preventDefault();
+    try {
+      const res = await fetch(`${API_URL}/recipe/setStats`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipeId: id,
+          profileId,
+          note: myNote,
+          comment: myComment,
+        }),
+      });
+      const data = await res.json();
+      if (!data.ok) return alert("Erreur: " + data.error);
+      alert("Avis enregistré !");
+      setStatsSaved(true);
+      loadRating();
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de l'enregistrement");
+    }
+  }
+
   if (loading) return <div className="p-8 text-center">Chargement...</div>;
   if (!recipe) return <div className="p-8 text-center">Recette introuvable.</div>;
 
-  console.log("recipe", recipe);
-
   return (
-  <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8 relative">
+  <div className={`min-h-screen px-4 md:px-8 lg:px-16 relative ${!idProp ? "py-8" : ""}`}>
       {!idProp && <Header homeId={homeId} /> }
 
       <div  className={`lg:flex lg:gap-6 ${!idProp ? "py-8" : ""}`}>
@@ -149,31 +296,40 @@ export default function RecipeDetail({homeId, id:idProp}) {
             </div>
           </div>
 
-          {/* Note moyenne + 🍏 pour mobile */}
+            {/* Note moyenne + 🍏 pour mobile ou si idProp pas défini */}
+            {votesCount > 0 && (
+              <div className="flex items-center gap-2 mt-2 text-yellow-500">
+                {Array.from({ length: 5 }, (_, i) => {
+                  const starNum = i + 1;
+                  if (starNum <= Math.floor(averageNote)) return "★";
+                  if (starNum - 1 < averageNote && averageNote < starNum) return "☆"; // demi-étoile si souhaité
+                  return "☆";
+                }).join("")}
 
-          {/* Note moyenne + 🍏 pour mobile ou si idProp pas défini */}
-          <div className="flex items-center gap-2 mt-2 text-yellow-500">
-            ⭐⭐⭐⭐☆
-            <span className="text-gray-600 text-sm">(4.2 / 5 sur 128 votes)</span>
+                <span className="text-gray-600 text-sm">
+                  ({averageNote} / 5 sur {votesCount} vote{votesCount > 1 ? "s" : ""})
+                </span>
 
-            {( idProp ) ? (
-              // idProp non défini → toujours visible
-              <span
-                className="ml-2 cursor-pointer"
-                onClick={() => setShowNutrition(true)}
-              >
-                🍏
-              </span>
-            ) : (
-              // idProp défini → mobile seulement
-              <span
-                className="ml-2 cursor-pointer lg:hidden"
-                onClick={() => setShowNutrition(true)}
-              >
-                🍏
-              </span>
+                {(!idProp ? (
+                  // idProp défini → mobile seulement
+                  <span
+                    className="ml-2 cursor-pointer lg:hidden"
+                    onClick={() => setShowNutrition(true)}
+                  >
+                    🍏
+                  </span>
+                ) : (
+                  // idProp non défini → toujours visible
+                  <span
+                    className="ml-2 cursor-pointer"
+                    onClick={() => setShowNutrition(true)}
+                  >
+                    🍏
+                  </span>
+                ))}
+              </div>
             )}
-          </div>
+
 
 
 
@@ -251,15 +407,16 @@ export default function RecipeDetail({homeId, id:idProp}) {
 
             <ul className="list-disc list-inside space-y-1">
               {recipe.ingredients?.map((ing) => {
-                const unit = ing.unit; // abbreviation (g, ml, càs…)
+                const unit = ing.unit;
                 const name = ing.name.toLowerCase();
 
-                // Règle : unité courte (<=2 lettres) -> collée
-                const displayQty = unit
-                  ? ing.amount + (unit.length <= 2 ? unit : ` ${unit}`)
-                  : ing.amount;
+                const amount = Number(ing.amount); // conversion en nombre
+                const displayAmount = Number.isInteger(amount) ? amount : amount.toFixed(2);
 
-                // Ajouter "de" ou "d'" seulement si on a une unité
+                const displayQty = unit
+                  ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
+                  : displayAmount;
+
                 const deWord = unit ? (/^[aeiouyh]/i.test(name) ? "d'" : "de ") : "";
 
                 return (
@@ -269,6 +426,7 @@ export default function RecipeDetail({homeId, id:idProp}) {
                 );
               })}
             </ul>
+
           </section>
 
 
@@ -305,21 +463,59 @@ export default function RecipeDetail({homeId, id:idProp}) {
           <section className="mt-10">
             <h2 className="text-xl font-semibold mb-3">💬 Commentaires</h2>
 
-            <div className="border-t pt-3 mt-3">
-              <p className="font-semibold">Marie — ⭐⭐⭐⭐⭐</p>
-              <p>Recette simple et délicieuse ! J’ai ajouté un peu de crème pour plus d’onctuosité 😋</p>
-            </div>
+            {/* Affichage des commentaires publics */}
+            {comments.length === 0 && (
+              <p className="text-gray-500 mb-4">Aucun commentaire pour l’instant.</p>
+            )}
 
-            <div className="border-t pt-3 mt-3">
-              <p className="font-semibold">Lucas — ⭐⭐⭐⭐☆</p>
-              <p>Très bon, mais un peu salé à cause des lardons.</p>
-            </div>
+            {comments.map((c, i) => (
+              <div key={i} className="border-t pt-3 mt-3">
+                <p className="font-semibold">
+                  {c.username} — {"★".repeat(c.note)}{"☆".repeat(5 - c.note)}
+                </p>
+                <p>{c.comment}</p>
+              </div>
+            ))}
 
-            <form className="mt-6 border-t pt-4">
-              <h3 className="font-semibold mb-2">Laisser un commentaire</h3>
-              <textarea className="w-full border rounded p-2 mb-2" rows="3" placeholder="Votre avis..."></textarea>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Envoyer</button>
+
+            <form onSubmit={saveStats} className="mt-6 border-t pt-4">
+              <h3 className="font-semibold mb-2">Votre avis</h3>
+
+              <div className="flex gap-1 mb-3 text-2xl cursor-pointer">
+                {[1,2,3,4,5].map(n => (
+                  <span key={n} onClick={() => setMyNote(n)} className={n <= (myNote||0) ? "text-yellow-500" : "text-gray-300"}>★</span>
+                ))}
+              </div>
+
+              <textarea
+                className="w-full border rounded p-2 mb-2"
+                rows="3"
+                maxLength="150"
+                placeholder="Votre avis..."
+                value={myComment}
+                onChange={e => setMyComment(e.target.value)}
+              />
+
+<div className="flex gap-2">
+  <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+    Enregistrer
+  </button>
+
+{statsSaved && (
+  <button
+    type="button"
+    onClick={deleteMyComment}
+    className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+  >
+    Supprimer mon avis
+  </button>
+)}
+
+</div>
+
             </form>
+
+
           </section>
 
         </main>

@@ -196,4 +196,140 @@ router.post("/create", async (req, res) => {
 });
 
 
+router.post("/subscribe", async (req, res) => {
+  try {
+    const { menuId, profileId } = req.body;
+
+    if (!menuId || !profileId) {
+      return res.status(400).json({ error: "menuId et profileId sont requis" });
+    }
+
+    // Ajouter l'association menu_id - profile_id dans la table menus_profiles
+    const result = await pool.query(
+      `
+      INSERT INTO menus_profiles (menu_id, profile_id)
+      VALUES ($1, $2)
+      ON CONFLICT (menu_id, profile_id) DO NOTHING;  -- Evite les doublons
+      `,
+      [menuId, profileId]
+    );
+
+    if (result.rowCount > 0) {
+      res.json({ ok: true });
+    } else {
+      res.status(400).json({ error: "L'inscription a déjà été effectuée" });
+    }
+  } catch (err) {
+    console.error("❌ Erreur dans /menu/subscribe:", err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
+router.post("/unsubscribe", async (req, res) => {
+  try {
+    const { menuId, profileId } = req.body;
+
+    // Vérification des données d'entrée
+    if (!menuId || !profileId) {
+      return res.status(400).json({ error: "menuId et profileId sont requis" });
+    }
+
+    // Supprimer l'association dans la table `menus_profiles`
+    const result = await pool.query(
+      `DELETE FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
+      [menuId, profileId]
+    );
+
+    // Vérifier si l'utilisateur était déjà inscrit
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Aucune inscription trouvée pour cet utilisateur et ce menu" });
+    }
+
+    // Si tout s'est bien passé
+    res.json({ success: true, message: "Désinscription réussie" });
+  } catch (err) {
+    console.error("❌ Erreur lors de la désinscription:", err);
+    res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
+  }
+});
+
+router.post("/checkSubscription", async (req, res) => {
+  try {
+    const { menuId, profileId } = req.body;
+
+    // Vérification des paramètres
+    if (!menuId || !profileId) {
+      return res.status(400).json({ error: "menuId et profileId sont requis" });
+    }
+
+    // Vérification si l'utilisateur est déjà inscrit à ce menu
+    const result = await pool.query(
+      `SELECT 1 FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
+      [menuId, profileId]
+    );
+
+    // Si l'utilisateur est inscrit, on retourne true
+    if (result.rowCount > 0) {
+      return res.json({ isSubscribed: true });
+    }
+
+    // Si l'utilisateur n'est pas inscrit
+    res.json({ isSubscribed: false });
+  } catch (err) {
+    console.error("❌ Erreur lors de la vérification de l'abonnement:", err);
+    res.status(500).json({ error: "Erreur serveur lors de la vérification de l'abonnement" });
+  }
+});
+
+router.get("/getSubscribers", async (req, res) => {
+  const { menuId } = req.query;
+
+  if (!menuId) {
+    return res.status(400).json({ error: "menuId est requis" });
+  }
+
+  try {
+    const { rows } = await pool.query(
+      `
+      SELECT p.name
+      FROM menus_profiles mp
+      JOIN "Profile" p ON p.id = mp.profile_id
+      WHERE mp.menu_id = $1
+      ORDER BY p.name ASC;
+      `,
+      [menuId]
+    );
+
+    res.json(rows);
+  } catch (err) {
+    console.error("Erreur /menu/get-subscribers:", err);
+    res.status(500).json({ error: "Erreur serveur lors de la récupération des inscrits" });
+  }
+});
+
+router.delete("/delete/:id", async (req, res) => {
+  const menuId = parseInt(req.params.id, 10);
+
+  if (isNaN(menuId)) {
+    return res.status(400).json({ error: "ID de menu invalide" });
+  }
+
+  try {
+    // 4️⃣ Supprimer la recette
+    await pool.query(
+      `DELETE FROM "Menu" WHERE id = $1`,
+      [menuId]
+    );
+
+    res.json({
+      ok: true
+    });
+
+  } catch (e) {
+    console.error("Erreur lors de la suppression :", e);
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 export default router;

@@ -330,7 +330,9 @@ const searchIngredient = async (index, nameOverride) => {
   setLoadingIngredient(index);
 
   try {
-    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(name)}&fields=product_name&json=1&page_size=10`);
+    // const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(name)}&fields=product_name&json=1&page_size=10`);
+    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(name)}&search_simple=1&json=1`);
+    
     const data = await res.json();
 
     const suggestions = (data.products || [])
@@ -978,7 +980,7 @@ const StarRating = ({ value, onChange }) => {
           return updated;
         })
       }
-      className="border rounded p-2 w-24 bg-white"
+      className="border rounded p-2 w-18 bg-white"
     >
       <option value="">-</option>
       {units.map((u) => (
