@@ -58,56 +58,61 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
     .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
 
   return (
-    <div>
-      <h3 className="text-2xl font-bold text-gray-800 mb-3">
-        Menus enregistrés
-      </h3>
-      <div className="space-y-3">
-        {groups.length === 0 && (
-          <p className="text-sm text-gray-500">
-            Aucun menu enregistré. Rendez-vous sur le calendrier.
-          </p>
-        )}
-        {groups.map((g) => {
-          const firstMenu = g.menus[0];
-          const previewRecipe = firstMenu.recipes?.[0];
-          const tagNames = g.menus.map((mm) => mm.tagName).filter(Boolean);
-          return (
-            <div
-              key={g.date}
-              className={`p-4 rounded-lg shadow-soft flex justify-between items-center cursor-pointer ${
-                selectedDay?.format("YYYY-MM-DD") === g.date
-                  ? "bg-accentGreen text-white"
-                  : "bg-white/80"
-              }`}
-              onClick={() => {
-                setSelectedDay(dayjs(g.date));
-                if (onSelectMenu)
-                  onSelectMenu({ date: g.date, menus: g.menus, tagName: g.tagName });
-              }}
-            >
-              <div>
-                <div className="font-semibold text-gray-800">
-                  {dayjs(g.date).format("ddd D MMM")}
-                </div>
-                <div className="text-sm opacity-80">
-                  {previewRecipe?.name || "—"}
-                </div>
-              </div>
+      <div>
+        <h3 className="text-2xl font-bold text-gray-800 mb-3">
+          Menus enregistrés
+        </h3>
 
+        {/* --- WRAPPER avec scroll --- */}
+        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
+          {groups.length === 0 && (
+            <p className="text-sm text-gray-500">
+              Aucun menu enregistré. Rendez-vous sur le calendrier.
+            </p>
+          )}
+
+          {groups.map((g) => {
+            const firstMenu = g.menus[0];
+            const previewRecipe = firstMenu.recipes?.[0];
+            const tagNames = g.menus.map((mm) => mm.tagName).filter(Boolean);
+
+            return (
               <div
-                className={`text-right ${
+                key={g.date}
+                className={`p-4 rounded-lg shadow-soft flex justify-between items-center cursor-pointer ${
                   selectedDay?.format("YYYY-MM-DD") === g.date
                     ? "bg-accentGreen text-white"
                     : "bg-white/80"
                 }`}
+                onClick={() => {
+                  setSelectedDay(dayjs(g.date));
+                  if (onSelectMenu)
+                    onSelectMenu({ date: g.date, menus: g.menus, tagName: g.tagName });
+                }}
               >
-                {g.menus.length} 🍽️
+                <div>
+                  <div className="font-semibold text-gray-800">
+                    {dayjs(g.date).format("ddd D MMM")}
+                  </div>
+                  <div className="text-sm opacity-80">
+                    {previewRecipe?.name || "—"}
+                  </div>
+                </div>
+
+                <div
+                  className={`text-right ${
+                    selectedDay?.format("YYYY-MM-DD") === g.date
+                      ? "bg-accentGreen text-white"
+                      : "bg-white/80"
+                  }`}
+                >
+                  {g.menus.length} 🍽️
+                </div>
               </div>
-            </div>
-          );
-        })}
+            );
+          })}
+        </div>
       </div>
-    </div>
+
   );
 }

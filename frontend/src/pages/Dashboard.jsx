@@ -12,6 +12,8 @@ dayjs.locale("fr");
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Dashboard({ homeId }) {
+  const [loading, setLoading] = useState(false); // TODO CHARGEMENT
+
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedMenusForDay, setSelectedMenusForDay] = useState([]);
   const [activeMenuIndex, setActiveMenuIndex] = useState(0);
@@ -28,6 +30,7 @@ export default function Dashboard({ homeId }) {
   // Chargement des menus
   const loadMenus = async (homeId) => {
     if (!homeId) return;
+    setLoading(true); // TODO deb du CHARGEMENT
     try {
       const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
       if (!res.ok) throw new Error("Erreur récupération menus");
@@ -50,6 +53,10 @@ export default function Dashboard({ homeId }) {
       console.error("Erreur loadMenus Dashboard:", e);
       setMenus([]);
       setTodayMenus([]);
+    }
+     finally {
+      setLoading(false);  // TODO fin du CHARGEMENT
+      
     }
   };
 
@@ -261,13 +268,20 @@ export default function Dashboard({ homeId }) {
   };
 
   return (
+    
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId} />
-
-      <main className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* LEFT – détail */}
+      {loading ? (  // TODO CHARGEMENT
+        <p className="text-center text-gray-500 py-10">Chargement…</p>
+      ) : (
         <section className="order-2 lg:order-1">
-          <div className="flex items-center gap-3 mb-4">
+          <Header homeId={homeId} />
+
+        {/* SECTION MENUS A (toujours visible) */}
+        <main className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+          {/* LEFT – détail */}
+          <section className="order-2 lg:order-1">
+            <div className="flex items-center gap-3 mb-4">
             {selectedDay && (
               <>
                 <div className="bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
@@ -305,97 +319,63 @@ export default function Dashboard({ homeId }) {
                 </div>
               </>
             )}
-          </div>
+            </div>
 
-          <div className="soft-card rounded-lg shadow-soft relative">
-            {selectedRecipe ? (
-              <div className="flex flex-col items-center relative">
-                                                        {/* TRASH À DROITE */}
-                    <button
-                      onClick={deleteMenuValidate}
-                      className="absolute right-0 text-right z-50"
-                    >
-                      ❌
-                    </button>
-                <div className="w-full flex items-center pt-8 relative">
-                  {/* GROUPE CENTRÉ */}
-                  <div className="flex items-center gap-2 mx-auto">
+            <div className="soft-card rounded-lg shadow-soft relative">
+              {selectedRecipe ? (
+                <div className="flex flex-col items-center relative">
+                                                          {/* TRASH À DROITE */}
+                      <button
+                        onClick={deleteMenuValidate}
+                        className="absolute right-0 text-right z-50"
+                      >
+                        ❌
+                      </button>
+                  <div className="w-full flex items-center pt-8 relative">
+                    {/* GROUPE CENTRÉ */}
+                    <div className="flex items-center gap-2 mx-auto">
 
 
-                    <button
-                      className="text-2xl"
-                      onClick={() =>
-                        handleSubscribeToMenu(selectedMenusForDay[activeMenuIndex].id)
-                      }
-                    >
-                      {subscriptionState[selectedMenusForDay[activeMenuIndex].id] ? (
-                        <span style={{ color: "green" }}>◉</span>
-                      ) : (
-                        <span style={{ color: "red" }}>⭘</span>
-                      )}💾
-                    </button>
+                      <button
+                        className="text-2xl"
+                        onClick={() =>
+                          handleSubscribeToMenu(selectedMenusForDay[activeMenuIndex].id)
+                        }
+                      >
+                        {subscriptionState[selectedMenusForDay[activeMenuIndex].id] ? (
+                          <span style={{ color: "green" }}>◉</span>
+                        ) : (
+                          <span style={{ color: "red" }}>⭘</span>
+                        )}💾
+                      </button>
 
-                    <h2 className="text-2xl font-semibold text-center">
-                      {selectedMenusForDay[activeMenuIndex]?.tagName}
-                    </h2>
+                      <h2 className="text-2xl font-semibold text-center">
+                        {selectedMenusForDay[activeMenuIndex]?.tagName}
+                      </h2>
 
-                    <button onClick={openSubscribersPopup} className="text-2xl">
-                      📋
-                    </button>
+                      <button onClick={openSubscribersPopup} className="text-2xl">
+                        📋
+                      </button>
 
+                    </div>
                   </div>
-                </div>
 
 
 
 
-                <div className="flex-1 mx-0 lg:mx-8 mt-4 w-full">
-                  <RecipeDetail
-                    key={selectedRecipe?.id}
-                    homeId={homeId}
-                    id={selectedRecipe?.id}
-                  />
-                </div>
+                  <div className="flex-1 mx-0 lg:mx-8 mt-4 w-full">
+                    <RecipeDetail
+                      key={selectedRecipe?.id}
+                      homeId={homeId}
+                      id={selectedRecipe?.id}
+                    />
+                  </div>
 
-                {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                  <button
-                    onClick={showPrev}
-                    disabled={recipeIndex <= 0}
-                    className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
-                      recipeIndex > 0
-                        ? "hover:shadow cursor-pointer"
-                        : "bg-white/60 opacity-50 cursor-not-allowed"
-                    }`}
-                  >
-                    ◀
-                  </button>
-                )}
-
-                {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                  <button
-                    onClick={showNext}
-                    disabled={
-                      recipeIndex >=
-                      selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                    }
-                    className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
-                      recipeIndex <
-                      selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                        ? "cursor-pointer"
-                        : "bg-white/60 opacity-50 cursor-not-allowed"
-                    }`}
-                  >
-                    ▶
-                  </button>
-                )}
-
-                {/* mobile */}
-                {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                  <div className="flex justify-center gap-4 mb-4 lg:hidden">
+                  {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
                     <button
                       onClick={showPrev}
                       disabled={recipeIndex <= 0}
-                      className={`px-3 py-1 rounded-md ${
+                      className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
                         recipeIndex > 0
                           ? "hover:shadow cursor-pointer"
                           : "bg-white/60 opacity-50 cursor-not-allowed"
@@ -403,14 +383,16 @@ export default function Dashboard({ homeId }) {
                     >
                       ◀
                     </button>
+                  )}
 
+                  {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
                     <button
                       onClick={showNext}
                       disabled={
                         recipeIndex >=
                         selectedMenusForDay[activeMenuIndex].recipes.length - 1
                       }
-                      className={`px-3 py-1 rounded-md ${
+                      className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
                         recipeIndex <
                         selectedMenusForDay[activeMenuIndex].recipes.length - 1
                           ? "cursor-pointer"
@@ -419,35 +401,79 @@ export default function Dashboard({ homeId }) {
                     >
                       ▶
                     </button>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <p className="text-gray-500 text-center py-10">
-                Choisir un jour avec menu(s) enregistré(s).
-              </p>
-            )}
+                  )}
 
-            {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-              <div className="text-sm text-gray-600 text-center mt-4">
-                {recipeIndex + 1} / {selectedMenusForDay[activeMenuIndex].recipes.length}
-              </div>
-            )}
+                  {/* mobile */}
+                  {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+                    <div className="flex justify-center gap-4 mb-4 lg:hidden">
+                      <button
+                        onClick={showPrev}
+                        disabled={recipeIndex <= 0}
+                        className={`px-3 py-1 rounded-md ${
+                          recipeIndex > 0
+                            ? "hover:shadow cursor-pointer"
+                            : "bg-white/60 opacity-50 cursor-not-allowed"
+                        }`}
+                      >
+                        ◀
+                      </button>
+
+                      <button
+                        onClick={showNext}
+                        disabled={
+                          recipeIndex >=
+                          selectedMenusForDay[activeMenuIndex].recipes.length - 1
+                        }
+                        className={`px-3 py-1 rounded-md ${
+                          recipeIndex <
+                          selectedMenusForDay[activeMenuIndex].recipes.length - 1
+                            ? "cursor-pointer"
+                            : "bg-white/60 opacity-50 cursor-not-allowed"
+                        }`}
+                      >
+                        ▶
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <p className="text-gray-500 text-center py-10">
+                  Choisir un jour avec menu(s) enregistré(s).
+                </p>
+              )}
+
+              {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+                <div className="text-sm text-gray-600 text-center mt-4">
+                  {recipeIndex + 1} / {selectedMenusForDay[activeMenuIndex].recipes.length}
+                </div>
+              )}
+            </div>
+          </section>
+
+          {/* RIGHT — regroupement de Menu A + Menu B */}
+          <div className="order-1 lg:order-2 flex flex-col gap-6">
+
+            {/* MENU A (toujours visible) */}
+            <section>
+              <Menus
+                selectedDay={selectedDay}
+                setSelectedDay={setSelectedDay}
+                onPick={handlePick}
+                onSelectMenu={handleSelectMenu}
+                homeId={homeId}
+              />
+              <div className="h-6" />
+            </section>
+
+            {/* MENU B (visible seulement desktop) */}
+            <section className="hidden lg:block">
+              <h3 className="text-2xl font-bold text-gray-800 mb-3">
+                Recettes Possibles
+              </h3>
+            </section>
+
           </div>
-        </section>
-
-        {/* RIGHT – menus */}
-        <section className="order-1 lg:order-2">
-          <Menus
-            selectedDay={selectedDay}
-            setSelectedDay={(d) => setSelectedDay(d)}
-            onPick={(r) => handlePick(r)}
-            onSelectMenu={handleSelectMenu}
-            homeId={homeId}
-          />
-          <div className="h-6" />
-        </section>
-      </main>
+        </main>
 
 
       {showSubscribers && (
@@ -476,7 +502,8 @@ export default function Dashboard({ homeId }) {
           </div>
         </div>
       )}
-
+        </section>
+      )}
     </div>
   );
 }

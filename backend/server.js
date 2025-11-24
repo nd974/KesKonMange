@@ -40,7 +40,7 @@ app.get("/ping", (req, res) => {
   res.status(200).send("p");
 });
 
-import openfoodfactsRoutes from "./routes/api/openfoodfacts.js";
-app.use("/api/openfoodfacts", openfoodfactsRoutes);
+// import openfoodfactsRoutes from "./routes/api/openfoodfacts.js";
+// app.use("/api/openfoodfacts", openfoodfactsRoutes);
 
 app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
