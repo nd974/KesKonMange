@@ -301,9 +301,9 @@ export default function RecipeDetail({ homeId, id: idProp }) {
               <div className="flex items-center gap-2 mt-2 text-yellow-500">
                 {Array.from({ length: 5 }, (_, i) => {
                   const starNum = i + 1;
-                  if (starNum <= Math.floor(averageNote)) return "★";
-                  if (starNum - 1 < averageNote && averageNote < starNum) return "☆"; // demi-étoile si souhaité
-                  return "☆";
+                  if (starNum <= Math.floor(averageNote)) return "★"; // étoile pleine
+                  if (starNum - 1 < averageNote && averageNote < starNum) return "⯨"; // demi-étoile
+                  return "☆"; // étoile vide
                 }).join("")}
 
                 <span className="text-gray-600 text-sm">
