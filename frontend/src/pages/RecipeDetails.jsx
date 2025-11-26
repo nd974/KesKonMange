@@ -300,15 +300,15 @@ export default function RecipeDetail({ homeId, id: idProp }) {
             {/* Note moyenne + 🍏 pour mobile ou si idProp pas défini */}
             {votesCount > 0 && (
               <div className="flex items-center gap-2 mt-2 text-yellow-500">
-<div className="flex gap-1">
-  {Array.from({ length: 5 }, (_, i) => {
-    const starNum = i + 1;
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const starNum = i + 1;
 
-    if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
-    if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
-    return <EmptyStar key={i} />;
-  })}
-</div>
+                    if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
+                    if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
+                    return <EmptyStar key={i} />;
+                  })}
+                </div>
 
 
                 <span className="text-gray-600 text-sm">
@@ -447,30 +447,36 @@ export default function RecipeDetail({ homeId, id: idProp }) {
                   </div>
 
                   {(s.time > 0 || s.level > 0) && (
-                    <div className="flex items-center justify-between text-sm mt-1">
-                      
+                    <div
+                      className={`flex items-center text-sm mt-1 ${
+                        s.time > 0 && s.level > 0
+                          ? "justify-between"
+                          : "justify-start"
+                      }`}
+                    >
+
                       {/* Temps */}
-                      {s.time > 0 ? (
+                      {s.time > 0 && (
                         <div className="text-gray-500">
                           ⏱️ {s.time} min
                         </div>
-                      ) : (
-                        <div></div>  /* garde la place si pas de temps */
                       )}
 
                       {/* Etoiles */}
                       {s.level > 0 && (
-                        <div className="text-accentGreen">
+                        <div className={`text-accentGreen ${s.time <= 0 ? "" : ""}`}>
                           {"★".repeat(Math.round(s.level)) +
                             "☆".repeat(5 - Math.round(s.level))}
                         </div>
                       )}
+
                     </div>
                   )}
                 </li>
               ))}
             </ol>
           </section>
+
 
 
           {/* Commentaires */}
