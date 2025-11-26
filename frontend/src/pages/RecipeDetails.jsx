@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header.jsx";
+import { FullStar, HalfStar, EmptyStar } from "../components/Stars";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -299,12 +300,16 @@ export default function RecipeDetail({ homeId, id: idProp }) {
             {/* Note moyenne + 🍏 pour mobile ou si idProp pas défini */}
             {votesCount > 0 && (
               <div className="flex items-center gap-2 mt-2 text-yellow-500">
-                {Array.from({ length: 5 }, (_, i) => {
-                  const starNum = i + 1;
-                  if (starNum <= Math.floor(averageNote)) return "★"; // étoile pleine
-                  if (starNum - 1 < averageNote && averageNote < starNum) return "⯪"; // demi-étoile
-                  return "☆"; // étoile vide
-                }).join("")}
+<div className="flex gap-1">
+  {Array.from({ length: 5 }, (_, i) => {
+    const starNum = i + 1;
+
+    if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
+    if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
+    return <EmptyStar key={i} />;
+  })}
+</div>
+
 
                 <span className="text-gray-600 text-sm">
                   ({averageNote} / 5 sur {votesCount} vote{votesCount > 1 ? "s" : ""})
