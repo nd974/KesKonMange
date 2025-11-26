@@ -302,7 +302,7 @@ export default function RecipeDetail({ homeId, id: idProp }) {
                 {Array.from({ length: 5 }, (_, i) => {
                   const starNum = i + 1;
                   if (starNum <= Math.floor(averageNote)) return "★"; // étoile pleine
-                  if (starNum - 1 < averageNote && averageNote < starNum) return "⯨"; // demi-étoile
+                  if (starNum - 1 < averageNote && averageNote < starNum) return "⯪"; // demi-étoile
                   return "☆"; // étoile vide
                 }).join("")}
 
@@ -434,30 +434,39 @@ export default function RecipeDetail({ homeId, id: idProp }) {
           {/* Préparation */}
           <section className="mt-8">
             <h2 className="text-xl font-semibold mb-2">👨‍🍳 Préparation</h2>
-              <ol className="list-inside space-y-2">
-                {recipe.steps.map((s) => (
-                  <li key={s.id}>
-                    <div className="font-medium">{s.number}. {s.description}</div>
+            <ol className="list-inside space-y-2">
+              {recipe.steps.map((s) => (
+                <li key={s.id}>
+                  <div className="font-medium">
+                    {s.number}. {s.description}
+                  </div>
 
-                    {/* Temps de l'étape */}
-                    {s.time > 0 && (
-                      <div className="text-sm text-gray-500">
-                        ⏱️ {s.time} min
-                      </div>
-                    )}
+                  {(s.time > 0 || s.level > 0) && (
+                    <div className="flex items-center justify-between text-sm mt-1">
+                      
+                      {/* Temps */}
+                      {s.time > 0 ? (
+                        <div className="text-gray-500">
+                          ⏱️ {s.time} min
+                        </div>
+                      ) : (
+                        <div></div>  /* garde la place si pas de temps */
+                      )}
 
-                    {/* Niveau de difficulté */}
-                    {s.level > 0 && (
-                      <div className="text-yellow-500 text-sm">
-                        {"★".repeat(Math.round(s.level)) + "☆".repeat(5 - Math.round(s.level))}
-                      </div>
-                    )}
-
-                  </li>
-                ))}
-
-              </ol>
+                      {/* Etoiles */}
+                      {s.level > 0 && (
+                        <div className="text-accentGreen">
+                          {"★".repeat(Math.round(s.level)) +
+                            "☆".repeat(5 - Math.round(s.level))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </li>
+              ))}
+            </ol>
           </section>
+
 
           {/* Commentaires */}
           <section className="mt-10">
@@ -468,14 +477,25 @@ export default function RecipeDetail({ homeId, id: idProp }) {
               <p className="text-gray-500 mb-4">Aucun commentaire pour l’instant.</p>
             )}
 
-            {comments.map((c, i) => (
-              <div key={i} className="border-t pt-3 mt-3">
-                <p className="font-semibold">
-                  {c.username} — {"★".repeat(c.note)}{"☆".repeat(5 - c.note)}
-                </p>
-                <p>{c.comment}</p>
-              </div>
-            ))}
+{comments.map((c, i) => (
+  <div key={i} className="border-t pt-3 mt-3">
+    
+    <div className="flex items-center justify-between">
+      {/* Username en gras à gauche */}
+      <p className="font-semibold">{c.username}</p>
+
+      {/* Étoiles à droite */}
+      {c.note > 0 && (
+        <p className="text-yellow-500 text-sm font-medium">
+          {"★".repeat(c.note)}{"☆".repeat(5 - c.note)}
+        </p>
+      )}
+    </div>
+
+    <p>{c.comment}</p>
+  </div>
+))}
+
 
 
             <form onSubmit={saveStats} className="mt-6 border-t pt-4">
