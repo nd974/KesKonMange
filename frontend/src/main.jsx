@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { messaging, requestWebPushToken } from "./firebase.js";
+import { messaging, requestWebPushToken } from "./config/firebase.js";
 import { onMessage } from "firebase/messaging";
 
 // ✅ Enregistre le service worker
