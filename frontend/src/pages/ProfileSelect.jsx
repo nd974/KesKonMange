@@ -26,7 +26,7 @@ import { refreshHomeId} from "../../session";
 //   });
 // }
 // ------------------------------------------------------------------------------
-
+import { requestWebPushToken } from "../config/firebase";
 
 export default function ProfileSelect({homeId}) {
   const [profiles, setProfiles] = useState([]);
@@ -48,9 +48,15 @@ export default function ProfileSelect({homeId}) {
     localStorage.setItem("profile_id", profileId);
 
     // Enregistrer le push token pour ce profil// ------------------------------------------------------------------------------
-    if (Platform.OS === 'ios' || Platform.OS === 'android') {
-      await registerPushToken(profileId);
-    }// ------------------------------------------------------------------------------
+    const pushToken = await requestWebPushToken();
+
+    if (pushToken) {
+      await fetch(`${API_URL}/profile/save-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId, pushToken }),
+      });
+    }
 
     navigate("/"); // dashboard
   };

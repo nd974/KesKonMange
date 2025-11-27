@@ -196,23 +196,16 @@ router.post("/create", async (req, res) => {
 });
 
 
-async function sendExpoNotification(tokens, title, body) {
-  const messages = tokens.map(token => ({
-    to: token,
-    sound: "default",
-    title,
-    body,
-  }));
+import admin from "../firebase.js"; // ou "../../lib/firebase.js"
 
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      "Accept": "application/json",
-      "Accept-encoding": "gzip, deflate",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(messages),
-  });
+async function sendFCMNotification(tokens, title, body) {
+  const message = {
+    notification: { title, body },
+    tokens,
+  };
+
+  const response = await admin.messaging().sendEachForMulticast(message);
+  console.log(response);
 }
 
 router.post("/subscribe", async (req, res) => {
@@ -264,7 +257,7 @@ router.post("/subscribe", async (req, res) => {
 
     // 4️⃣ Envoyer notification
     if (tokens.length > 0) {
-      await sendExpoNotification(
+      await sendFCMNotification(
         tokens,
         "Nouvelle inscription",
         "Une mise à jour est disponible dans votre dashboard."
@@ -335,7 +328,7 @@ router.post("/unsubscribe", async (req, res) => {
 
     // 4️⃣ Envoyer notification
     if (tokens.length > 0) {
-      await sendExpoNotification(
+      await sendFCMNotification(
         tokens,
         "Désinscription",
         "Une mise à jour est disponible dans votre dashboard."
