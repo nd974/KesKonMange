@@ -198,99 +198,136 @@ router.post("/create", async (req, res) => {
 
 import admin from "../firebase.js";
 
-// --- Fonction pour envoyer la notification FCM ---
+// 🔹 Envoi des notifications FCM avec tokens uniques
 async function sendFCMNotification(tokens, title, body) {
-  if (tokens.length === 0) return;
+  // On s'assure que chaque token est unique
+  const uniqueTokens = [...new Set(tokens)];
+
+  if (uniqueTokens.length === 0) return;
 
   const message = {
     notification: { title, body },
-    tokens,
+    tokens: uniqueTokens,
   };
 
-  console.log("Envoi notification à ces tokens :", tokens);
+  console.log("Tokens uniques récupérés :", uniqueTokens);
+  console.log("Message FCM :", JSON.stringify(message, null, 2));
 
   const response = await admin.messaging().sendEachForMulticast(message);
+
   console.log("Réponse FCM :", response);
+
   return response;
 }
 
-// --- Helper : récupérer tokens des profils d'une maison, sauf le profil déclencheur ---
-async function getTokensForHomeExcludingProfile(homeId, excludeProfileId) {
-  const tokensResult = await pool.query(
-    `
-    SELECT p.id AS profile_id, p.push_token
-    FROM "Profile" p
-    INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-    WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
-    `,
-    [homeId]
-  );
-
-  // Exclure le profil déclencheur
-  const tokens = tokensResult.rows
-    .filter(r => r.profile_id !== excludeProfileId)
-    .map(r => r.push_token);
-
-  return tokens;
-}
-
-// --- SUBSCRIBE ---
+// ------------------- SUBSCRIBE -------------------
 router.post("/subscribe", async (req, res) => {
-  console.log("SUBSCRIBE called for profileId:", req.body.profileId, "menuId:", req.body.menuId);
   try {
     const { menuId, profileId } = req.body;
-    if (!menuId || !profileId) return res.status(400).json({ error: "menuId et profileId sont requis" });
+    if (!menuId || !profileId)
+      return res.status(400).json({ error: "menuId et profileId sont requis" });
 
-    const menu = await pool.query(`SELECT "home_id" FROM "Menu" WHERE id = $1`, [menuId]);
-    if (menu.rowCount === 0) return res.status(404).json({ error: "Menu introuvable" });
+    // 1️⃣ Récupérer home_id du menu
+    const menu = await pool.query(
+      `SELECT "home_id" FROM "Menu" WHERE id = $1`,
+      [menuId]
+    );
+    if (menu.rowCount === 0)
+      return res.status(404).json({ error: "Menu introuvable" });
 
     const homeId = menu.rows[0].home_id;
 
+    // 2️⃣ Ajouter l'association menu/profile
     const result = await pool.query(
-      `INSERT INTO menus_profiles (menu_id, profile_id) VALUES ($1, $2) ON CONFLICT (menu_id, profile_id) DO NOTHING`,
+      `INSERT INTO menus_profiles (menu_id, profile_id)
+       VALUES ($1, $2)
+       ON CONFLICT (menu_id, profile_id) DO NOTHING`,
       [menuId, profileId]
     );
-    if (result.rowCount === 0) return res.status(400).json({ error: "L'inscription a déjà été effectuée" });
+    if (result.rowCount === 0)
+      return res.status(400).json({ error: "L'inscription a déjà été effectuée" });
 
-    // Récupérer tokens des autres profils de la maison
-    const tokens = await getTokensForHomeExcludingProfile(homeId, profileId);
+    // 3️⃣ Récupérer tous les tokens uniques des profils liés à cette maison
+    const tokensResult = await pool.query(
+      `
+      SELECT DISTINCT p.push_token 
+      FROM "Profile" p
+      INNER JOIN homes_profiles hp ON p.id = hp.profile_id
+      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+      `,
+      [homeId]
+    );
 
-    // Envoyer notification une seule fois
-    await sendFCMNotification(tokens, "Nouvelle inscription", "Une mise à jour est disponible dans votre dashboard.");
+    const tokens = tokensResult.rows.map(r => r.push_token);
+
+    // 4️⃣ Envoyer notification
+    if (tokens.length > 0) {
+      await sendFCMNotification(
+        tokens,
+        "Nouvelle inscription",
+        "Une mise à jour est disponible dans votre dashboard."
+      );
+    }
 
     res.json({ ok: true, notified: tokens.length });
+
   } catch (err) {
-    console.error("Erreur /subscribe :", err.stack);
+    console.error("❌ Erreur dans /menu/subscribe:", err.stack);
     res.status(500).json({ error: err.message });
   }
 });
 
-// --- UNSUBSCRIBE ---
+// ------------------- UNSUBSCRIBE -------------------
 router.post("/unsubscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
-    if (!menuId || !profileId) return res.status(400).json({ error: "menuId et profileId sont requis" });
+    if (!menuId || !profileId)
+      return res.status(400).json({ error: "menuId et profileId sont requis" });
 
-    const menu = await pool.query(`SELECT "home_id" FROM "Menu" WHERE id = $1`, [menuId]);
-    if (menu.rowCount === 0) return res.status(404).json({ error: "Menu introuvable" });
+    // 1️⃣ Récupérer home_id du menu
+    const menu = await pool.query(
+      `SELECT "home_id" FROM "Menu" WHERE id = $1`,
+      [menuId]
+    );
+    if (menu.rowCount === 0)
+      return res.status(404).json({ error: "Menu introuvable" });
 
     const homeId = menu.rows[0].home_id;
 
+    // 2️⃣ Supprimer l'association menu/profile
     const result = await pool.query(
       `DELETE FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
       [menuId, profileId]
     );
-    if (result.rowCount === 0) return res.status(404).json({ error: "Aucune inscription trouvée pour cet utilisateur et ce menu" });
+    if (result.rowCount === 0)
+      return res.status(404).json({ error: "Aucune inscription trouvée pour cet utilisateur et ce menu" });
 
-    // Récupérer tokens des autres profils de la maison
-    const tokens = await getTokensForHomeExcludingProfile(homeId, profileId);
+    // 3️⃣ Récupérer tous les tokens uniques des profils liés à cette maison
+    const tokensResult = await pool.query(
+      `
+      SELECT DISTINCT p.push_token
+      FROM "Profile" p
+      INNER JOIN homes_profiles hp ON p.id = hp.profile_id
+      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+      `,
+      [homeId]
+    );
 
-    // Envoyer notification une seule fois
-    await sendFCMNotification(tokens, "Désinscription", "Une mise à jour est disponible dans votre dashboard.");
+    const tokens = tokensResult.rows.map(r => r.push_token);
+
+    // 4️⃣ Envoyer notification
+    if (tokens.length > 0) {
+      await sendFCMNotification(
+        tokens,
+        "Désinscription",
+        "Une mise à jour est disponible dans votre dashboard."
+      );
+    }
 
     res.json({ success: true, message: "Désinscription réussie", notified: tokens.length });
+
   } catch (err) {
-    console.error("Erreur /unsubscribe :", err.stack);
+    console.error("❌ Erreur lors de la désinscription:", err.stack);
     res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
   }
 });
