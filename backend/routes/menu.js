@@ -214,24 +214,23 @@ async function sendFCMNotification(tokens, title, body) {
   return response;
 }
 
-// --- Helper pour récupérer un token par profil ---
+// --- Helper : 1 token par profil ---
 async function getOneTokenPerProfile(homeId, excludeProfileId) {
   const tokensResult = await pool.query(
     `
-    SELECT DISTINCT ON (p.id) p.id as profile_id, p.push_token
+    SELECT p.id as profile_id, p.push_token
     FROM "Profile" p
     INNER JOIN homes_profiles hp ON p.id = hp.profile_id
     WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
-    ORDER BY p.id
     `,
     [homeId]
   );
 
-  // Exclure le profil qui déclenche l'action
+  // On conserve 1 token par profil et on exclut le profil déclencheur
   const tokensPerProfile = {};
   tokensResult.rows.forEach(r => {
-    if (r.profile_id !== excludeProfileId) {
-      tokensPerProfile[r.profile_id] = r.push_token; // garder 1 token par profil
+    if (r.profile_id !== excludeProfileId && !tokensPerProfile[r.profile_id]) {
+      tokensPerProfile[r.profile_id] = r.push_token;
     }
   });
 
@@ -293,6 +292,7 @@ router.post("/unsubscribe", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
   }
 });
+
 
 
 
