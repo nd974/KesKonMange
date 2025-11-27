@@ -22,7 +22,6 @@ export async function requestWebPushToken() {
     const token = await getToken(messaging, {
       vapidKey: import.meta.env.VITE_FIREBASE_VAPID_KEY
     });
-
     return token;
   } catch (err) {
     console.error("Erreur FCM token:", err);
