@@ -196,7 +196,7 @@ router.post("/create", async (req, res) => {
 });
 
 
-import admin from "../firebase.js"; // ou "../../lib/firebase.js"
+import admin from "../firebase.js";
 
 async function sendFCMNotification(tokens, title, body) {
   const message = {
@@ -204,8 +204,17 @@ async function sendFCMNotification(tokens, title, body) {
     tokens,
   };
 
+  // 🔹 Log avant l'envoi
+  console.log("Tokens récupérés :", tokens);
+  console.log("Message FCM :", JSON.stringify(message, null, 2));
+
+  // Envoi du message
   const response = await admin.messaging().sendEachForMulticast(message);
-  console.log(response);
+
+  // 🔹 Log après l'envoi pour vérifier la réponse de FCM
+  console.log("Réponse FCM :", response);
+
+  return response;
 }
 
 router.post("/subscribe", async (req, res) => {
