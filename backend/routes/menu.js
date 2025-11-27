@@ -254,9 +254,11 @@ router.post("/subscribe", async (req, res) => {
       SELECT DISTINCT p.push_token
       FROM "Profile" p
       INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+      WHERE hp.home_id = $1 
+        AND p.push_token IS NOT NULL
+        AND p.id <> $2
       `,
-      [homeId]
+      [homeId, profileId] // exclure le profile courant
     );
 
     const tokens = tokensResult.rows.map(r => r.push_token);
@@ -305,19 +307,22 @@ router.post("/unsubscribe", async (req, res) => {
     }
 
     // 🔹 Récupérer tous les tokens uniques pour cette maison
+    // Récupération des tokens distincts pour la maison, sauf celui du profile courant
     const tokensResult = await pool.query(
       `
       SELECT DISTINCT p.push_token
       FROM "Profile" p
       INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+      WHERE hp.home_id = $1 
+        AND p.push_token IS NOT NULL
+        AND p.id <> $2
       `,
-      [homeId]
+      [homeId, profileId] // exclure le profile courant
     );
 
     const tokens = tokensResult.rows.map(r => r.push_token);
 
-    // 🔹 Envoyer notification seulement si désinscription réelle
+    // Envoyer la notification seulement si tokens non vide
     if (tokens.length > 0) {
       await sendFCMNotification(
         tokens,
