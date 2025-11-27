@@ -35,53 +35,6 @@ export default function RecipeAdd({ homeId }) {
     setstatusCSS("green");
   };
 
-  //   const fileToUpload = selectedFile || fileInputRef.current?.files[0];
-
-  //   if (!fileToUpload){
-  //     return null;
-  //   }
-
-  //   console.log(publicMameIdCloud);
-  //   setstatusName("Envoi en cours...");
-
-  //   try {
-  //     const formData = new FormData();
-  //     formData.append("file", fileToUpload);
-  //     formData.append("upload_preset", "Recettes");
-  //     formData.append("public_id", publicMameIdCloud);
-
-  //     const res = await fetch(
-  //       "https://api.cloudinary.com/v1_1/dsnaosp8u/image/upload",
-  //       { method: "POST", body: formData }
-  //     );
-
-  //     const data = await res.json();
-  //     console.log("Réponse Cloudinary :", data);
-
-  //     if (data.secure_url) {
-  //       // Transformation Cloudinary pour redimensionner à 1870×1250
-  //       const transformedUrl = data.secure_url.replace(
-  //         "/upload/",
-  //         "/upload/w_1870,h_1250,c_fill/"
-  //       );
-
-  //       setstatusName("✅ Image uploadée");
-
-  //       const parts = transformedUrl.split("/upload/w_1870,h_1250,c_fill/");
-  //       console.log(parts[1]);
-  //       return parts[1];
-  //     } else {
-  //       setstatusName("❌ Erreur : pas d'URL renvoyée.");
-  //       console.log("❌ Erreur : pas d'URL renvoyée.");
-  //       return null;
-  //     }
-  //   } catch (err) {
-  //     console.error(err);
-  //     setstatusName("❌ Erreur lors de l'upload : " + err.message);
-  //     console.log("❌ Erreur : pas d'URL renvoyée.");
-  //     return null;
-  //   }
-  // };
 const handleDeletePicture = async () => {
   try {
     await fetch(`${API_URL}/recipe/delete-image/${recipeName}`, {
@@ -248,9 +201,13 @@ const [ingredients, setIngredients] = useState([
 ]);
 
 
+// Stocke localIngredients au chargement du composant pour éviter des fetch répétées
+const [localIngredients, setLocalIngredients] = useState([]);
 
 const [loadingIngredient, setLoadingIngredient] = useState(null);
 const [warningIndex, setWarningIndex] = useState(null);
+
+const [showIngredientInfo, setShowIngredientInfo] = useState(false);
 
 function useDebounce(value, delay) {
   const [debounced, setDebounced] = useState(value);
@@ -271,90 +228,117 @@ function debounce(func, wait) {
   };
 }
 
-
 // const debouncedName = useDebounce(ing.name, 500);
 // Dans ton composant RecipeAdd
-const debounceSearchIngredient = useRef(
-  debounce((index, value) => searchIngredient(index, value), 500)
-).current;
+const debounceRefs = useRef({}); // { [index]: timeoutId }
+
+const debounceSearchIngredient = (index, value) => {
+  if (debounceRefs.current[index]) clearTimeout(debounceRefs.current[index]);
+  debounceRefs.current[index] = setTimeout(() => {
+    searchIngredient(index, value);
+    debounceRefs.current[index] = null;
+  }, 500); // 500ms suffisent
+};
 
 
-// useEffect(() => {
-//   if (!debouncedName) return;
+// Charger les ingrédients locaux au démarrage
+useEffect(() => {
+  const fetchLocalIngredients = async () => {
+    try {
+      const res = await fetch(`${API_URL}/ingredient/get-all`);
+      const data = await res.json();
+      setLocalIngredients(data);
+    } catch (err) {
+      console.error("Erreur chargement ingrédients locaux :", err);
+    }
+  };
+  fetchLocalIngredients();
+}, []);
 
-//   let active = true;
+const suggestionsCache = useRef({}); // { query: suggestions }
+const lastQueryRef = useRef("");
 
-//   setLoadingIngredient(i);
+const searchIngredient = (index, nameOverride) => {
+  const name = (nameOverride || ingredients[index].name.trim()).toLowerCase();
+  if (!name || name.length < 3) return; // pas de fetch pour < 3 lettres
+  if (name === lastQueryRef.current) return; // éviter les fetch doublons
+  lastQueryRef.current = name;
 
-//   fetch(
-//     `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(
-//       debouncedName
-//     )}&search_simple=1&json=1&page_size=20`
-//   )
-//     .then(res => res.json())
-//     .then(data => {
-//       if (!active) return;
+  // 🔹 Suggestions locales
+  const localSuggestions = localIngredients
+    .filter(ing => ing.name.toLowerCase().includes(name))
+    .map(ing => ({ name: ing.name.trim(), isLocal: true }));
 
-//       let suggestions = (data.products || [])
-//         .map(p => p.product_name || p.generic_name || p.ingredients_text)
-//         .filter(Boolean)
-//         .map(s => s.trim())
-//         .filter(s => !/^E\d+/i.test(s))
-//         .filter(s => s.toLowerCase().includes(debouncedName.toLowerCase()));
+  // Affiche immédiatement les locales
+  setIngredients(prev => {
+    const updated = [...prev];
+    updated[index].suggestions = localSuggestions;
+    updated[index].selected = false;
+    updated[index].warning = localSuggestions.length === 0;
+    return updated;
+  });
 
-//       if (suggestions.length === 0) suggestions.push(debouncedName);
-
-//       setIngredients(prev => {
-//         const updated = [...prev];
-//         updated[i].suggestions = suggestions;
-//         updated[i].selected = false;
-//         return updated;
-//       });
-//     })
-//     .catch(console.error)
-//     .finally(() => setLoadingIngredient(null));
-
-//   return () => {
-//     active = false;
-//   };
-// }, [debouncedName]);
-
-
-// 🔍 Fonction de recherche manuelle sur clic
-
-
-const searchIngredient = async (index, nameOverride) => {
-  const name = nameOverride || ingredients[index].name.trim();
-  if (!name) return;
-
-  setLoadingIngredient(index);
-
-  try {
-    // const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(name)}&fields=product_name&json=1&page_size=10`);
-    const res = await fetch(`https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(name)}&search_simple=1&json=1`);
-    
-    const data = await res.json();
-
-    const suggestions = (data.products || [])
-      .map(p => p.product_name)
-      .filter(Boolean)
-      .map(s => s.trim())
-      .filter(s => !/^E\d+/i.test(s))
-      .filter(s => s.toLowerCase().includes(name.toLowerCase()));
-
+  // 🔹 Vérifier le cache
+  if (suggestionsCache.current[name]) {
+    // si cache, on merge les locales + cache
+    const cachedSuggestions = suggestionsCache.current[name];
     setIngredients(prev => {
       const updated = [...prev];
-      updated[index].suggestions = suggestions;
-      updated[index].selected = false;
-      updated[index].warning = suggestions.length === 0;
+      updated[index].suggestions = [...localSuggestions, ...cachedSuggestions];
       return updated;
     });
-  } catch (err) {
-    console.error("Erreur OpenFoodFacts :", err);
+    return;
   }
 
-  setLoadingIngredient(null);
+  // 🔹 Fetch API OpenFoodFacts en arrière-plan
+  (async () => {
+    setLoadingIngredient(index);
+    try {
+      const resAPI = await fetch(
+        `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(
+          name
+        )}&search_simple=1&json=1&page_size=10`
+      );
+      const dataAPI = await resAPI.json();
+
+      const apiSuggestions = (dataAPI.products || [])
+        .map(p => p.product_name)
+        .filter(Boolean)
+        .map(s => s.trim())
+        .filter(s => s.toLowerCase().includes(name))
+        .map(s => ({ name: s, isLocal: false }));
+
+      // 🔹 Fusion locales + API
+      const suggestions = [...localSuggestions, ...apiSuggestions];
+
+      // 🔹 Mettre à jour le cache
+      suggestionsCache.current[name] = apiSuggestions;
+
+      // 🔹 Mettre à jour le state
+      setIngredients(prev => {
+        const updated = [...prev];
+        updated[index].suggestions = suggestions;
+        updated[index].warning = suggestions.length === 0;
+        return updated;
+      });
+    } catch (err) {
+      console.error("Erreur fetch API OpenFoodFacts :", err);
+      setIngredients(prev => {
+        const updated = [...prev];
+        updated[index].warning = true;
+        return updated;
+      });
+    } finally {
+      setLoadingIngredient(null);
+    }
+  })();
 };
+
+
+
+
+
+
 
 
 // Sélection d'une suggestion
@@ -875,80 +859,21 @@ const StarRating = ({ value, onChange }) => {
           </button>
         </section>
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
         {/* Ingrédients */}
 {/* Ingrédients */}
 <section className="mb-6">
-  <h2 className="text-xl font-semibold mb-2">🥕 Ingrédients nécessaires</h2>
+<h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
+  🥕 Ingrédients nécessaires
+
+  {/* Bouton info */}
+  <button
+    type="button"
+    onClick={() => setShowIngredientInfo(true)}
+    className="text-gray-400 hover:text-gray-600 text-lg font-bold flex items-center"
+  >
+    ℹ️
+  </button>
+</h2>
 
 {ingredients.map((ing, i) => (
   <div key={i} className="flex items-center gap-2 mb-3">
@@ -1002,24 +927,19 @@ const StarRating = ({ value, onChange }) => {
       const updated = [...prev];
       updated[i].name = inputValue;
       updated[i].selected = false;
-
-      const nameLower = inputValue.trim().toLowerCase();
-      updated[i].warning =
-        (updated[i].suggestions.length > 0 &&
-         !updated[i].suggestions.map(s => s.toLowerCase()).includes(nameLower)) ||
-        (updated[i].suggestions.length === 0 && nameLower.length > 0);
-
+      // ⚠️ NE PAS toucher aux suggestions ici
       return updated;
     });
 
-    // Lancer la recherche avec debounce
-    debounceSearchIngredient(i, inputValue); 
+    debounceSearchIngredient(i, inputValue); // lance la recherche
   }}
-        className={`border rounded p-2 w-full pr-16 ${
-          ing.warning ? "border-orange-400 border-2" : "border-gray-300"
-        }`}
-        placeholder="Nom ingrédient"
-      />
+  className={`border rounded p-2 w-full pr-16 ${
+    ing.warning ? "border-orange-400 border-2" : "border-gray-300"
+  }`}
+  placeholder="Nom ingrédient"
+/>
+
+
 
       {/* 🟧 Icône warning */}
       {ing.warning && (
@@ -1044,15 +964,19 @@ const StarRating = ({ value, onChange }) => {
       {/* Suggestions */}
       {ing.suggestions.length > 0 && (
         <ul className="absolute bg-white border rounded shadow w-full mt-1 z-50 max-h-40 overflow-auto">
-          {ing.suggestions.map((s, j) => (
-            <li
-              key={j}
-              className="p-2 hover:bg-gray-100 cursor-pointer"
-              onMouseDown={() => selectSuggestion(i, s)}
-            >
-              {s}
-            </li>
-          ))}
+          {ing.suggestions
+            .sort((a, b) => (b.isLocal ? 1 : 0) - (a.isLocal ? 1 : 0)) // locales en haut
+            .map((s, j) => (
+              <li
+                key={j}
+                className={`p-2 hover:bg-gray-100 cursor-pointer ${
+                  s.isLocal ? "text-accentGreen font-bold" : "text-yellow-700"
+                }`}
+                onMouseDown={() => selectSuggestion(i, s.name)}
+              >
+                {s.name}
+              </li>
+            ))}
         </ul>
       )}
     </div>
@@ -1104,18 +1028,35 @@ const StarRating = ({ value, onChange }) => {
   </div>
 )}
 
+  {showIngredientInfo && (
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+      onClick={() => setShowIngredientInfo(false)} // clic en dehors ferme la popin
+    >
+      <div
+        className="bg-white rounded-lg p-6 max-w-sm w-full relative"
+        onClick={(e) => e.stopPropagation()} // empêche fermeture si clic à l'intérieur
+      >
+        <h3 className="text-lg font-semibold mb-2">ℹ️ Informations sur les suggestions</h3>
+        <p className="text-gray-700 mb-2">
+          Les suggestions <span className="font-bold text-accentGreen">en vert</span> proviennent de notre base de données.
+        </p>
+        <p className="text-gray-700">
+          Les suggestions <span className="font-bold text-yellow-700">en beige</span> proviennent de l’API OpenFoodFacts.
+        </p>
+        <div className="text-right mt-4">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+            onClick={() => setShowIngredientInfo(false)}
+          >
+            OK
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
 </section>
-
-
-
-
-
-
-
-
-
-
-
 
         {/* Étapes */}
         <section className="mb-6 items-center" >

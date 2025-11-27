@@ -11,6 +11,7 @@ import recipeRoutes from "./routes/recipe.js";
 import menuRoutes from "./routes/menu.js";
 import unitRoutes from "./routes/unit.js";
 import utensilRoutes from "./routes/utensil.js";
+import ingredientRoutes from "./routes/ingredient.js";
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use("/recipe", recipeRoutes);
 app.use("/menu", menuRoutes);
 app.use("/unit", unitRoutes);
 app.use("/utensil", utensilRoutes);
+app.use("/ingredient", ingredientRoutes);
 
 const PORT = process.env.PORT || 3000;
 

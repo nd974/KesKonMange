@@ -1,7 +1,5 @@
 export const CLOUDINARY_NAME = `${import.meta.env.VITE_CLOUDINARY_NAME}`;
 
-// export const CLOUDINARY_NAME = "dsnaosp8u";// dz4ejk7r7
-
 export const CLOUDINARY_RES = `https://res.cloudinary.com/${CLOUDINARY_NAME}/image/upload/`;
 export const CLOUDINARY_API = `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME}/image/upload`;
 
@@ -19,4 +17,4 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
 ];
 
 export const CLOUDINARY_PRESET_RECIPE = "Recettes";
-export const CLOUDINARY_RECETTE_NOTFOUND = "v1762771501/imageNotFound_kkrdc3.png";
+export const CLOUDINARY_RECETTE_NOTFOUND = "v1764239561/noimg.webp";
