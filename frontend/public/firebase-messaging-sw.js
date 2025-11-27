@@ -26,3 +26,14 @@ messaging.onBackgroundMessage(function(payload) {
   };
   self.registration.showNotification(notificationTitle, notificationOptions);
 });
+
+import { onMessage } from "firebase/messaging";
+
+onMessage(messaging, (payload) => {
+  console.log("Notification reçue au premier plan :", payload);
+  // Afficher une notification custom
+  new Notification(payload.notification.title, {
+    body: payload.notification.body,
+    icon: "/favicon.ico",
+  });
+});
