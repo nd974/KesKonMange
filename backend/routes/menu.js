@@ -223,18 +223,18 @@ async function getUniqueTokensForHome(homeId, excludeProfileId) {
     FROM "Profile" p
     INNER JOIN homes_profiles hp ON p.id = hp.profile_id
     WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
-    ORDER BY p.id, p.updated_at DESC
     `,
     [homeId]
   );
 
-  // On exclut le profil qui déclenche l'action
+  // Exclure le profil qui déclenche l'action
   const tokens = tokensResult.rows
     .filter(r => r.profile_id !== excludeProfileId)
     .map(r => r.push_token);
 
   return tokens;
 }
+
 
 // --- SUBSCRIBE ---
 router.post("/subscribe", async (req, res) => {
