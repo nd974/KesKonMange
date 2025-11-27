@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { messaging } from "../config/firebase"; // ton fichier firebase.js
+import { messaging } from "./config/firebase"; // ton fichier firebase.js
 import { onMessage } from "firebase/messaging";
 
 // Enregistrer le service worker
