@@ -119,6 +119,22 @@ router.post("/save-token", async (req, res) => {
     res.status(500).json({ error: e.message });
   }
 });
+
+router.post("/remove-token", async (req, res) => {
+  const { profileId } = req.body;
+  if (!profileId) return res.status(400).json({ error: "profileId requis" });
+
+  try {
+    await pool.query(
+      `UPDATE "Profile" SET push_token = NULL WHERE id = $1`,
+      [profileId]
+    );
+    res.json({ success: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 // ------------------------------------------------------------------------------
 
 export default router;

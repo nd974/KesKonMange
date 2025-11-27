@@ -35,10 +35,19 @@ export default function ProfileSelect({homeId}) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    localStorage.removeItem("profile_id");
-    // const homeId = localStorage.getItem("home_id");
-    if (!homeId) return;
+    // 1️⃣ Supprimer le token actuel côté serveur
+    const currentProfileId = localStorage.getItem("profile_id");
+    if (currentProfileId) {
+      fetch(`${API_URL}/profile/remove-token`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId: currentProfileId }),
+      });
+      localStorage.removeItem("profile_id");
+    }
 
+    // 2️⃣ Charger les profils
+    if (!homeId) return;
     fetch(`${API_URL}/profile/get?homeId=${homeId}`)
       .then((res) => res.json())
       .then((data) => setProfiles(data || []));
@@ -47,9 +56,8 @@ export default function ProfileSelect({homeId}) {
   const handleSelectProfile = async (profileId) => {
     localStorage.setItem("profile_id", profileId);
 
-    // Enregistrer le push token pour ce profil// ------------------------------------------------------------------------------
+    // 3️⃣ Enregistrer le nouveau push token pour ce profil
     const pushToken = await requestWebPushToken();
-
     if (pushToken) {
       await fetch(`${API_URL}/profile/save-token`, {
         method: "POST",
