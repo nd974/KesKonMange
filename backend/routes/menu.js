@@ -236,6 +236,7 @@ async function getTokensForHomeExcludingProfile(homeId, excludeProfileId) {
 
 // --- SUBSCRIBE ---
 router.post("/subscribe", async (req, res) => {
+  console.log("SUBSCRIBE called for profileId:", req.body.profileId, "menuId:", req.body.menuId);
   try {
     const { menuId, profileId } = req.body;
     if (!menuId || !profileId) return res.status(400).json({ error: "menuId et profileId sont requis" });
