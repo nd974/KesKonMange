@@ -226,7 +226,7 @@ router.post("/subscribe", async (req, res) => {
       return res.status(400).json({ error: "menuId et profileId sont requis" });
     }
 
-    // 🔹 Récupérer home_id du menu
+    // Récupérer home_id du menu
     const menu = await pool.query(
       `SELECT "home_id" FROM "Menu" WHERE id = $1`,
       [menuId]
@@ -236,7 +236,7 @@ router.post("/subscribe", async (req, res) => {
     }
     const homeId = menu.rows[0].home_id;
 
-    // 🔹 Ajouter l'association menu/profile (uniquement si nouvelle)
+    // Ajouter l'association menu/profile (uniquement si nouvelle)
     const result = await pool.query(
       `INSERT INTO menus_profiles (menu_id, profile_id)
        VALUES ($1, $2)
@@ -248,20 +248,22 @@ router.post("/subscribe", async (req, res) => {
       return res.status(400).json({ error: "L'inscription a déjà été effectuée" });
     }
 
-    // 🔹 Récupérer tous les tokens uniques pour cette maison
+    // Récupérer tous les tokens uniques pour cette maison, sauf celui du profile courant
     const tokensResult = await pool.query(
       `
       SELECT DISTINCT p.push_token
       FROM "Profile" p
       INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+      WHERE hp.home_id = $1
+        AND p.push_token IS NOT NULL
+        AND p.id <> $2
       `,
-      [homeId]
+      [homeId, profileId]
     );
 
     const tokens = tokensResult.rows.map(r => r.push_token);
 
-    // 🔹 Envoyer notification seulement si nouvel abonnement
+    // Envoyer notification seulement si nouvel abonnement
     if (tokens.length > 0) {
       await sendFCMNotification(
         tokens,
@@ -285,7 +287,7 @@ router.post("/unsubscribe", async (req, res) => {
       return res.status(400).json({ error: "menuId et profileId sont requis" });
     }
 
-    // 🔹 Récupérer home_id du menu
+    // Récupérer home_id du menu
     const menu = await pool.query(
       `SELECT "home_id" FROM "Menu" WHERE id = $1`,
       [menuId]
@@ -295,7 +297,7 @@ router.post("/unsubscribe", async (req, res) => {
     }
     const homeId = menu.rows[0].home_id;
 
-    // 🔹 Supprimer l'association menu/profile
+    // Supprimer l'association menu/profile
     const result = await pool.query(
       `DELETE FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
       [menuId, profileId]
@@ -304,20 +306,22 @@ router.post("/unsubscribe", async (req, res) => {
       return res.status(404).json({ error: "Aucune inscription trouvée" });
     }
 
-    // 🔹 Récupérer tous les tokens uniques pour cette maison
+    // Récupérer tous les tokens uniques pour cette maison, sauf celui du profile courant
     const tokensResult = await pool.query(
       `
       SELECT DISTINCT p.push_token
       FROM "Profile" p
       INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+      WHERE hp.home_id = $1
+        AND p.push_token IS NOT NULL
+        AND p.id <> $2
       `,
-      [homeId]
+      [homeId, profileId]
     );
 
     const tokens = tokensResult.rows.map(r => r.push_token);
 
-    // 🔹 Envoyer notification seulement si désinscription réelle
+    // Envoyer notification seulement si désinscription réelle
     if (tokens.length > 0) {
       await sendFCMNotification(
         tokens,
@@ -332,7 +336,6 @@ router.post("/unsubscribe", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
   }
 });
-
 
 
 
