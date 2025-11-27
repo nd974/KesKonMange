@@ -266,7 +266,7 @@ router.post("/subscribe", async (req, res) => {
     // 🔹 Envoyer notification seulement si nouvel abonnement
     if (tokens.length > 0) {
       await sendFCMNotification(
-        tokens[0],
+        tokens,
         "Nouvelle inscription",
         "Une mise à jour est disponible dans votre dashboard."
       );
@@ -325,7 +325,7 @@ router.post("/unsubscribe", async (req, res) => {
     // Envoyer la notification seulement si tokens non vide
     if (tokens.length > 0) {
       await sendFCMNotification(
-        tokens[0],
+        tokens,
         "Désinscription",
         "Une mise à jour est disponible dans votre dashboard."
       );
