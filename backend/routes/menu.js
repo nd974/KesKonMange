@@ -198,25 +198,24 @@ router.post("/create", async (req, res) => {
 
 import admin from "../firebase.js";
 
+// --- Fonction pour envoyer la notification ---
 async function sendFCMNotification(tokens, title, body) {
   const message = {
     notification: { title, body },
     tokens,
   };
 
-  // 🔹 Log avant l'envoi
   console.log("Tokens récupérés :", tokens);
   console.log("Message FCM :", JSON.stringify(message, null, 2));
 
-  // Envoi du message
   const response = await admin.messaging().sendEachForMulticast(message);
 
-  // 🔹 Log après l'envoi pour vérifier la réponse de FCM
   console.log("Réponse FCM :", response);
 
   return response;
 }
 
+// --- SUBSCRIBE ---
 router.post("/subscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
@@ -262,7 +261,16 @@ router.post("/subscribe", async (req, res) => {
       [homeId]
     );
 
-    const tokens = tokensResult.rows.map(r => r.push_token);
+    let tokens = tokensResult.rows.map(r => r.push_token);
+
+    // 3️⃣a Éliminer doublons et exclure le token de l'utilisateur courant
+    const currentTokenResult = await pool.query(
+      `SELECT push_token FROM "Profile" WHERE id = $1`,
+      [profileId]
+    );
+    const currentToken = currentTokenResult.rows[0]?.push_token;
+
+    tokens = [...new Set(tokens)].filter(t => t !== currentToken);
 
     // 4️⃣ Envoyer notification
     if (tokens.length > 0) {
@@ -271,11 +279,6 @@ router.post("/subscribe", async (req, res) => {
         "Nouvelle inscription",
         "Une mise à jour est disponible dans votre dashboard."
       );
-      
-      console.log("Envoi de notification à :", tokens);
-      console.log("Titre : Nouvelle inscription");
-      console.log("Message : Une mise à jour est disponible dans votre dashboard.");
-
     }
 
     res.json({ ok: true, notified: tokens.length });
@@ -286,12 +289,7 @@ router.post("/subscribe", async (req, res) => {
   }
 });
 
-
-
-
-
-
-/* ---------------------- UNSUBSCRIBE ---------------------- */
+// --- UNSUBSCRIBE ---
 router.post("/unsubscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
@@ -333,7 +331,16 @@ router.post("/unsubscribe", async (req, res) => {
       [homeId]
     );
 
-    const tokens = tokensResult.rows.map(r => r.push_token);
+    let tokens = tokensResult.rows.map(r => r.push_token);
+
+    // 3️⃣a Éliminer doublons et exclure le token de l'utilisateur courant
+    const currentTokenResult = await pool.query(
+      `SELECT push_token FROM "Profile" WHERE id = $1`,
+      [profileId]
+    );
+    const currentToken = currentTokenResult.rows[0]?.push_token;
+
+    tokens = [...new Set(tokens)].filter(t => t !== currentToken);
 
     // 4️⃣ Envoyer notification
     if (tokens.length > 0) {
@@ -342,10 +349,6 @@ router.post("/unsubscribe", async (req, res) => {
         "Désinscription",
         "Une mise à jour est disponible dans votre dashboard."
       );
-            
-      console.log("Envoi de notification à :", tokens);
-      console.log("Titre : Nouvelle desinscription");
-      console.log("Message : Une mise à jour est disponible dans votre dashboard.");
     }
 
     res.json({ success: true, message: "Désinscription réussie", notified: tokens.length });
@@ -355,7 +358,6 @@ router.post("/unsubscribe", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
   }
 });
-
 
 
 
