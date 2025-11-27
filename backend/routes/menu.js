@@ -210,31 +210,33 @@ async function sendFCMNotification(tokens, title, body) {
   console.log("Envoi notification à ces tokens :", tokens);
 
   const response = await admin.messaging().sendEachForMulticast(message);
-
   console.log("Réponse FCM :", response);
   return response;
 }
 
-// --- Helper pour récupérer 1 token par profil ---
-async function getUniqueTokensForHome(homeId, excludeProfileId) {
+// --- Helper pour récupérer un token par profil ---
+async function getOneTokenPerProfile(homeId, excludeProfileId) {
   const tokensResult = await pool.query(
     `
     SELECT DISTINCT ON (p.id) p.id as profile_id, p.push_token
     FROM "Profile" p
     INNER JOIN homes_profiles hp ON p.id = hp.profile_id
     WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
+    ORDER BY p.id
     `,
     [homeId]
   );
 
   // Exclure le profil qui déclenche l'action
-  const tokens = tokensResult.rows
-    .filter(r => r.profile_id !== excludeProfileId)
-    .map(r => r.push_token);
+  const tokensPerProfile = {};
+  tokensResult.rows.forEach(r => {
+    if (r.profile_id !== excludeProfileId) {
+      tokensPerProfile[r.profile_id] = r.push_token; // garder 1 token par profil
+    }
+  });
 
-  return tokens;
+  return Object.values(tokensPerProfile);
 }
-
 
 // --- SUBSCRIBE ---
 router.post("/subscribe", async (req, res) => {
@@ -253,7 +255,7 @@ router.post("/subscribe", async (req, res) => {
     );
     if (result.rowCount === 0) return res.status(400).json({ error: "L'inscription a déjà été effectuée" });
 
-    const tokens = await getUniqueTokensForHome(homeId, profileId);
+    const tokens = await getOneTokenPerProfile(homeId, profileId);
 
     await sendFCMNotification(tokens, "Nouvelle inscription", "Une mise à jour est disponible dans votre dashboard.");
 
@@ -281,7 +283,7 @@ router.post("/unsubscribe", async (req, res) => {
     );
     if (result.rowCount === 0) return res.status(404).json({ error: "Aucune inscription trouvée pour cet utilisateur et ce menu" });
 
-    const tokens = await getUniqueTokensForHome(homeId, profileId);
+    const tokens = await getOneTokenPerProfile(homeId, profileId);
 
     await sendFCMNotification(tokens, "Désinscription", "Une mise à jour est disponible dans votre dashboard.");
 
