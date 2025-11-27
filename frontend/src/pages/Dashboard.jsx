@@ -203,37 +203,43 @@ export default function Dashboard({ homeId }) {
 
   console.log(subscriptionState);
 
-const [isSubmitting, setIsSubmitting] = useState(false);
 
-const handleSubscribeToMenu = async (menuId) => {
-  if (isSubmitting) return; // Bloque les doubles appels
-  setIsSubmitting(true);
+  const [subscribing, setSubscribing] = useState(false);
 
-  const profileId = localStorage.getItem("profile_id");
-  const current = subscriptionState[menuId] === true;
+  const handleSubscribeToMenu = async (menuId) => {
+    if (subscribing) return; // 🔹 bloquer les clics multiples
+    setSubscribing(true);
 
-  try {
-    if (current) {
-      await fetch(`${API_URL}/menu/unsubscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuId, profileId }),
-      });
-      setSubscriptionState(prev => ({ ...prev, [menuId]: false }));
-    } else {
-      await fetch(`${API_URL}/menu/subscribe`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuId, profileId }),
-      });
-      setSubscriptionState(prev => ({ ...prev, [menuId]: true }));
+    const profileId = localStorage.getItem("profile_id");
+    const current = subscriptionState[menuId] === true;
+
+    try {
+      if (current) {
+        // Désinscription
+        const res = await fetch(`${API_URL}/menu/unsubscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ menuId, profileId }),
+        });
+        if (!res.ok) throw new Error("Erreur désinscription");
+        setSubscriptionState(prev => ({ ...prev, [menuId]: false }));
+      } else {
+        // Abonnement
+        const res = await fetch(`${API_URL}/menu/subscribe`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ menuId, profileId }),
+        });
+        if (!res.ok) throw new Error("Erreur abonnement");
+        setSubscriptionState(prev => ({ ...prev, [menuId]: true }));
+      }
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setSubscribing(false); // 🔹 réactivation du bouton
     }
-  } catch (error) {
-    console.error("Erreur lors de l'inscription/désinscription:", error);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
+  };
+
 
   const openSubscribersPopup = async () => {
     const menuId = selectedMenusForDay[activeMenuIndex].id;
@@ -339,18 +345,18 @@ const handleSubscribeToMenu = async (menuId) => {
                     <div className="flex items-center gap-2 mx-auto">
 
 
-                    <button
-                      className="text-2xl"
-                      onClick={() =>
-                        !isSubmitting && handleSubscribeToMenu(selectedMenusForDay[activeMenuIndex].id)
-                      }
-                    >
-                      {subscriptionState[selectedMenusForDay[activeMenuIndex].id] ? (
-                        <span style={{ color: "green" }}>◉</span>
-                      ) : (
-                        <span style={{ color: "red" }}>⭘</span>
-                      )}💾
-                    </button>
+                      <button
+                        className="text-2xl"
+                        onClick={() => handleSubscribeToMenu(selectedMenusForDay[activeMenuIndex].id)}
+                        disabled={subscribing} // 🔹 bloque pendant la requête
+                      >
+                        {subscriptionState[selectedMenusForDay[activeMenuIndex].id] ? (
+                          <span style={{ color: "green" }}>◉</span>
+                        ) : (
+                          <span style={{ color: "red" }}>⭘</span>
+                        )}💾
+                      </button>
+
 
                       <h2 className="text-2xl font-semibold text-center">
                         {selectedMenusForDay[activeMenuIndex]?.tagName}
