@@ -9,6 +9,24 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { refreshHomeId} from "../../session";
 
+// ------------------------------ TODO ----------------------------------------
+// import * as Notifications from 'expo-notifications';
+// async function registerPushToken(profileId) {
+//   const { status } = await Notifications.requestPermissionsAsync();
+//   if (status !== 'granted') return;
+
+//   const tokenData = await Notifications.getExpoPushTokenAsync();
+//   const pushToken = tokenData.data;
+
+//   // Envoyer au backend
+//   await fetch(`${API_URL}/profile/save-token`, {
+//     method: 'POST',
+//     headers: { 'Content-Type': 'application/json' },
+//     body: JSON.stringify({ profileId, pushToken })
+//   });
+// }
+// ------------------------------------------------------------------------------
+
 
 export default function ProfileSelect({homeId}) {
   const [profiles, setProfiles] = useState([]);
@@ -26,10 +44,17 @@ export default function ProfileSelect({homeId}) {
       .then((data) => setProfiles(data || []));
   }, [homeId]);
 
-  const handleSelectProfile = (profileId) => {
+  const handleSelectProfile = async (profileId) => {
     localStorage.setItem("profile_id", profileId);
-    navigate("/"); // ✅ Après sélection du profil → dashboard
+
+    // Enregistrer le push token pour ce profil// ------------------------------------------------------------------------------
+    if (Platform.OS === 'ios' || Platform.OS === 'android') {
+      await registerPushToken(profileId);
+    }// ------------------------------------------------------------------------------
+
+    navigate("/"); // dashboard
   };
+
 
   // refreshHomeId();
 

@@ -96,4 +96,29 @@ router.post("/transfer", async (req, res) => {
   }
 });
 
+
+
+
+
+
+
+
+// -----------------------------------TODO----------------------------------------
+router.post("/save-token", async (req, res) => {
+  try {
+    const { profileId, pushToken } = req.body;
+    if (!profileId || !pushToken) return res.status(400).json({ error: "Missing fields" });
+
+    await pool.query(
+      `UPDATE "Profile" SET push_token = $1 WHERE id = $2`,
+      [pushToken, profileId]
+    );
+
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+// ------------------------------------------------------------------------------
+
 export default router;

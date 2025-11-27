@@ -196,25 +196,6 @@ router.post("/create", async (req, res) => {
 });
 
 
-async function sendExpoNotification(tokens, title, body) {
-  const messages = tokens.map(token => ({
-    to: token,
-    sound: "default",
-    title,
-    body,
-  }));
-
-  await fetch("https://exp.host/--/api/v2/push/send", {
-    method: "POST",
-    headers: {
-      "Accept": "application/json",
-      "Accept-encoding": "gzip, deflate",
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(messages),
-  });
-}
-
 router.post("/subscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
@@ -223,139 +204,54 @@ router.post("/subscribe", async (req, res) => {
       return res.status(400).json({ error: "menuId et profileId sont requis" });
     }
 
-    // 1️⃣ Récupérer home_id du menu
-    const menu = await pool.query(
-      `SELECT "home_id" FROM "Menu" WHERE id = $1`,
-      [menuId]
-    );
-
-    if (menu.rowCount === 0) {
-      return res.status(404).json({ error: "Menu introuvable" });
-    }
-
-    const homeId = menu.rows[0].home_id;
-
-    // 2️⃣ Ajouter l'association menu/profile
+    // Ajouter l'association menu_id - profile_id dans la table menus_profiles
     const result = await pool.query(
       `
       INSERT INTO menus_profiles (menu_id, profile_id)
       VALUES ($1, $2)
-      ON CONFLICT (menu_id, profile_id) DO NOTHING;
+      ON CONFLICT (menu_id, profile_id) DO NOTHING;  -- Evite les doublons
       `,
       [menuId, profileId]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(400).json({ error: "L'inscription a déjà été effectuée" });
+    if (result.rowCount > 0) {
+      res.json({ ok: true });
+    } else {
+      res.status(400).json({ error: "L'inscription a déjà été effectuée" });
     }
-
-    // 3️⃣ Récupérer tous les profils liés à cette maison
-    const tokensResult = await pool.query(
-      `
-      SELECT p.push_token 
-      FROM "Profile" p
-      INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
-      `,
-      [homeId]
-    );
-
-    const tokens = tokensResult.rows.map(r => r.push_token);
-
-    // 4️⃣ Envoyer notification
-    if (tokens.length > 0) {
-      await sendExpoNotification(
-        tokens,
-        "Nouvelle inscription",
-        "Une mise à jour est disponible dans votre dashboard."
-      );
-      
-      console.log("Envoi de notification à :", tokens);
-      console.log("Titre : Nouvelle inscription");
-      console.log("Message : Une mise à jour est disponible dans votre dashboard.");
-
-    }
-
-    res.json({ ok: true, notified: tokens.length });
-
   } catch (err) {
-    console.error("❌ Erreur dans /menu/subscribe:", err.stack);
+    console.error("❌ Erreur dans /menu/subscribe:", err);
     res.status(500).json({ error: err.message });
   }
 });
 
-
-
-
-
-
-/* ---------------------- UNSUBSCRIBE ---------------------- */
 router.post("/unsubscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
 
+    // Vérification des données d'entrée
     if (!menuId || !profileId) {
       return res.status(400).json({ error: "menuId et profileId sont requis" });
     }
 
-    // 1️⃣ Récupérer home_id du menu
-    const menu = await pool.query(
-      `SELECT "home_id" FROM "Menu" WHERE id = $1`,
-      [menuId]
-    );
-
-    if (menu.rowCount === 0) {
-      return res.status(404).json({ error: "Menu introuvable" });
-    }
-
-    const homeId = menu.rows[0].home_id;
-
-    // 2️⃣ Supprimer l'association menu/profile
+    // Supprimer l'association dans la table `menus_profiles`
     const result = await pool.query(
       `DELETE FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
       [menuId, profileId]
     );
 
+    // Vérifier si l'utilisateur était déjà inscrit
     if (result.rowCount === 0) {
       return res.status(404).json({ error: "Aucune inscription trouvée pour cet utilisateur et ce menu" });
     }
 
-    // 3️⃣ Récupérer tous les profils liés à cette maison
-    const tokensResult = await pool.query(
-      `
-      SELECT p.push_token 
-      FROM "Profile" p
-      INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL
-      `,
-      [homeId]
-    );
-
-    const tokens = tokensResult.rows.map(r => r.push_token);
-
-    // 4️⃣ Envoyer notification
-    if (tokens.length > 0) {
-      await sendExpoNotification(
-        tokens,
-        "Désinscription",
-        "Une mise à jour est disponible dans votre dashboard."
-      );
-            
-      console.log("Envoi de notification à :", tokens);
-      console.log("Titre : Nouvelle desinscription");
-      console.log("Message : Une mise à jour est disponible dans votre dashboard.");
-    }
-
-    res.json({ success: true, message: "Désinscription réussie", notified: tokens.length });
-
+    // Si tout s'est bien passé
+    res.json({ success: true, message: "Désinscription réussie" });
   } catch (err) {
-    console.error("❌ Erreur lors de la désinscription:", err.stack);
+    console.error("❌ Erreur lors de la désinscription:", err);
     res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
   }
 });
-
-
-
 
 router.post("/checkSubscription", async (req, res) => {
   try {
