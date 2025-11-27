@@ -203,7 +203,6 @@ import admin from "../firebase.js";
 async function sendFCMNotification(tokens, title, body) {
   if (!tokens || tokens.length === 0) return;
 
-  // Unicité des tokens
   const uniqueTokens = [...new Set(tokens)];
 
   const message = {
@@ -214,6 +213,25 @@ async function sendFCMNotification(tokens, title, body) {
   console.log("Envoi notification FCM :", JSON.stringify(message, null, 2));
 
   const response = await admin.messaging().sendEachForMulticast(message);
+
+  // Supprimer automatiquement les tokens invalides
+  response.responses.forEach(async (resp, idx) => {
+    if (!resp.success) {
+      const errorCode = resp.error.code;
+      if (
+        errorCode === "messaging/registration-token-not-registered" ||
+        errorCode === "messaging/invalid-registration-token"
+      ) {
+        const badToken = uniqueTokens[idx];
+        console.log("Token invalide, suppression :", badToken);
+        await pool.query(
+          `UPDATE "Profile" SET push_token = NULL WHERE push_token = $1`,
+          [badToken]
+        );
+      }
+    }
+  });
+
   console.log("Réponse FCM :", response);
   return response;
 }
@@ -222,48 +240,34 @@ async function sendFCMNotification(tokens, title, body) {
 router.post("/subscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
-    if (!menuId || !profileId) {
+    if (!menuId || !profileId)
       return res.status(400).json({ error: "menuId et profileId sont requis" });
-    }
 
-    // Récupérer home_id du menu
-    const menu = await pool.query(
-      `SELECT "home_id" FROM "Menu" WHERE id = $1`,
-      [menuId]
-    );
-    if (menu.rowCount === 0) {
-      return res.status(404).json({ error: "Menu introuvable" });
-    }
+    const menu = await pool.query(`SELECT "home_id" FROM "Menu" WHERE id = $1`, [menuId]);
+    if (menu.rowCount === 0) return res.status(404).json({ error: "Menu introuvable" });
     const homeId = menu.rows[0].home_id;
 
-    // Ajouter l'association menu/profile (uniquement si nouvelle)
-    const result = await pool.query(
+    // Ajouter l'association menu/profile uniquement si nouvelle
+    await pool.query(
       `INSERT INTO menus_profiles (menu_id, profile_id)
        VALUES ($1, $2)
-       ON CONFLICT (menu_id, profile_id) DO NOTHING;`,
+       ON CONFLICT (menu_id, profile_id) DO NOTHING`,
       [menuId, profileId]
     );
 
-    if (result.rowCount === 0) {
-      return res.status(400).json({ error: "L'inscription a déjà été effectuée" });
-    }
-
-    // Récupérer tous les tokens uniques pour cette maison, sauf celui du profile courant
+    // Récupérer tous les tokens uniques pour cette maison sauf le profile courant
     const tokensResult = await pool.query(
       `
       SELECT DISTINCT p.push_token
       FROM "Profile" p
       INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1
-        AND p.push_token IS NOT NULL
-        AND p.id <> $2
+      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL AND p.id <> $2
       `,
       [homeId, profileId]
     );
 
     const tokens = tokensResult.rows.map(r => r.push_token);
 
-    // Envoyer notification seulement si nouvel abonnement
     if (tokens.length > 0) {
       await sendFCMNotification(
         tokens,
@@ -283,45 +287,31 @@ router.post("/subscribe", async (req, res) => {
 router.post("/unsubscribe", async (req, res) => {
   try {
     const { menuId, profileId } = req.body;
-    if (!menuId || !profileId) {
+    if (!menuId || !profileId)
       return res.status(400).json({ error: "menuId et profileId sont requis" });
-    }
 
-    // Récupérer home_id du menu
-    const menu = await pool.query(
-      `SELECT "home_id" FROM "Menu" WHERE id = $1`,
-      [menuId]
-    );
-    if (menu.rowCount === 0) {
-      return res.status(404).json({ error: "Menu introuvable" });
-    }
+    const menu = await pool.query(`SELECT "home_id" FROM "Menu" WHERE id = $1`, [menuId]);
+    if (menu.rowCount === 0) return res.status(404).json({ error: "Menu introuvable" });
     const homeId = menu.rows[0].home_id;
 
-    // Supprimer l'association menu/profile
-    const result = await pool.query(
+    await pool.query(
       `DELETE FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
       [menuId, profileId]
     );
-    if (result.rowCount === 0) {
-      return res.status(404).json({ error: "Aucune inscription trouvée" });
-    }
 
-    // Récupérer tous les tokens uniques pour cette maison, sauf celui du profile courant
+    // Récupérer tous les tokens uniques pour cette maison sauf le profile courant
     const tokensResult = await pool.query(
       `
       SELECT DISTINCT p.push_token
       FROM "Profile" p
       INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1
-        AND p.push_token IS NOT NULL
-        AND p.id <> $2
+      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL AND p.id <> $2
       `,
       [homeId, profileId]
     );
 
     const tokens = tokensResult.rows.map(r => r.push_token);
 
-    // Envoyer notification seulement si désinscription réelle
     if (tokens.length > 0) {
       await sendFCMNotification(
         tokens,

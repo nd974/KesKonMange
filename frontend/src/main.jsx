@@ -2,22 +2,27 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { messaging, listenForegroundNotifications } from "./config/firebase";
+import { messaging } from "./config/firebase";
+import { onMessage } from "firebase/messaging";
 
-// Enregistrement du service worker
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    .then(reg => console.log('Service Worker enregistré:', reg))
-    .catch(err => console.error('SW registration failed:', err));
-}
+// Enregistrer service worker
+navigator.serviceWorker.register("/firebase-messaging-sw.js")
+  .then((registration) => console.log("Service Worker registered:", registration))
+  .catch((err) => console.error("SW registration failed:", err));
 
-// Demande de permission notification
+// Demander permission notifications
 Notification.requestPermission().then(permission => {
   if (permission === "granted") {
-    console.log("Permission notifications accordée.");
-    listenForegroundNotifications(); // écoute les notifications foreground
+    console.log("Notification permission granted.");
+
+    // Foreground notifications
+    // ⚠️ On ne crée plus manuellement de Notification ici
+    onMessage(messaging, (payload) => {
+      console.log("Notification reçue au premier plan :", payload);
+      // Le service worker s'occupe déjà d'afficher la notification
+    });
   } else {
-    console.log("Permission notifications refusée.");
+    console.log("Notification permission denied.");
   }
 });
 
