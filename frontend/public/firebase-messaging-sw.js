@@ -1,3 +1,4 @@
+// firebase-messaging-sw.js
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/9.23.0/firebase-messaging-compat.js');
 
@@ -11,14 +12,16 @@ const firebaseConfig = {
   measurementId: "G-7YS1KC9T91"
 };
 
+// Init Firebase
 firebase.initializeApp(firebaseConfig);
 const messaging = firebase.messaging();
 
-// Notifications uniquement en background
-messaging.onBackgroundMessage((payload) => {
-  console.log('[SW] Background message', payload);
-  self.registration.showNotification(payload.notification.title, {
-    body: payload.notification.body,
-    icon: '/favicon.ico',
-  });
+// Notifications en background
+messaging.onBackgroundMessage(function(payload) {
+  const notificationTitle = payload.notification?.title || "Notification";
+  const notificationOptions = {
+    body: payload.notification?.body || "",
+    icon: '/favicon.ico'
+  };
+  self.registration.showNotification(notificationTitle, notificationOptions);
 });

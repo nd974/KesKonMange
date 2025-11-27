@@ -1,3 +1,4 @@
+// firebase.js
 import { initializeApp } from "firebase/app";
 import { getMessaging, getToken } from "firebase/messaging";
 
@@ -11,9 +12,11 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
+// Initialise Firebase
 const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
+// Demande et retourne le token FCM
 export async function requestWebPushToken() {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return null;
