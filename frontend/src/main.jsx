@@ -2,7 +2,7 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { messaging } from "./config/firebase"; // ton fichier firebase.js
+import { messaging } from "./config/firebase";
 import { onMessage } from "firebase/messaging";
 
 // Enregistrer le service worker
@@ -20,10 +20,14 @@ Notification.requestPermission().then(permission => {
     // Foreground notifications
     onMessage(messaging, (payload) => {
       console.log("Notification reçue au premier plan :", payload);
-      new Notification(payload.notification.title, {
-        body: payload.notification.body,
-        icon: "/favicon.ico",
-      });
+
+      // 🔹 Vérifier que ce n'est pas un message déjà géré par le SW
+      if (payload?.notification) {
+        // Ici tu peux soit afficher custom notification
+        // soit simplement mettre à jour le UI (sans new Notification)
+        // Exemple : affichage custom UI dans React
+        alert(`Notification: ${payload.notification.title} - ${payload.notification.body}`);
+      }
     });
   } else {
     console.log("Notification permission denied.");
