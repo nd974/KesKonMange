@@ -1,6 +1,5 @@
-// firebase.js
 import { initializeApp } from "firebase/app";
-import { getMessaging, getToken } from "firebase/messaging";
+import { getMessaging, getToken, onMessage } from "firebase/messaging";
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -12,11 +11,9 @@ const firebaseConfig = {
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID
 };
 
-// Initialise Firebase
 const app = initializeApp(firebaseConfig);
 export const messaging = getMessaging(app);
 
-// Demande et retourne le token FCM
 export async function requestWebPushToken() {
   const permission = await Notification.requestPermission();
   if (permission !== "granted") return null;
@@ -30,4 +27,19 @@ export async function requestWebPushToken() {
     console.error("Erreur FCM token:", err);
     return null;
   }
+}
+
+// Foreground notifications
+export function listenForegroundNotifications() {
+  onMessage(messaging, (payload) => {
+    console.log("Notification reçue au premier plan :", payload);
+
+    // 🔹 Afficher la notif seulement si l'app est visible
+    if (document.visibilityState === "visible") {
+      new Notification(payload.notification.title, {
+        body: payload.notification.body,
+        icon: "/favicon.ico",
+      });
+    }
+  });
 }

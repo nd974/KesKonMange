@@ -2,46 +2,27 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App.jsx";
 import "./index.css";
-import { messaging, requestWebPushToken } from "./config/firebase.js";
-import { onMessage } from "firebase/messaging";
+import { messaging, listenForegroundNotifications } from "./config/firebase";
 
-// ✅ Enregistre le service worker
+// Enregistrement du service worker
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('/firebase-messaging-sw.js')
-    .then((registration) => {
-      console.log('Service Worker registered:', registration);
-    })
-    .catch(err => console.error('Service Worker registration failed:', err));
+    .then(reg => console.log('Service Worker enregistré:', reg))
+    .catch(err => console.error('SW registration failed:', err));
 }
 
-// ✅ Request permission et listener foreground
-async function initNotifications() {
-  const permission = await Notification.requestPermission();
+// Demande de permission notification
+Notification.requestPermission().then(permission => {
   if (permission === "granted") {
-    console.log("Notification permission granted.");
-    const token = await requestWebPushToken();
-    console.log("FCM Token:", token);
-
-    // 🔹 Ajouter un guard pour éviter double listener
-    if (!window.fcmListenerAdded) {
-      onMessage(messaging, (payload) => {
-        console.log("Foreground notification received:", payload);
-        if (payload.notification) {
-          new Notification(payload.notification.title, {
-            body: payload.notification.body,
-            icon: "/favicon.ico",
-          });
-        }
-      });
-      window.fcmListenerAdded = true;
-    }
+    console.log("Permission notifications accordée.");
+    listenForegroundNotifications(); // écoute les notifications foreground
   } else {
-    console.log("Notification permission denied.");
+    console.log("Permission notifications refusée.");
   }
-}
-
-initNotifications();
+});
 
 ReactDOM.createRoot(document.getElementById("root")).render(
-  <App />
+  <React.StrictMode>
+    <App />
+  </React.StrictMode>
 );
