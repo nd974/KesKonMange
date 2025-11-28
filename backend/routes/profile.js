@@ -10,10 +10,11 @@ router.get("/get", async (req, res) => {
     if (!homeId) return res.status(400).json({ error: "missing homeId" });
 
     const result = await pool.query(
-      `SELECT p.id, p.name, p.avatar
+      `SELECT p.id, p.name, p.avatar, p.role_id
        FROM "Profile" p
        JOIN homes_profiles ahp ON ahp.profile_id = p.id
-       WHERE ahp.home_id = $1`,
+       WHERE ahp.home_id = $1
+       ORDER BY p.role_id ASC, p.name ASC`, // Tri par role_id puis name
       [homeId]
     );
 

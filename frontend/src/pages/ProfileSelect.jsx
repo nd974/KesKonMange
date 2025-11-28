@@ -10,23 +10,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 import { refreshHomeId} from "../../session";
 
 // ------------------------------ TODO ----------------------------------------
-// import * as Notifications from 'expo-notifications';
-// async function registerPushToken(profileId) {
-//   const { status } = await Notifications.requestPermissionsAsync();
-//   if (status !== 'granted') return;
-
-//   const tokenData = await Notifications.getExpoPushTokenAsync();
-//   const pushToken = tokenData.data;
-
-//   // Envoyer au backend
-//   await fetch(`${API_URL}/profile/save-token`, {
-//     method: 'POST',
-//     headers: { 'Content-Type': 'application/json' },
-//     body: JSON.stringify({ profileId, pushToken })
-//   });
-// }
+// import { requestWebPushToken } from "../config/firebase";
 // ------------------------------------------------------------------------------
-import { requestWebPushToken } from "../config/firebase";
 
 export default function ProfileSelect({homeId}) {
   const [profiles, setProfiles] = useState([]);
@@ -35,16 +20,18 @@ export default function ProfileSelect({homeId}) {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // ------------------------------ TODO ----------------------------------------
     // 1️⃣ Supprimer le token actuel côté serveur
-    const currentProfileId = localStorage.getItem("profile_id");
-    if (currentProfileId) {
-      fetch(`${API_URL}/profile/remove-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId: currentProfileId }),
-      });
-      localStorage.removeItem("profile_id");
-    }
+    // const currentProfileId = localStorage.getItem("profile_id");
+    // if (currentProfileId) {
+    //   fetch(`${API_URL}/profile/remove-token`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ profileId: currentProfileId }),
+    //   });
+    //   localStorage.removeItem("profile_id");
+    // }
+    // -----------------------------------*----------------------------------------
 
     // 2️⃣ Charger les profils
     if (!homeId) return;
@@ -55,17 +42,18 @@ export default function ProfileSelect({homeId}) {
 
   const handleSelectProfile = async (profileId) => {
     localStorage.setItem("profile_id", profileId);
-
+    
+// ------------------------------ TODO ----------------------------------------
     // 3️⃣ Enregistrer le nouveau push token pour ce profil
-    const pushToken = await requestWebPushToken();
-    if (pushToken) {
-      await fetch(`${API_URL}/profile/save-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId, pushToken }),
-      });
-    }
-
+    // const pushToken = await requestWebPushToken();
+    // if (pushToken) {
+    //   await fetch(`${API_URL}/profile/save-token`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ profileId, pushToken }),
+    //   });
+    // }
+// ---------------------------------------------------------------------------
     navigate("/"); // dashboard
   };
 
@@ -78,7 +66,7 @@ export default function ProfileSelect({homeId}) {
       <img
         src={`${CLOUDINARY_RES}${CLOUDINARY_LOGO_HOME}`}
         alt="kskmg logo"
-        className="w-56 md:w-64 mb-6 select-none"
+        className="w-56 md:w-64 mb-6 select-none py-6"
         style={{
           filter: "drop-shadow(0 0 0 transparent)", // enlève tout halo résiduel
         }}
@@ -116,7 +104,7 @@ export default function ProfileSelect({homeId}) {
           <div className="w-28 h-28 flex items-center justify-center rounded-xl border-2 border-transparent group-hover:border-white transition duration-200 bg-[#5e8263] text-white text-4xl font-bold">
               +
           </div>
-          <p className="mt-2 text-lg font-semibold">Ajouter un profil</p>
+          <p className="mt-2 text-lg font-semibold">Ajouter</p>
         </div>
 
         <div 
@@ -126,7 +114,7 @@ export default function ProfileSelect({homeId}) {
           <div className="w-28 h-28 flex items-center justify-center rounded-xl border-2 border-transparent group-hover:border-white transition duration-200 bg-[#5e8263] text-white">
               <Repeat size={28} strokeWidth={2} className="translate-y-1" /> {/* ajustement vertical */}
           </div>
-          <p className="mt-2 text-lg font-semibold">Transférer un profil</p>
+          <p className="mt-2 text-lg font-semibold">Transférer</p>
         </div>
       </div>
 
@@ -138,6 +126,8 @@ export default function ProfileSelect({homeId}) {
         className="mt-16 px-6 py-3 bg-transparent border-2 border-white text-white rounded-full font-bold hover:bg-white hover:text-[#6b926f] transition">
             Changer de compte
       </button>
+
+      <div className="py-8"></div>
 
       {/* Modal */}
       {showCreate && (

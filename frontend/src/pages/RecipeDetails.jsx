@@ -399,6 +399,11 @@ export default function RecipeDetail({ homeId, id: idProp }) {
                     />
                   ) : (
                     <span className="text-gray-400 text-sm ml-3">—</span> // si pas d'image
+                    // <img
+                    //   src="https://www.manutan.fr/fstrz/r/s/www.manutan.fr/img/S/GRP/ST/AIG17936217.jpg?frz-v=126"
+                    //   alt={utensil.name}
+                    //   className="w-8 h-8 object-contain ml-3"
+                    // />
                   )}
                 </li>
               ))}
@@ -438,43 +443,32 @@ export default function RecipeDetail({ homeId, id: idProp }) {
 
           {/* Préparation */}
           <section className="mt-8">
-            <h2 className="text-xl font-semibold mb-2">👨‍🍳 Préparation</h2>
-            <ol className="list-inside space-y-2">
+            <h2 className="text-xl font-semibold mb-4">👨‍🍳 Préparation</h2>
+            <div className="space-y-4">
               {recipe.steps.map((s) => (
-                <li key={s.id}>
-                  <div className="font-medium">
+                <div
+                  key={s.id}
+                  className="p-4 bg-white rounded-2xl shadow-md border border-gray-100"
+                >
+                  <div className="font-medium mb-2">
                     {s.number}. {s.description}
                   </div>
 
                   {(s.time > 0 || s.level > 0) && (
-                    <div
-                      className={`flex items-center text-sm mt-1 ${
-                        s.time > 0 && s.level > 0
-                          ? "justify-between"
-                          : "justify-start"
-                      }`}
-                    >
-
+                    <div className="flex justify-between items-center text-sm text-gray-500">
                       {/* Temps */}
-                      {s.time > 0 && (
-                        <div className="text-gray-500">
-                          ⏱️ {s.time} min
-                        </div>
-                      )}
+                      <div>{s.time > 0 ? `⏱️ ${s.time} min` : <span>&nbsp;</span>}</div>
 
-                      {/* Etoiles */}
-                      {s.level > 0 && (
-                        <div className={`text-accentGreen ${s.time <= 0 ? "" : ""}`}>
-                          {"★".repeat(Math.round(s.level)) +
-                            "☆".repeat(5 - Math.round(s.level))}
-                        </div>
-                      )}
-
+                      {/* Level */}
+                      <div className="text-accentGreen">
+                        {"★".repeat(Math.round(s.level)) +
+                          "☆".repeat(5 - Math.round(s.level))}
+                      </div>
                     </div>
                   )}
-                </li>
+                </div>
               ))}
-            </ol>
+            </div>
           </section>
 
 

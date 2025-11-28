@@ -96,7 +96,7 @@ export default function Calendar({homeId}) {
 
       <div className="flex items-center justify-between py-5">
         <button onClick={() => setCurrentMonth(currentMonth.subtract(1, "month"))}>←</button>
-        <div>{currentMonth.format("MMMM YYYY").charAt(0).toUpperCase() + currentMonth.format("MMMM YYYY").slice(1)}</div>
+        <div><strong><u>{currentMonth.format("MMMM YYYY").charAt(0).toUpperCase() + currentMonth.format("MMMM YYYY").slice(1)}</u></strong></div>
         <button onClick={() => setCurrentMonth(currentMonth.add(1, "month"))}>→</button>
       </div>
 

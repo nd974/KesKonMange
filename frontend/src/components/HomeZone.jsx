@@ -370,7 +370,7 @@ export default function HomeZone({ ingredients }) {
         })}
       </svg>
 
-      <div className="mt-4">
+      {/* <div className="mt-4">
         <h2 className="text-xl font-semibold mb-2">
           {selectedStorage
             ? selectedStorage.isZone
@@ -389,7 +389,7 @@ export default function HomeZone({ ingredients }) {
                   : <li>Aucun ingrédient</li>)
           ) : null}
         </ul>
-      </div>
+      </div> */}
     </div>
   );
 }
