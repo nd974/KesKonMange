@@ -45,6 +45,10 @@ export default function ShoppingList({homeId}) {
     }
     fetchProduct();
   }, [scannedCode]);
+
+  const handleConfirmExpiration = () => {
+    setShowExpirationPopin(false);
+  };
   
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
@@ -105,7 +109,7 @@ export default function ShoppingList({homeId}) {
               className="border p-2 w-full mb-4"
             />
                         <button
-              onClick={setShowExpirationPopin(false)}
+              onClick={handleConfirmExpiration}
               className="bg-green-500 text-white p-2 rounded w-full"
             >
               Valider
