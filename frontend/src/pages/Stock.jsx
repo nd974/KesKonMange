@@ -255,7 +255,7 @@ export default function Stock({ homeId }) {
 
                           <td
                             className={`border px-2 py-1
-                              ${status === "expired" ? "text-red-600 font-bold" : ""}
+                              ${status === "expired" ? "text-red-600 font-semibold" : ""}
                               ${status === "soon" ? "text-orange-500 font-semibold" : ""}
                             `}
                           >
