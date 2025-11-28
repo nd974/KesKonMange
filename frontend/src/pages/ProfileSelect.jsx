@@ -10,7 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 import { refreshHomeId} from "../../session";
 
 // ------------------------------ TODO ----------------------------------------
-// import { requestWebPushToken } from "../config/firebase";
+import { requestWebPushToken } from "../config/firebase";
 // ------------------------------------------------------------------------------
 
 export default function ProfileSelect({homeId}) {
