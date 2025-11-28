@@ -294,11 +294,13 @@ const searchIngredient = (index, nameOverride) => {
   (async () => {
     setLoadingIngredient(index);
     try {
+      console.log("Fetch Api OpenFact ...");
       const resAPI = await fetch(
         `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(
           name
         )}&search_simple=1&json=1&page_size=10`
       );
+      console.log("Fetch fini .");
       const dataAPI = await resAPI.json();
 
       const apiSuggestions = (dataAPI.products || [])
@@ -309,6 +311,7 @@ const searchIngredient = (index, nameOverride) => {
         .map(s => ({ name: s, isLocal: false }));
 
       // 🔹 Fusion locales + API
+      console.log("Fusion suggestions...");
       const suggestions = [...localSuggestions, ...apiSuggestions];
 
       // 🔹 Mettre à jour le cache
@@ -321,6 +324,7 @@ const searchIngredient = (index, nameOverride) => {
         updated[index].warning = suggestions.length === 0;
         return updated;
       });
+      console.log("Affichage suggestions.");
     } catch (err) {
       console.error("Erreur fetch API OpenFoodFacts :", err);
       setIngredients(prev => {
