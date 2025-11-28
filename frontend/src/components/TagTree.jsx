@@ -44,17 +44,24 @@ export default function TagTree({ tagsFlat, tagTree, selectedTagIds, setSelected
           ) : (
             <span className="tag-toggle-placeholder" />
           )}
-          <button
-            className={`tag-name ${isSelected ? "text-blue-600 font-semibold" : ""}`}
-            onClick={() => {
-              setSelectedTagIds((prev) =>
-                isSelected ? prev.filter((id) => id !== node.id) : [...prev, node.id]
-              );
-            }}
-            title={`Filtrer par ${node.name}`}
-          >
-            {node.name}
-          </button>
+<button
+  className={`tag-name ${isSelected ? "text-blue-600 font-semibold" : ""}`}
+  onClick={() => {
+    // Si c'est un tag racine, on toggle l'expansion au lieu de la sélection
+    if (node.parent_id === null) {
+      toggleExpand(node.id);
+      return;
+    }
+
+    // Sinon, comportement normal de sélection
+    setSelectedTagIds((prev) =>
+      isSelected ? prev.filter((id) => id !== node.id) : [...prev, node.id]
+    );
+  }}
+  title={node.parent_id === null ? "Cliquer pour ouvrir la branche" : `Filtrer par ${node.name}`}
+>
+  {node.name}
+</button>
         </div>
 
         {hasChildren && isExpanded && (
