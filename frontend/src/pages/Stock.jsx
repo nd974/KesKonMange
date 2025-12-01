@@ -175,7 +175,7 @@ export default function Stock({ homeId }) {
               );
             })}
           </svg>
-          <HomeZone ingredients={ingredients} />
+          <HomeZone key={homeId} homeId={homeId}/>
         </div>
 
         {/* TABLEAU : 2/3 sur desktop, full width mobile */}
