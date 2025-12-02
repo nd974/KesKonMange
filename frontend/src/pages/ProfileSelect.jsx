@@ -10,7 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 import { refreshHomeId} from "../../session";
 
 // ------------------------------ TODO ----------------------------------------
-import { requestWebPushToken } from "../config/firebase";
+// import { requestWebPushToken } from "../config/firebase";
 // ------------------------------------------------------------------------------
 
 export default function ProfileSelect({homeId}) {
@@ -22,15 +22,15 @@ export default function ProfileSelect({homeId}) {
   useEffect(() => {
     // ------------------------------ TODO ----------------------------------------
     // 1️⃣ Supprimer le token actuel côté serveur
-    const currentProfileId = localStorage.getItem("profile_id");
-    if (currentProfileId) {
-      fetch(`${API_URL}/profile/remove-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId: currentProfileId }),
-      });
-      localStorage.removeItem("profile_id");
-    }
+    // const currentProfileId = localStorage.getItem("profile_id");
+    // if (currentProfileId) {
+    //   fetch(`${API_URL}/profile/remove-token`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ profileId: currentProfileId }),
+    //   });
+    //   localStorage.removeItem("profile_id");
+    // }
     // -----------------------------------*----------------------------------------
 
     // 2️⃣ Charger les profils
@@ -45,14 +45,14 @@ export default function ProfileSelect({homeId}) {
     
 // ------------------------------ TODO ----------------------------------------
     // 3️⃣ Enregistrer le nouveau push token pour ce profil
-    const pushToken = await requestWebPushToken();
-    if (pushToken) {
-      await fetch(`${API_URL}/profile/save-token`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ profileId, pushToken }),
-      });
-    }
+    // const pushToken = await requestWebPushToken();
+    // if (pushToken) {
+    //   await fetch(`${API_URL}/profile/save-token`, {
+    //     method: "POST",
+    //     headers: { "Content-Type": "application/json" },
+    //     body: JSON.stringify({ profileId, pushToken }),
+    //   });
+    // }
 // ---------------------------------------------------------------------------
     navigate("/"); // dashboard
   };
