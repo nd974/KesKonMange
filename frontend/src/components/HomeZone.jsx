@@ -308,42 +308,44 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
   // -------------------------------------
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold mb-4 text-center">
-        Stockages d’ingrédients (Version 2)
-      </h1>
+      {!inPopin && (
+        <h1 className="text-2xl font-bold mb-4 text-center">
+          Stockages d’ingrédients (Version 2)
+        </h1>
+      )}
 
-{/* Boutons */}
-{!inPopin && (
-  <div className="grid grid-cols-4 gap-4 mb-4">
-    <button
-      onClick={() => setShowZoneModal(true)}
-      className="w-full px-4 py-2 bg-green-500 text-white rounded"
-    >
-      🗺️
-    </button>
+      {/* Boutons */}
+      {!inPopin && (
+        <div className="grid grid-cols-4 gap-4 mb-4">
+          <button
+            onClick={() => setShowZoneModal(true)}
+            className="w-full px-4 py-2 bg-green-500 text-white rounded"
+          >
+            🗺️
+          </button>
 
-    <button
-      onClick={() => setShowStorageModal(true)}
-      className="w-full px-4 py-2 bg-blue-500 text-white rounded"
-    >
-      📦
-    </button>
+          <button
+            onClick={() => setShowStorageModal(true)}
+            className="w-full px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            📦
+          </button>
 
-    <button
-      onClick={handleAnnul}
-      className="w-full px-4 py-2 bg-red-500 text-white rounded"
-    >
-      R
-    </button>
+          <button
+            onClick={handleAnnul}
+            className="w-full px-4 py-2 bg-red-500 text-white rounded"
+          >
+            R
+          </button>
 
-    <button
-      onClick={handleSave}
-      className="w-full px-4 py-2 bg-purple-500 text-white rounded"
-    >
-      💾
-    </button>
-  </div>
-)}
+          <button
+            onClick={handleSave}
+            className="w-full px-4 py-2 bg-purple-500 text-white rounded"
+          >
+            💾
+          </button>
+        </div>
+      )}
 
 
             {/* POPIN AJOUT ZONE */}
