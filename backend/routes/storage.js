@@ -119,34 +119,5 @@ router.get("/getSVG", async (req, res) => {
   }
 });
 
-/* ---------------------------------------------
-   5️⃣  GET ALL INSTANCES POUR UNE MAISON
-       (chaque Cave à vin, Frigo, etc séparée)
---------------------------------------------- */
-router.get("/getHomeStorages", async (req, res) => {
-  try {
-    const { homeId } = req.query;
-
-    const { rows } = await pool.query(`
-      SELECT 
-        hs.id AS instance_id,
-        hs.storage_id AS type_id,
-        hs.x, hs.y, hs.w_units, hs.h_units, hs.color,
-        s.name,
-        s.parent_id
-      FROM homes_storages hs
-      JOIN "Storage" s ON s.id = hs.storage_id
-      WHERE hs.home_id = $1
-      ORDER BY hs.id ASC
-    `, [homeId]);
-
-    res.json(rows);
-
-  } catch (err) {
-    console.error("❌ Erreur /storage/getHomeStorages:", err);
-    res.status(500).json({ error: "Erreur serveur" });
-  }
-});
-
 
 export default router;
