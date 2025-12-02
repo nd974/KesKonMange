@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import BarCodeScanner from "../components/BarCodeScanner";
-import HomeZone from "../components/HomeZone";  // <--- IMPORTANT
+import HomeZone from "../components/HomeZone";
 
 export default function ShoppingList({ homeId }) {
   const [scannedCode, setScannedCode] = useState("");
@@ -13,7 +13,7 @@ export default function ShoppingList({ homeId }) {
   const [expirationDate, setExpirationDate] = useState("");
 
   // Popin stockage
-  const [showStorageConfirm, setShowStorageConfirm] = useState(false);
+  const [showStoragePopin, setShowStoragePopin] = useState(false);
   const [selectedStorage, setSelectedStorage] = useState(null);
 
   // --------------------------------------
@@ -45,7 +45,7 @@ export default function ShoppingList({ homeId }) {
           brand: p.brands || "Marque inconnue",
           nutriments: p.nutriments || {},
           image: p.image_small_url || p.image_front_url || null,
-          stock_id: null // sera défini après clic HomeZone
+          stock_id: null
         });
 
         setShowExpirationPopin(true);
@@ -64,15 +64,7 @@ export default function ShoppingList({ homeId }) {
   // --------------------------------------
   const handleStorageSelection = (storage) => {
     setSelectedStorage(storage);
-    setShowStorageConfirm(true);
-  };
-
-  const confirmStorage = () => {
-    setProduct((prev) => ({
-      ...prev,
-      stock_id: selectedStorage.id
-    }));
-    setShowStorageConfirm(false);
+    setProduct((prev) => ({ ...prev, stock_id: storage.id }));
   };
 
   return (
@@ -133,19 +125,6 @@ export default function ShoppingList({ homeId }) {
         </div>
       )}
 
-      {/* HomeZone affichée en dessous */}
-      {product && (
-        <div className="mt-10">
-          <h2 className="text-lg font-bold mb-3">Choisir où stocker le produit</h2>
-
-          <HomeZone
-            homeId={homeId}
-            onSelectStorage={handleStorageSelection}
-            onSelectZone={() => {}}
-          />
-        </div>
-      )}
-
       {/* Résumé final si stockage défini */}
       {product && expirationDate && product.stock_id && (
         <div className="mt-8 p-4 border rounded bg-green-50">
@@ -173,7 +152,10 @@ export default function ShoppingList({ homeId }) {
               className="border p-2 w-full mb-4"
             />
             <button
-              onClick={() => setShowExpirationPopin(false)}
+              onClick={() => {
+                setShowExpirationPopin(false);
+                setShowStoragePopin(true); // 🚀 lance HomeZone directement
+              }}
               className="bg-green-500 text-white p-2 rounded w-full"
             >
               Valider
@@ -182,34 +164,32 @@ export default function ShoppingList({ homeId }) {
         </div>
       )}
 
-      {/* POPIN : CONFIRMATION STOCKAGE */}
-      {showStorageConfirm && selectedStorage && (
+      {/* POPIN : HomeZone */}
+      {showStoragePopin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-80">
-            <h3 className="text-lg font-semibold mb-2">Affecter le produit</h3>
+          <div className="bg-white p-4 rounded shadow-lg w-[90%] max-w-3xl h-[80%] overflow-auto relative">
+            <button
+              className="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl"
+              onClick={() => setShowStoragePopin(false)}
+            >
+              ✕
+            </button>
 
-            <p className="mb-4">
-              Mettre ce produit dans :
-              <br />
-              <strong>{selectedStorage.displayName}</strong> ?
-            </p>
+            <h2 className="text-xl font-bold mb-4 text-center">
+              Choisir le stockage
+            </h2>
 
-            <div className="flex gap-3">
-              <button
-                onClick={confirmStorage}
-                className="bg-green-500 text-white p-2 rounded w-full"
-              >
-                Oui
-              </button>
-
-              <button
-                onClick={() => setShowStorageConfirm(false)}
-                className="bg-gray-400 text-white p-2 rounded w-full"
-              >
-                Non
-              </button>
-            </div>
-
+            <HomeZone
+              homeId={homeId}
+              onSelectStorage={(storage) => {
+                handleStorageSelection(storage);
+                if (window.innerWidth <= 768) {
+                  setShowStoragePopin(false); // ferme popin sur mobile
+                }
+              }}
+              onSelectZone={() => {}}
+              inPopin={true}
+            />
           </div>
         </div>
       )}

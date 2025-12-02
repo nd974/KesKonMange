@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef} from "react";
 import Draggable from "react-draggable";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function HomeZone({ homeId, onSelectStorage, onSelectZone }) {
+export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopin = false}) {
   const [zones, setZones] = useState([]);
   const [storages, setStorages] = useState([]);
   const [dragOverZone, setDragOverZone] = useState(null);
@@ -23,6 +23,9 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone }) {
   const gridSize = 5;
 
   const generateId = () => Math.floor(Math.random() * 100000);
+
+  const [draggedStorageIds, setDraggedStorageIds] = useState({});
+
 
   // -------------------------------------
   // 🔄 CHARGEMENT LISTES : ZONES + TYPES STOCKAGES
@@ -309,39 +312,43 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone }) {
         Stockages d’ingrédients (Version 2)
       </h1>
 
-      {/* Boutons */}
-      <div className="flex gap-4 mb-4">
-        <button
-          onClick={() => setShowZoneModal(true)}
-          className="px-4 py-2 bg-green-500 text-white rounded"
-        >
-          Ajouter une zone
-        </button>
+{/* Boutons */}
+{!inPopin && (
+  <div className="grid grid-cols-4 gap-4 mb-4">
+    <button
+      onClick={() => setShowZoneModal(true)}
+      className="w-full px-4 py-2 bg-green-500 text-white rounded"
+    >
+      🗺️
+    </button>
 
-        <button
-          onClick={() => setShowStorageModal(true)}
-          className="px-4 py-2 bg-blue-500 text-white rounded"
-        >
-          Ajouter un stockage
-        </button>
+    <button
+      onClick={() => setShowStorageModal(true)}
+      className="w-full px-4 py-2 bg-blue-500 text-white rounded"
+    >
+      📦
+    </button>
 
-        <button
-          onClick={handleAnnul}
-          className="px-4 py-2 bg-red-500 text-white rounded"
-        >
-          Annuler
-        </button>
+    <button
+      onClick={handleAnnul}
+      className="w-full px-4 py-2 bg-red-500 text-white rounded"
+    >
+      R
+    </button>
 
-        <button
-          onClick={handleSave}
-          className="px-4 py-2 bg-purple-500 text-white rounded"
-        >
-          Sauvegarder
-        </button>
-      </div>
+    <button
+      onClick={handleSave}
+      className="w-full px-4 py-2 bg-purple-500 text-white rounded"
+    >
+      💾
+    </button>
+  </div>
+)}
+
 
             {/* POPIN AJOUT ZONE */}
-      {showZoneModal && (
+
+      {!inPopin && showZoneModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-80">
             <h2 className="text-xl font-semibold mb-4">Nouvelle zone</h2>
@@ -388,7 +395,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone }) {
       )}
 
       {/* POPIN AJOUT STOCKAGE */}
-      {showStorageModal && (
+      {!inPopin && showStorageModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-80">
             <h2 className="text-xl font-semibold mb-4">Nouveau stockage</h2>
@@ -465,70 +472,118 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone }) {
           </g>
         ))}
 
-        {/* 🔥 STOCKAGES (cliquables même dans Draggable) */}
-        {storages.map((child) => (
-          <Draggable
+        {inPopin && storages.map((child) => (
+          <g
             key={child.localId}
-            position={{ x: child.x, y: child.y }}
-            onDrag={(e, data) => handleDrag(e, data, child)}
-            onStop={(e, data) => {
-              const inZone = updateParent({
-                ...child,
-                x: data.x,
-                y: data.y,
-              });
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              const parentZone = zonePositions.find(z => z.id === child.parent_id);
+              const displayName = parentZone ? `${child.name} [${parentZone.name}]` : child.name;
+              onSelectStorage({ ...child, displayName });
 
-              if (!inZone) {
-                setStorages((prev) =>
-                  prev.map((s) =>
-                    s.localId === child.localId
-                      ? { ...s, x: child.x, y: child.y }
-                      : s
-                  )
-                );
-              } else {
-                setStorages((prev) =>
-                  prev.map((s) =>
-                    s.localId === child.localId
-                      ? { ...s, x: data.x, y: data.y }
-                      : s
-                  )
-                );
+              // Si on est sur mobile et en popin, on peut fermer la popin / passer à la suite
+              if (inPopin && window.innerWidth <= 768) {
+                // Ici tu peux déclencher la fermeture de la popin ou la navigation
+                // ex: setShowHomeZonePopin(false)
               }
-
-              setDragOverZone(null);
             }}
           >
-              <g
-                style={{ cursor: "pointer" }}
-                onClick={() => {
-                  const parentZone = zonePositions.find(z => z.id === child.parent_id);
-                  const displayName = parentZone ? `${child.name} [${parentZone.name}]` : child.name;
-                  onSelectStorage({ ...child, displayName });
-                }}
-              >
-
-              <rect
-                x={0}
-                y={0}
-                width={child.w}
-                height={child.h}
-                fill="#60A5FA"
-                stroke="#111827"
-                strokeWidth="2"
-              />
-              <text
-                x={child.w / 2}
-                y={child.h / 2}
-                textAnchor="middle"
-                fontSize="12"
-                fill="#111827"
-              >
-                {child.name}
-              </text>
-            </g>
-          </Draggable>
+            <rect
+              x={child.x}
+              y={child.y}
+              width={child.w}
+              height={child.h}
+              fill="#60A5FA"
+              stroke="#111827"
+              strokeWidth="2"
+            />
+            <text
+              x={child.x + child.w / 2}
+              y={child.y + child.h / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fill="#111827"
+            >
+              {child.name}
+            </text>
+          </g>
         ))}
+
+        {/* 🔥 STOCKAGES (cliquables même dans Draggable) */}
+{!inPopin &&
+  storages.map((child) => {
+    const handleSelect = () => {
+      const parentZone = zonePositions.find((z) => z.id === child.parent_id);
+      const displayName = parentZone
+        ? `${child.name} [${parentZone.name}]`
+        : child.name;
+      onSelectStorage({ ...child, displayName });
+    };
+
+    return (
+      <Draggable
+        key={child.localId}
+        position={{ x: child.x, y: child.y }}
+        onStart={() =>
+          setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: false }))
+        }
+        onDrag={() =>
+          setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: true }))
+        }
+        onStop={(e, data) => {
+          const dragged = draggedStorageIds[child.localId];
+          const inZone = updateParent({ ...child, x: data.x, y: data.y });
+
+          setStorages((prev) =>
+            prev.map((s) =>
+              s.localId === child.localId
+                ? { ...s, x: inZone ? data.x : child.x, y: inZone ? data.y : child.y }
+                : s
+            )
+          );
+
+          setDragOverZone(null);
+
+          if (!dragged) handleSelect();
+        }}
+      >
+        <g
+          style={{ cursor: "pointer" }}
+          pointerEvents="all"
+          onTouchEnd={(e) => {
+            e.preventDefault();
+            if (!draggedStorageIds[child.localId]) handleSelect();
+          }}
+        >
+          <rect
+            x={0}
+            y={0}
+            width={child.w}
+            height={child.h}
+            fill="#60A5FA"
+            stroke="#111827"
+            strokeWidth="2"
+          />
+          <text
+            x={child.w / 2}
+            y={child.h / 2}
+            textAnchor="middle"
+            alignmentBaseline="middle"
+            fontSize="12"
+            fill="#111827"
+          >
+            {child.name}
+          </text>
+        </g>
+      </Draggable>
+    );
+  })}
+
+
+
+
+
+
       </svg>
     </div>
   );
