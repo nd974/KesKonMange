@@ -2,24 +2,7 @@ import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import HomeZone from "../components/HomeZone";
 
-const id_istanceDBid = 87+4;
-
-const ingredients = [
-  { id: 1, name: "Tomates", quantity: 2, unit: "kg", instanceId: id_istanceDBid, expiration: "2026-12-05" },
-  { id: 2, name: "Lait", quantity: 1, unit: "L", instanceId: id_istanceDBid, expiration: "2025-12-05" },
-  { id: 3, name: "Beurre", quantity: 0.5, unit: "kg", instanceId: id_istanceDBid, expiration: "2025-06-01" },
-
-  { id: 4, name: "Jambon", quantity: 4, unit: "tranches", instanceId: id_istanceDBid+1, expiration: "2025-02-10" },
-  { id: 5, name: "Oeufs", quantity: 12, unit: "pcs", instanceId: id_istanceDBid+1, expiration: "2025-03-05" },
-
-  { id: 6, name: "Poulet", quantity: 1.5, unit: "kg", instanceId: id_istanceDBid+2, expiration: "2025-02-02" },
-  { id: 7, name: "Glace Vanille", quantity: 1, unit: "L", instanceId: id_istanceDBid+2, expiration: "2026-01-01" },
-  { id: 8, name: "Haricots Surgelés", quantity: 0.8, unit: "kg", instanceId: id_istanceDBid+2, expiration: "2027-01-10" },
-
-  { id: 9, name: "Farine", quantity: 5, unit: "kg", instanceId: id_istanceDBid+3, expiration: "2026-12-10" },
-  { id: 10, name: "Pâtes", quantity: 3, unit: "kg", instanceId: id_istanceDBid+3, expiration: "2027-05-21" },
-  { id: 11, name: "Riz", quantity: 2, unit: "kg", instanceId: id_istanceDBid+3, expiration: "2027-09-01" },
-];
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Stock({ homeId }) {
   const [selectedStorage, setSelectedStorage] = useState(null);
@@ -27,9 +10,34 @@ export default function Stock({ homeId }) {
   const [unitFilter, setUnitFilter] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
-
+  const [ingredients, setIngredients] = useState([]); // Stocke les ingrédients récupérés
+  const [loading, setLoading] = useState(true); // Indicateur de chargement
   const nb_day_postmeal = 7;
   const today = new Date();
+
+  // Fonction pour récupérer les produits pour un homeId spécifique
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/product/getProducts/${homeId}`);
+        console.log(response);
+        const data = await response.json();
+        setIngredients(data); // Mise à jour des ingrédients avec les données récupérées
+      } catch (error) {
+        console.error("Erreur lors de la récupération des produits:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchIngredients();
+  }, [homeId]);
+
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR"); // Format français sans heures, minutes et secondes
+  }
 
   function getExpirationStatus(dateStr) {
     const date = new Date(dateStr);
@@ -38,6 +46,7 @@ export default function Stock({ homeId }) {
     if (diff <= nb_day_postmeal) return "soon";
     return "ok";
   }
+
 
   function sortIngredients(list) {
     if (!sortColumn) return list;
@@ -62,29 +71,26 @@ export default function Stock({ homeId }) {
       setSortOrder("asc");
     }
   }
-  // ✅ Ici, on utilise instanceId = storage.id
-const displayedIngredients = selectedStorage
-  ? sortIngredients(
-      ingredients
-        .filter(i => i.instanceId === selectedStorage.id)
-        .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
-        .filter(i => (unitFilter ? i.unit === unitFilter : true))
-    )
-  : [];
 
-// ✅ Ici, on veut tous les ingredients qui existe mais qui ont pqs de storqges lie a leutr instanceId
-const displayedIngredientsNull = selectedStorage
-  ? sortIngredients(
-      ingredients
-        .filter(i => i.instanceId === null)
-        .filter(i => i.name.toLowerCase().includes(search.toLowerCase()))
-        .filter(i => (unitFilter ? i.unit === unitFilter : true))
-    )
-  : []; // A REFAIRE et le faire affiché uniquement si aucun stotrageest selectionne (donc quoand on arrive sur la page et que c'est l'affichage par dafaut)
+  const displayedIngredients = selectedStorage
+    ? sortIngredients(
+        ingredients
+          .filter(i => i.stock_id === selectedStorage.id)
+          .filter(i => i.ingredient_name.toLowerCase().includes(search.toLowerCase()))
+          .filter(i => (unitFilter ? i.unit_name === unitFilter : true))
+      )
+    : [];
 
+  const displayedIngredientsNull = selectedStorage
+    ? sortIngredients(
+        ingredients
+          .filter(i => i.stock_id === null)
+          .filter(i => i.ingredient_name.toLowerCase().includes(search.toLowerCase()))
+          .filter(i => (unitFilter ? i.unit_name === unitFilter : true))
+      )
+    : [];
 
-
-  const units = [...new Set(ingredients.map(i => i.unit))];
+  const units = [...new Set(ingredients.map(i => i.unit_name))];
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
@@ -97,10 +103,9 @@ const displayedIngredientsNull = selectedStorage
             homeId={homeId}
             onSelectStorage={(storage) => {
               if (!storage) return;
-              console.log("Storage sélectionné", storage.id); // ✅ lire le paramètre
+              console.log("Storage sélectionné", storage.id);
               setSelectedStorage(storage);
             }}
-
             onSelectZone={() => setSelectedStorage(null)}
           />
         </div>
@@ -143,34 +148,40 @@ const displayedIngredientsNull = selectedStorage
                   <tr>
                     <th
                       className="border px-2 py-1 cursor-pointer select-none"
-                      onClick={() => handleSort("name")}
+                      onClick={() => handleSort("ingredient_name")}
                     >
-                      Nom {sortColumn === "name" && (sortOrder === "asc" ? " ▲" : " ▼")}
+                      Nom {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
                     </th>
                     <th className="border px-2 py-1">Quantité</th>
                     <th className="border px-2 py-1">Unité</th>
                     <th
                       className="border px-2 py-1 cursor-pointer select-none"
-                      onClick={() => handleSort("expiration")}
+                      onClick={() => handleSort("expiry")}
                     >
-                      Péremption {sortColumn === "expiration" && (sortOrder === "asc" ? " ▲" : " ▼")}
+                      Péremption {sortColumn === "expiry" && (sortOrder === "asc" ? " ▲" : " ▼")}
                     </th>
                   </tr>
                 </thead>
                 <tbody>
-                  {displayedIngredients.length > 0 ? (
+                  {loading ? (
+                    <tr>
+                      <td className="border px-2 py-2 text-center" colSpan="4">
+                        Chargement...
+                      </td>
+                    </tr>
+                  ) : displayedIngredients.length > 0 ? (
                     displayedIngredients.map((ing, idx) => {
-                      const status = getExpirationStatus(ing.expiration);
+                      const status = getExpirationStatus(ing.expiry);
                       return (
                         <tr key={idx}>
-                          <td className="border px-2 py-1">{ing.name}</td>
-                          <td className="border px-2 py-1">{ing.quantity}</td>
-                          <td className="border px-2 py-1">{ing.unit}</td>
+                          <td className="border px-2 py-1">{ing.ingredient_name}</td>
+                          <td className="border px-2 py-1">{ing.amount}</td>
+                          <td className="border px-2 py-1">{ing.unit_name}</td>
                           <td className={`border px-2 py-1
                             ${status === "expired" ? "text-red-600 font-semibold" : ""}
                             ${status === "soon" ? "text-orange-500 font-semibold" : ""}`}
                           >
-                            {ing.expiration}
+                            {formatDate(ing.expiry)} {/* Affichage de la date formatée */}
                             {status === "expired" && <span className="ml-2 text-red-600">⚠️ Expiré</span>}
                             {status === "soon" && <span className="ml-2 text-orange-500">⏳ Bientôt</span>}
                           </td>
@@ -186,6 +197,7 @@ const displayedIngredientsNull = selectedStorage
                   )}
                 </tbody>
               </table>
+
             </>
           )}
         </div>

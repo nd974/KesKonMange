@@ -23,6 +23,13 @@ export default function ShoppingList({ homeId }) {
   const [showScannerPopin, setShowScannerPopin] = useState(false);
   const [showManualPopin, setShowManualPopin] = useState(false);
 
+
+  const [showFinalPopin, setShowFinalPopin] = useState(false);
+
+  
+
+
+
   // Champs manuels
   const [manualValues, setManualValues] = useState({
     name: "",
@@ -31,6 +38,7 @@ export default function ShoppingList({ homeId }) {
     brand: "",
     ean: "",
   });
+  const [manualLock, setManualLock] = useState(false);
 
   // --------------------------------------
   // 🔍 SCAN + FETCH OPENFOODFACTS
@@ -80,6 +88,8 @@ export default function ShoppingList({ homeId }) {
   const handleStorageSelection = (storage) => {
     setSelectedStorage(storage);
     setProduct((prev) => ({ ...prev, stock_id: storage.id }));
+    setShowStoragePopin(false);
+    setShowFinalPopin(true);  // <-- nouvelle popin finale
   };
 
   // --------------------------------------
@@ -102,16 +112,23 @@ export default function ShoppingList({ homeId }) {
     setShowExpirationPopin(true);
   };
 
-  const openManualPopinWithPreset = (name, amount = "", unit = "") => {
+  const openManualPopinWithPreset = (name, amount = "", unit = "", ing_id = null, unit_id = null) => {
+    setManualLock(true);
+
     setManualValues({
       name,
       quantity: amount,
       unit,
       brand: "",
       ean: "",
+      ing_id,        // 🔥 ajouté
+      unit_id        // 🔥 ajouté
     });
+
     setShowManualPopin(true);
   };
+
+
 
   // --------------------------------------
   // 🔹 MENUS + SELECTION MULTI + fetch ingrédients
@@ -179,11 +196,17 @@ export default function ShoppingList({ homeId }) {
     selectedMenus.forEach((menu) => {
       menu.recipes?.forEach((recipe) => {
         recipe.ingredients?.forEach((ing) => {
+          console.log(ing);
           allIngredients.push({
-            ...ing,
+            name: ing.name,
+            amount: ing.amount,
+            unit: ing.unit,
+            unit_id: ing.unit_id,
+            ing_id: ing.id,          // 🔥 obligatoire
             recipeName: recipe.name,
             menuDate: menu.date,
           });
+
         });
       });
     });
@@ -216,6 +239,40 @@ export default function ShoppingList({ homeId }) {
     .map((d) => ({ date: d, menus: groupedMenus[d] }))
     .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
 
+
+  const handleInsertProduct = async () => {
+    try {
+      const body = {
+        ing_id: manualValues.ing_id ?? null,     // 🔥 si menu → id, si manuel → null
+        amount: manualValues.quantity,
+        unit_id: manualValues.unit_id ?? null,   // 🔥 si menu → id, si manuel → null
+        stock_id: product.stock_id,
+        expiry: expirationDate,
+        home_storage_id: selectedStorage.id,
+      };
+
+
+      const res = await fetch(`${API_URL}/product/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      alert("Produit ajouté !");
+      setShowFinalPopin(false);
+      setProduct(null);
+      setExpirationDate("");
+
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de l’ajout du produit");
+    }
+  };
+
+
   // --------------------------------------
   // 🔹 RENDER
   // --------------------------------------
@@ -229,17 +286,22 @@ export default function ShoppingList({ homeId }) {
         <div className="flex gap-4">
           <button
             onClick={() => setShowScannerPopin(true)}
-            className="flex-1 bg-blue-600 text-white p-3 rounded-lg flex items-center justify-center gap-2"
+            className="flex-1 bg-gray-700 text-white p-3 rounded-lg flex items-center justify-center gap-2"
           >
             📷 Scanner un code-barres
           </button>
 
           <button
-            onClick={() => setShowManualPopin(true)}
-            className="flex-1 bg-gray-700 text-white p-3 rounded-lg flex items-center justify-center gap-2"
+            onClick={() => {
+              setManualLock(false); // 🔓
+              setManualValues({ name: "", quantity: "", unit: "", brand: "", ean: "" });
+              setShowManualPopin(true);
+            }}
+            className="flex-1 bg-accentGreen text-white p-3 rounded-lg flex items-center justify-center gap-2"
           >
             ✏️ Saisie manuelle
           </button>
+
         </div>
       </div>
 
@@ -260,7 +322,7 @@ export default function ShoppingList({ homeId }) {
               g.menus.map((menu) => {
                 const previewRecipe = menu.recipes?.[0];
                 const isSelected = selectedMenus.some((m) => m.id === menu.id);
-                console.log(menu);
+                console.log("menu",menu);
 
                 return (
                   <div
@@ -302,6 +364,7 @@ export default function ShoppingList({ homeId }) {
           ) : (
             <ul className="list-disc list-inside space-y-1">
               {generateShoppingList().map((item, idx) => {
+                console.log("item",item);
                 const unit = item.unit;
                 const name = item.name.toLowerCase();
                 const amount = Number(item.amount || 1);
@@ -320,8 +383,16 @@ export default function ShoppingList({ homeId }) {
                     key={idx}
                     className="cursor-pointer hover:text-blue-600 transition"
                     onClick={() =>
-                      openManualPopinWithPreset(item.name, item.amount, item.unit)
+                      openManualPopinWithPreset(
+                        item.name,
+                        item.amount,
+                        item.unit,
+                        item.ing_id,     
+                        item.unit_id     
+                      )
                     }
+
+
                   >
                     {displayQty} {deWord}
                     {name}
@@ -373,11 +444,13 @@ export default function ShoppingList({ homeId }) {
                 type="text"
                 placeholder="Nom du produit"
                 value={manualValues.name}
+                disabled={manualLock}   // <----------
                 onChange={(e) =>
                   setManualValues({ ...manualValues, name: e.target.value })
                 }
-                className="border p-2 rounded"
+                className={`border p-2 rounded ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
               />
+
               <input
                 type="text"
                 placeholder="Marque"
@@ -401,11 +474,13 @@ export default function ShoppingList({ homeId }) {
                   type="text"
                   placeholder="Unité (g, L, ml...)"
                   value={manualValues.unit}
+                  disabled={manualLock}   // <----------
                   onChange={(e) =>
                     setManualValues((v) => ({ ...v, unit: e.target.value }))
                   }
-                  className="border p-2 w-1/2"
+                  className={`border p-2 w-1/2 ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
                 />
+
               </div>
               <input
                 type="text"
@@ -473,18 +548,40 @@ export default function ShoppingList({ homeId }) {
         </div>
       )}
 
-      {product && expirationDate && product.stock_id && (
-        <div className="mt-8 p-4 border rounded bg-green-50">
-          <h3 className="text-lg font-bold mb-2">Données prêtes pour l’insertion</h3>
-          <ul className="text-sm">
+    {showFinalPopin && product && (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white p-6 rounded-lg w-[90%] max-w-md relative">
+
+          <button
+            className="absolute top-2 right-2 text-xl"
+            onClick={() => setShowFinalPopin(false)}
+          >
+            ✕
+          </button>
+
+          <h2 className="text-xl font-bold mb-4 text-center">
+            Confirmer le produit
+          </h2>
+
+          <ul className="text-sm mb-4 space-y-1">
             <li><strong>Nom :</strong> {product.name}</li>
             <li><strong>Marque :</strong> {product.brand}</li>
             <li><strong>Quantité :</strong> {product.quantity}</li>
-            <li><strong>stock_id :</strong> {product.stock_id}</li>
-            <li><strong>expiry :</strong> {expirationDate}</li>
+            <li><strong>Unité :</strong> {product.unit || "—"}</li>
+            <li><strong>Stockage :</strong> {selectedStorage?.name}</li>
+            <li><strong>Expiration :</strong> {expirationDate}</li>
           </ul>
+
+          <button
+            className="bg-green-600 text-white p-2 rounded w-full"
+            onClick={handleInsertProduct}
+          >
+            ➕ Ajouter le produit
+          </button>
         </div>
-      )}
+      </div>
+    )}
+
     </div>
   );
 }

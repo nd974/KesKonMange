@@ -13,6 +13,7 @@ import unitRoutes from "./routes/unit.js";
 import utensilRoutes from "./routes/utensil.js";
 import ingredientRoutes from "./routes/ingredient.js";
 import storageRoutes from "./routes/storage.js";
+import productRoutes from "./routes/product.js";
 
 const app = express();
 
@@ -37,6 +38,7 @@ app.use("/unit", unitRoutes);
 app.use("/utensil", utensilRoutes);
 app.use("/ingredient", ingredientRoutes);
 app.use("/storage", storageRoutes);
+app.use("/product", productRoutes);
 
 const PORT = process.env.PORT || 3000;
 

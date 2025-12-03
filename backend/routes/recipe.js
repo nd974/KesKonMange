@@ -488,7 +488,8 @@ router.get("/get-one/:id", async (req, res) => {
           i.id, 
           i.name, 
           ri.amount, 
-          u.abbreviation AS unit
+          u.abbreviation AS unit,
+          u.id AS unit_id
       FROM "recipes_ingredients" ri
       JOIN "Ingredient" i ON i.id = ri.ingredient_id
       LEFT JOIN "Unit" u ON u.id = ri.unit_id
