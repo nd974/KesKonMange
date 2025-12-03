@@ -63,9 +63,25 @@ export default function ShoppingList({ homeId }) {
 
         const p = data.product;
 
+        const parseQuantity = (q) => {
+          if (!q) return { quantity: "Inconnu", unit: "Inconnu" };
+
+          // Exemple : "500 g" → ["500", "g"]
+          const match = q.match(/([\d.,]+)\s*([a-zA-Z]+)/);
+
+          if (!match) return { quantity: q, unit: "" };
+
+          return {
+            quantity: match[1],
+            unit: match[2],
+          };
+        };
+        const { quantity, unit } = parseQuantity(p.quantity);
+
         setProduct({
           name: p.product_name || "Nom inconnu",
-          quantity: p.quantity || "Inconnu",
+          quantity,
+          unit,
           brand: p.brands || "Marque inconnue",
           nutriments: p.nutriments || {},
           image: p.image_small_url || p.image_front_url || null,

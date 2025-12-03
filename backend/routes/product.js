@@ -7,6 +7,9 @@ router.post("/create", async (req, res) => {
   try {
     const { ing_id, amount, unit_id, stock_id, expiry} = req.body;
 
+    console.log("create product");
+    console.log("ing_id, amount, unit_id, stock_id, expiry : ",ing_id, amount, unit_id, stock_id, expiry);
+
     if (!amount || !stock_id || !expiry) {
       return res.status(400).json({ error: "missing fields" });
     }
