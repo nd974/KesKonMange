@@ -53,18 +53,6 @@ router.post("/create", async (req, res) => {
       [ing_id || null, amount, unit_id || null, stock_id, expiry]
     );
 
-    // await pool.query(
-    //   `INSERT INTO storages_products (home_storage_id, product_id)
-    //    VALUES ($1, $2)`,
-    //   [stock_id, insert.rows[0].id]
-    // );
-
-    // 8	91	9
-    // 9	94	10
-    // 10	91	11
-    // 11	93	12
-    // 12	91	13
-
     res.json({
       ok: true,
       merged: false,
