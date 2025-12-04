@@ -40,6 +40,11 @@ export default function ShoppingList({ homeId }) {
   });
   const [manualLock, setManualLock] = useState(false);
 
+  function formatDate(dateStr) {
+    const date = new Date(dateStr);
+    return date.toLocaleDateString("fr-FR"); // Format français sans heures, minutes et secondes
+  }
+
   // --------------------------------------
   // 🔍 SCAN + FETCH OPENFOODFACTS
   // --------------------------------------
@@ -448,7 +453,7 @@ export default function ShoppingList({ homeId }) {
               className="absolute top-2 right-2 text-xl"
               onClick={() => setShowManualPopin(false)}
             >
-              ✕
+              ❌
             </button>
 
             <h2 className="text-xl font-bold mb-4 text-center">
@@ -520,16 +525,27 @@ export default function ShoppingList({ homeId }) {
 
       {showExpirationPopin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white p-6 rounded-lg w-80">
+          <div className="relative bg-white p-6 rounded-lg w-80">
+
+            <button
+              onClick={() => setShowExpirationPopin(false)}
+              className="absolute top-2 right-2 text-red-500 text-xl font-bold"
+            >
+              ❌
+            </button>
+
             <h3 className="text-lg font-semibold mb-2">Date de péremption</h3>
+
             <input
               type="date"
               value={expirationDate}
               onChange={(e) => setExpirationDate(e.target.value)}
               className="border p-2 w-full mb-4"
             />
+
             <button
               onClick={() => {
+                if (!expirationDate) return alert("Veuillez sélectionner une date.");
                 setShowExpirationPopin(false);
                 setShowStoragePopin(true);
               }}
@@ -537,9 +553,11 @@ export default function ShoppingList({ homeId }) {
             >
               Valider
             </button>
+
           </div>
         </div>
       )}
+
 
       {showStoragePopin && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -548,7 +566,7 @@ export default function ShoppingList({ homeId }) {
               className="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl"
               onClick={() => setShowStoragePopin(false)}
             >
-              ✕
+              ❌
             </button>
             <h2 className="text-xl font-bold mb-4 text-center">Choisir le stockage</h2>
             <HomeZone
@@ -572,7 +590,7 @@ export default function ShoppingList({ homeId }) {
             className="absolute top-2 right-2 text-xl"
             onClick={() => setShowFinalPopin(false)}
           >
-            ✕
+            ❌
           </button>
 
           <h2 className="text-xl font-bold mb-4 text-center">
@@ -585,7 +603,7 @@ export default function ShoppingList({ homeId }) {
             <li><strong>Quantité :</strong> {product.quantity}</li>
             <li><strong>Unité :</strong> {product.unit || "—"}</li>
             <li><strong>Stockage :</strong> {selectedStorage?.name}</li>
-            <li><strong>Expiration :</strong> {expirationDate}</li>
+            <li><strong>Expiration :</strong> {formatDate(expirationDate)}</li>
           </ul>
 
           <button

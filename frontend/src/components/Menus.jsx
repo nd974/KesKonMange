@@ -76,6 +76,9 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
             const previewRecipe = firstMenu.recipes?.[0];
             const tagNames = g.menus.map((mm) => mm.tagName).filter(Boolean);
 
+            console.log("Tag names for date", g.date, ":", tagNames);
+            console.log("groups", g.date, ":", groups);
+
             return (
               <div
                 key={g.date}
@@ -95,7 +98,7 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
                     {dayjs(g.date).format("ddd D MMM")}
                   </div>
                   <div className="text-sm opacity-80">
-                    {previewRecipe?.name || "—"}
+                    {tagNames.length > 0 ? tagNames.join(" / ") : "—"}
                   </div>
                 </div>
 
@@ -106,7 +109,7 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
                       : "bg-white/80"
                   }`}
                 >
-                  {g.menus.length} 🍽️
+                  {g.menus.reduce((sum, m) => sum + (m.recipes?.length || 0), 0)} 🍽️
                 </div>
               </div>
             );

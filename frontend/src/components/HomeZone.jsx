@@ -494,7 +494,10 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
       <svg viewBox="0 0 600 600" className="w-full h-[500px] border">
         
         {/* 🔥 ZONES (cliquables) */}
-        {zonePositions.map((zone) => (
+        {
+        zonePositions
+        .filter(zone => zone.x != null && zone.y != null)
+        .map((zone) => (
           <g
             key={zone.id}
             onClick={() => onSelectZone(zone)}
@@ -521,7 +524,9 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
           </g>
         ))}
 
-        {inPopin && storages.map((child) => (
+        {inPopin && storages
+        .filter(child => child.x != null && child.y != null)
+        .map((child) => (
           <g
             key={child.localId}
             style={{ cursor: "pointer" }}
@@ -560,7 +565,9 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
 
         {/* 🔥 STOCKAGES (cliquables même dans Draggable) */}
 {!inPopin &&
-  storages.map((child) => {
+  storages
+    .filter(child => child.x != null && child.y != null)
+    .map((child) => {
     const handleSelect = () => {
       const parentZone = zonePositions.find((z) => z.id === child.parent_id);
       const displayName = parentZone
