@@ -103,7 +103,7 @@ export default function Stock({ homeId }) {
             homeId={homeId}
             onSelectStorage={(storage) => {
               if (!storage) return;
-              console.log("Storage sélectionné", storage.id);
+              console.log("Storage sélectionné", storage);
               setSelectedStorage(storage);
             }}
             onSelectZone={() => setSelectedStorage(null)}

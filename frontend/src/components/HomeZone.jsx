@@ -14,6 +14,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
 
   const [showStorageModal, setShowStorageModal] = useState(false);
   const [selectedStorageType, setSelectedStorageType] = useState("");
+  const [selectedStorageId, setSelectedStorageId] = useState(0);
   const [selectedStorageSize, setSelectedStorageSize] = useState("1x1");
 
   const [zoneNamesFromDB, setZoneNamesFromDB] = useState([]);
@@ -42,7 +43,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
       .then((res) => res.json())
       .then((data) => {
         setStorageTypesFromDB(data);
-        if (data.length > 0) setSelectedStorageType(data[0].name);
+        if (data.length > 0) {setSelectedStorageType(data[0].name); setSelectedStorageId(data[0].id);};
       });
   }, []);
 
@@ -213,9 +214,12 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
     const countInZone = storages.filter((s) => s.parent_id === parentZone.id).length;
     const [wUnits, hUnits] = selectedStorageSize.split("x").map(Number);
 
+    console.log("selectedStorageType=",selectedStorageType);
+    console.log("selectedStorageId=",selectedStorageId);
+
     const newStorage = {
       localId: generateId(),
-      storageId: selectedStorageType.id,
+      storageId: selectedStorageId,
       name: selectedStorageType,
       parent_id: parentZone.id,
       x: 10,
@@ -248,23 +252,66 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
   // -------------------------------------
   const handleSave = async () => {
     try {
+      // const allItems = [
+      //   ...zones.map((z) => ({
+      //     name: z.name,
+      //     x: z.x,
+      //     y: z.y,
+      //     w_units: z.wUnits,
+      //     h_units: z.hUnits,
+      //     color: z.color ?? "#FDE68A",
+      //   })),
+      //   ...storages.map((s) => ({
+      //     name: s.name,
+      //     x: s.x,
+      //     y: s.y,
+      //     w_units: s.wUnits,
+      //     h_units: s.hUnits,
+      //     color: s.color ?? "#60A5FA",
+      //   })),
+      // ];
+
+      // const allItems = [
+      //   ...zones.map((z) => ({
+      //     id: z.id,               // <-- ***IMPORTANT***
+      //     name: z.name,
+      //     x: z.x,
+      //     y: z.y,
+      //     w_units: z.wUnits,
+      //     h_units: z.hUnits,
+      //     color: z.color,
+      //   })),
+      //   ...storages.map((s) => ({
+      //     id: s.id,               // <-- ***IMPORTANT***
+      //     name: s.name,
+      //     x: s.x,
+      //     y: s.y,
+      //     w_units: s.wUnits,
+      //     h_units: s.hUnits,
+      //     color: s.color,
+      //   }))
+      // ];
       const allItems = [
         ...zones.map((z) => ({
+          instance_id: z.id,
+          storage_id: null,
           name: z.name,
           x: z.x,
           y: z.y,
           w_units: z.wUnits,
           h_units: z.hUnits,
-          color: z.color ?? "#FDE68A",
+          color: z.color,
         })),
         ...storages.map((s) => ({
+          instance_id: s.id ?? null,   // id de l’instance pour update
+          storage_id: s.storageId,     // ✔ important !
           name: s.name,
           x: s.x,
           y: s.y,
           w_units: s.wUnits,
           h_units: s.hUnits,
-          color: s.color ?? "#60A5FA",
-        })),
+          color: s.color,
+        }))
       ];
 
       const response = await fetch(`${API_URL}/storage/save`, {
