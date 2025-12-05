@@ -282,46 +282,11 @@ const handleAddZone = () => {
   // 💾 SAUVEGARDE
   // -------------------------------------
   const handleSave = async () => {
-    try {
-      // const allItems = [
-      //   ...zones.map((z) => ({
-      //     name: z.name,
-      //     x: z.x,
-      //     y: z.y,
-      //     w_units: z.wUnits,
-      //     h_units: z.hUnits,
-      //     color: z.color ?? "#FDE68A",
-      //   })),
-      //   ...storages.map((s) => ({
-      //     name: s.name,
-      //     x: s.x,
-      //     y: s.y,
-      //     w_units: s.wUnits,
-      //     h_units: s.hUnits,
-      //     color: s.color ?? "#60A5FA",
-      //   })),
-      // ];
+    
+    const confirmed = window.confirm("Voulez-vous vraiment sauvegarder le plan ?");
+    if (!confirmed) return;  // Annule si l’utilisateur clique sur Annuler
 
-      // const allItems = [
-      //   ...zones.map((z) => ({
-      //     id: z.id,               // <-- ***IMPORTANT***
-      //     name: z.name,
-      //     x: z.x,
-      //     y: z.y,
-      //     w_units: z.wUnits,
-      //     h_units: z.hUnits,
-      //     color: z.color,
-      //   })),
-      //   ...storages.map((s) => ({
-      //     id: s.id,               // <-- ***IMPORTANT***
-      //     name: s.name,
-      //     x: s.x,
-      //     y: s.y,
-      //     w_units: s.wUnits,
-      //     h_units: s.hUnits,
-      //     color: s.color,
-      //   }))
-      // ];
+    try {
       const allItems = [
         ...zones.map((z) => ({
           instance_id: z.id,
@@ -387,47 +352,31 @@ const handleAddZone = () => {
   // AFFICHAGE
   // -------------------------------------
   return (
-    <div className="flex flex-col gap-4">
+    <div className="flex flex-col gap-4 card p-4 bg-white rounded shadow">
       {!inPopin && (
         <h1 className="text-2xl font-bold mb-4 text-center">
-          Stockages d’ingrédients (Version 2)
+          Plan Maison
         </h1>
       )}
 
       {/* Boutons */}
       {!inPopin && (
-        <div className="grid grid-cols-4 gap-4 mb-4">
+        <div className="grid grid-cols-2 gap-4">
           <button
             onClick={() => setShowZoneModal(true)}
             className="w-full px-4 py-2 bg-green-500 text-white rounded"
           >
-            🗺️
+            Ajouter une Zone
           </button>
 
           <button
             onClick={() => setShowStorageModal(true)}
             className="w-full px-4 py-2 bg-blue-500 text-white rounded"
           >
-            📦
-          </button>
-
-          {/* <button
-            onClick={handleAnnul}
-            className="w-full px-4 py-2 bg-red-500 text-white rounded"
-          >
-            R
-          </button> */}
-
-          <button
-            onClick={handleSave}
-            className="w-full px-4 py-2 bg-purple-500 text-white rounded"
-          >
-            💾
+            Ajouter un Stockage
           </button>
         </div>
       )}
-
-
             {/* POPIN AJOUT ZONE */}
 
       {!inPopin && showZoneModal && (
@@ -597,6 +546,38 @@ const handleAddZone = () => {
       </g>
     ))
 }
+{inPopin && storages.map((child) => {
+  const parentZone = zonePositions.find(z => z.id === child.parent_id);
+  const displayName = parentZone ? `${child.name} [${parentZone.name}]` : child.name;
+
+  return (
+    <g
+      key={child.localId}
+      style={{ cursor: "pointer" }}
+      onClick={() => onSelectStorage({ ...child, displayName })}
+    >
+      <rect
+        x={child.x}
+        y={child.y}
+        width={child.w}
+        height={child.h}
+        fill="#60A5FA"
+        stroke="#111827"
+        strokeWidth="2"
+      />
+      <text
+        x={child.x + child.w / 2}
+        y={child.y + child.h / 2}
+        textAnchor="middle"
+        alignmentBaseline="middle"
+        fontSize="12"
+        fill="#111827"
+      >
+        {child.name}
+      </text>
+    </g>
+  );
+})}
 
 
         {/* 🔥 STOCKAGES (cliquables même dans Draggable) */}
@@ -694,6 +675,17 @@ const handleAddZone = () => {
 
 
       </svg>
+
+      {!inPopin && (
+        <div className="grid grid-cols-1 gap-4 mb-4">
+          <button
+            onClick={handleSave}
+            className="w-full px-4 py-2 bg-purple-500 text-white rounded"
+          >
+            Sauvegarder la Maison
+          </button>
+        </div>
+      )}
     </div>
   );
 }

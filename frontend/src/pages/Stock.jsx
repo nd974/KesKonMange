@@ -14,9 +14,10 @@ export default function Stock({ homeId }) {
   const [loading, setLoading] = useState(true); // Indicateur de chargement
   const nb_day_postmeal = 7;
   const today = new Date();
-
+  console.log("Récupération2 des ingrédients pour le homeId:", homeId);
   // Fonction pour récupérer les produits pour un homeId spécifique
   useEffect(() => {
+    console.log("Récupération des ingrédients pour le homeId:", homeId);
     const fetchIngredients = async () => {
       setLoading(true);
       try {
@@ -92,6 +93,30 @@ export default function Stock({ homeId }) {
 
   const units = [...new Set(ingredients.map(i => i.unit_name))];
 
+  async function deleteProduct(id) {
+    const ok = confirm("Supprimer ce produit ?");
+    if (!ok) return;
+
+    try {
+      const res = await fetch(`${API_URL}/product/delete/${id}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        setIngredients((prev) => prev.filter(p => p.id !== id));
+      } else {
+        alert("Erreur : " + data.error);
+      }
+
+    } catch (e) {
+      console.error(e);
+      alert("Erreur réseau");
+    }
+  }
+
+
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
       <Header homeId={homeId} />
@@ -143,60 +168,90 @@ export default function Stock({ homeId }) {
                 </div>
               </div>
 
-              <table className="w-full border mt-2">
-                <thead className="bg-gray-200">
-                  <tr>
-                    <th
-                      className="border px-2 py-1 cursor-pointer select-none"
-                      onClick={() => handleSort("ingredient_name")}
-                    >
-                      Nom {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
-                    </th>
-                    <th className="border px-2 py-1">Quantité</th>
-                    <th className="border px-2 py-1">Unité</th>
-                    <th
-                      className="border px-2 py-1 cursor-pointer select-none"
-                      onClick={() => handleSort("expiry")}
-                    >
-                      Péremption {sortColumn === "expiry" && (sortOrder === "asc" ? " ▲" : " ▼")}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {loading ? (
-                    <tr>
-                      <td className="border px-2 py-2 text-center" colSpan="4">
-                        Chargement...
-                      </td>
-                    </tr>
-                  ) : displayedIngredients.length > 0 ? (
-                    displayedIngredients.map((ing, idx) => {
-                      const status = getExpirationStatus(ing.expiry);
-                      return (
-                        <tr key={idx}>
-                          <td className="border px-2 py-1">{ing.ingredient_name}</td>
-                          <td className="border px-2 py-1">{ing.amount}</td>
-                          <td className="border px-2 py-1">{ing.unit_name}</td>
-                          <td className={`border px-2 py-1
-                            ${status === "expired" ? "text-red-600 font-semibold" : ""}
-                            ${status === "soon" ? "text-orange-500 font-semibold" : ""}`}
-                          >
-                            {formatDate(ing.expiry)} {/* Affichage de la date formatée */}
-                            {status === "expired" && <span className="ml-2 text-red-600">⚠️ Expiré</span>}
-                            {status === "soon" && <span className="ml-2 text-orange-500">⏳ Bientôt</span>}
-                          </td>
-                        </tr>
-                      );
-                    })
-                  ) : (
-                    <tr>
-                      <td className="border px-2 py-2 text-center" colSpan="4">
-                        Aucun ingrédient
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
+<table className="w-full border mt-2">
+  <thead className="bg-gray-200">
+    <tr>
+      <th
+        className="border px-2 py-1 cursor-pointer select-none"
+        onClick={() => handleSort("ingredient_name")}
+      >
+        Nom {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
+      </th>
+      <th className="border px-2 py-1">Quantité</th>
+      <th className="border px-2 py-1">Unité</th>
+      <th
+        className="border px-2 py-1 cursor-pointer select-none"
+        onClick={() => handleSort("expiry")}
+      >
+        Péremption {sortColumn === "expiry" && (sortOrder === "asc" ? " ▲" : " ▼")}
+      </th>
+
+      {/* 👉 Nouvelle colonne Action */}
+      <th className="border px-2 py-1">Action</th>
+    </tr>
+  </thead>
+
+  <tbody>
+    {loading ? (
+      <tr>
+        <td className="border px-2 py-2 text-center" colSpan="5">
+          Chargement...
+        </td>
+      </tr>
+    ) : displayedIngredients.length > 0 ? (
+      displayedIngredients.map((ing, idx) => {
+        const status = getExpirationStatus(ing.expiry);
+        return (
+          <tr key={idx}>
+            <td className="border px-2 py-1">{ing.ingredient_name}</td>
+            <td className="border px-2 py-1">{ing.amount}</td>
+            <td className="border px-2 py-1">{ing.unit_name}</td>
+
+            <td
+              className={`border px-2 py-1
+                ${status === "expired" ? "text-red-600 font-semibold" : ""}
+                ${status === "soon" ? "text-orange-500 font-semibold" : ""}`}
+            >
+              {formatDate(ing.expiry)}
+              {status === "expired" && (
+                <span className="ml-2 text-red-600">⚠️ Expiré</span>
+              )}
+              {status === "soon" && (
+                <span className="ml-2 text-orange-500">⏳ Bientôt</span>
+              )}
+            </td>
+
+            {/* 👉 Colonne Action */}
+            <td className="border px-2 py-1 text-center space-x-3">
+              <div className="flex items-center justify-center space-x-3">
+                <button
+                  className="text-blue-600 hover:text-blue-800"
+                  title="Modifier"
+                >
+                  ✏️
+                </button>
+                <button
+                  className="text-red-600 hover:text-red-800"
+                  title="Supprimer"
+                  onClick={() => deleteProduct(ing.id)}
+                >
+                  🗑️
+                </button>
+              </div>
+            </td>
+          </tr>
+        );
+      })
+    ) : (
+      <tr>
+        <td className="border px-2 py-2 text-center" colSpan="5">
+          Aucun ingrédient
+        </td>
+      </tr>
+    )}
+  </tbody>
+</table>
+
 
             </>
           )}
