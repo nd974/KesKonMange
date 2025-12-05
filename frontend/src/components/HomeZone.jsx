@@ -190,10 +190,12 @@ const handleAddZone = () => {
     return;
   }
 
+  console.log("selectedZoneId",selectedZoneId);
+
   // Nouvelle zone
   const newZoneData = {
-    localId: generateId(),       // identifiant unique local
-    id: selectedZoneId || null,  // utilise selectedZoneId si existant, sinon null
+    localId: generateId(),
+    id: null,             // <= FIX : on n'utilise plus selectedZoneId ici
     name: selectedZoneName,
     wUnits,
     hUnits,
@@ -363,7 +365,10 @@ const handleAddZone = () => {
       {!inPopin && (
         <div className="grid grid-cols-2 gap-4">
           <button
-            onClick={() => setShowZoneModal(true)}
+              onClick={() => {
+                setSelectedZoneId(null); // on force la création
+                setShowZoneModal(true);
+              }}
             className="w-full px-4 py-2 bg-green-500 text-white rounded"
           >
             Ajouter une Zone
@@ -392,8 +397,8 @@ const handleAddZone = () => {
                 setSelectedZoneName(value);
 
                 // trouver l'objet dans la DB
-                const item = storageTypesFromDB.find(st => st.name === value);
-                if (item) setSelectedZoneId(item.id);
+                setSelectedZoneName(e.target.value);
+                setSelectedZoneId(null);
               }}
 
               className="w-full mb-4 p-2 border rounded"
@@ -505,7 +510,7 @@ const handleAddZone = () => {
           y={zone.y}
           width={zone.w - 20}
           height={zone.h - 20}
-          fill={dragOverZone === zone.id ? "#FFD700" : zone.color}
+          fill={dragOverZone === zone.id ? "#ff7300ff" : zone.color}
           stroke="#111827"
           strokeWidth="2"
         />
