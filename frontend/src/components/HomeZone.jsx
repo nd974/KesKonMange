@@ -3,19 +3,19 @@ import Draggable from "react-draggable";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopin = false}) {
+export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStoragesLoaded, inPopin = false}) {
   const [zones, setZones] = useState([]);
   const [storages, setStorages] = useState([]);
   const [dragOverZone, setDragOverZone] = useState(null);
 
   const [showZoneModal, setShowZoneModal] = useState(false);
   const [selectedSize, setSelectedSize] = useState("1x1");
+  const [selectedZoneId, setSelectedZoneId] = useState("");
   const [selectedZoneName, setSelectedZoneName] = useState("");
-  const [selectedZoneId, setSelectedZoneId] = useState(0);
 
   const [showStorageModal, setShowStorageModal] = useState(false);
   const [selectedStorageType, setSelectedStorageType] = useState("");
-  const [selectedStorageId, setSelectedStorageId] = useState(0);
+  const [selectedStorageId, setSelectedStorageId] = useState("");
   const [selectedStorageSize, setSelectedStorageSize] = useState("1x1");
 
   const [zoneNamesFromDB, setZoneNamesFromDB] = useState([]);
@@ -37,14 +37,12 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
       .then((res) => res.json())
       .then((data) => {
         setZoneNamesFromDB(data);
-        if (data.length > 0) {setSelectedZoneName(data[0].name);setSelectedZoneId(data[0].id);};
       });
 
     fetch(`${API_URL}/storage/getAllStorages`)
       .then((res) => res.json())
       .then((data) => {
         setStorageTypesFromDB(data);
-        if (data.length > 0) {setSelectedStorageType(data[0].name); setSelectedStorageId(data[0].id);};
       });
   }, []);
 
@@ -60,6 +58,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
         setZones(
           data.zones.map((z) => ({
             id: z.instance_id,
+            storage_id: z.storage_id,
             name: z.name,
             wUnits: z.w_units,
             hUnits: z.h_units,
@@ -74,6 +73,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
         setStorages(
           data.storages.map((s) => ({
             id: s.instance_id,
+            storageId: s.storage_id,
             name: s.name,
             parent_id: s.parent_id,
             x: s.x,
@@ -89,6 +89,15 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
       })
       .catch((err) => console.error("Erreur chargement SVG:", err));
   }, [homeId]);
+
+  // ------------------------------------------------------
+  // ✅ Envoyer les storages au parent quand ils changent
+  // ------------------------------------------------------
+  useEffect(() => {
+    if (onStoragesLoaded && storages.length > 0) {
+      onStoragesLoaded(storages);
+    }
+  }, [storages]);
 
   // -------------------------------------
   // 📐 POSITIONNEMENT DES ZONES
@@ -180,67 +189,51 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, inPopi
   // -------------------------------------
   // ➕ AJOUT ZONE
   // -------------------------------------
-const handleAddZone = () => {
-  const [wUnits, hUnits] = selectedSize.split("x").map(Number);
+  const handleAddZone = () => {
+    const [wUnits, hUnits] = selectedSize.split("x").map(Number);
 
-  // Vérifie la limite totale
-  const totalUnits = zones.reduce((acc, z) => acc + (z.wUnits || 0) * (z.hUnits || 0), 0);
-  if (totalUnits + wUnits * hUnits > 25) {
-    alert("Impossible d'ajouter cette zone : limite totale dépassée.");
-    return;
-  }
+    if (!selectedZoneId) {
+      alert("Veuillez choisir une zone.");
+      return;
+    }
 
-  console.log("selectedZoneId",selectedZoneId);
+    const totalUnits = zones.reduce((acc, z) => acc + z.wUnits * z.hUnits, 0);
+    if (totalUnits + wUnits * hUnits > 25) {
+      alert("Impossible d'ajouter cette zone : limite totale dépassée.");
+      return;
+    }
 
-  // Nouvelle zone
-  const newZoneData = {
-    localId: generateId(),
-    id: null,             // <= FIX : on n'utilise plus selectedZoneId ici
-    name: selectedZoneName,
-    wUnits,
-    hUnits,
-    x: 10,
-    y: 10 + zones.length * 70,
-    w: wUnits * 50,
-    h: hUnits * 50,
-    color: "#FDE68A",
-  };
-
-  // Vérifie si un placeholder existe pour ce nom et ce selectedZoneId
-  const placeholderIndex = zones.findIndex(
-    (z) =>
-      z.name === selectedZoneName &&
-      (z.wUnits == null || z.hUnits == null || z.x == null || z.y == null) &&
-      (!selectedZoneId || z.id === selectedZoneId)
-  );
-
-  let newZones;
-  if (placeholderIndex !== -1) {
-    // Remplace le placeholder par la nouvelle zone
-    newZones = [...zones];
-    newZones[placeholderIndex] = {
-      ...newZones[placeholderIndex],
-      ...newZoneData,
-      id: newZones[placeholderIndex].id ?? newZoneData.id,
+    const newZone = {
+      id: generateId(),
+      storage_id: selectedZoneId,
+      name: selectedZoneName,
+      wUnits,
+      hUnits,
+      x: 10,
+      y: 10 + zones.length * 70,
+      color: "#FDE68A",
+      w: wUnits * 50,
+      h: hUnits * 50,
     };
-  } else {
-    // Ajoute une nouvelle zone sans toucher aux existantes
-    newZones = [...zones, newZoneData];
-  }
 
-  setZones(newZones);
-  setShowZoneModal(false);
+    console.log("Adding zone:", newZone);
 
-  console.log("Zones après ajout :", newZones);
-};
+    setZones([...zones, newZone]);
 
-
-
+    console.log("zone:", zones);
+    setShowZoneModal(false);
+  };
 
   // -------------------------------------
   // ➕ AJOUT STOCKAGE
   // -------------------------------------
   const handleAddStorage = () => {
+
+    if (!selectedStorageId) {
+      alert("Veuillez choisir un type de stockage.");
+      return;
+    }
+
     const parentZone = zones[0];
     if (!parentZone) return alert("Ajoutez une zone d'abord.");
 
@@ -254,7 +247,7 @@ const handleAddZone = () => {
       localId: generateId(),
       storageId: selectedStorageId,
       name: selectedStorageType,
-      parent_id: parentZone.id,  // ✔ c’est ok
+      parent_id: parentZone.id,
       x: 10,
       y: 10 + countInZone * 70,
       wUnits,
@@ -284,15 +277,11 @@ const handleAddZone = () => {
   // 💾 SAUVEGARDE
   // -------------------------------------
   const handleSave = async () => {
-    
-    const confirmed = window.confirm("Voulez-vous vraiment sauvegarder le plan ?");
-    if (!confirmed) return;  // Annule si l’utilisateur clique sur Annuler
-
     try {
       const allItems = [
         ...zones.map((z) => ({
           instance_id: z.id,
-          storage_id: null,
+          storage_id: z.storage_id,
           name: z.name,
           x: z.x,
           y: z.y,
@@ -311,8 +300,6 @@ const handleAddZone = () => {
           color: s.color,
         }))
       ];
-
-      console.log("allItems= ",allItems);
 
       const response = await fetch(`${API_URL}/storage/save`, {
         method: "POST",
@@ -354,7 +341,16 @@ const handleAddZone = () => {
   // AFFICHAGE
   // -------------------------------------
   return (
-    <div className="flex flex-col gap-4 card p-4 bg-white rounded shadow">
+    <div     className="
+      flex flex-col gap-4
+      bg-white
+      border border-gray-200
+      rounded-2xl
+      p-6
+      shadow-lg
+      hover:shadow-xl
+      transition-shadow
+    ">
       {!inPopin && (
         <h1 className="text-2xl font-bold mb-4 text-center">
           Plan Maison
@@ -363,25 +359,38 @@ const handleAddZone = () => {
 
       {/* Boutons */}
       {!inPopin && (
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-4 gap-4 mb-4">
           <button
-              onClick={() => {
-                setSelectedZoneId(null); // on force la création
-                setShowZoneModal(true);
-              }}
+            onClick={() => setShowZoneModal(true)}
             className="w-full px-4 py-2 bg-green-500 text-white rounded"
           >
-            Ajouter une Zone
+            🗺️
           </button>
 
           <button
             onClick={() => setShowStorageModal(true)}
             className="w-full px-4 py-2 bg-blue-500 text-white rounded"
           >
-            Ajouter un Stockage
+            📦
+          </button>
+
+          <button
+            onClick={handleAnnul}
+            className="w-full px-4 py-2 bg-red-500 text-white rounded"
+          >
+            R
+          </button>
+
+          <button
+            onClick={handleSave}
+            className="w-full px-4 py-2 bg-purple-500 text-white rounded"
+          >
+            💾
           </button>
         </div>
       )}
+
+
             {/* POPIN AJOUT ZONE */}
 
       {!inPopin && showZoneModal && (
@@ -391,20 +400,22 @@ const handleAddZone = () => {
 
             <label className="block mb-2 font-medium">Nom de la zone</label>
             <select
-              value={selectedZoneName}
+              value={selectedZoneId}
               onChange={(e) => {
-                const value = e.target.value;
-                setSelectedZoneName(value);
+                const id = e.target.value;
+                const z = zoneNamesFromDB.find(z => z.id == id);
 
-                // trouver l'objet dans la DB
-                setSelectedZoneName(e.target.value);
-                setSelectedZoneId(null);
+                setSelectedZoneId(id);
+                setSelectedZoneName(z ? z.name : "");
               }}
-
               className="w-full mb-4 p-2 border rounded"
             >
+              <option value="">-- Choisir --</option>
+
               {zoneNamesFromDB.map((zone) => (
-                <option key={zone.id} value={zone.name}>{zone.name}</option>
+                <option key={zone.id} value={zone.id}>
+                  {zone.name}
+                </option>
               ))}
             </select>
 
@@ -446,19 +457,22 @@ const handleAddZone = () => {
 
             <label className="block mb-2 font-medium">Type de stockage</label>
             <select
-              value={selectedStorageType}
+              value={selectedStorageId}
               onChange={(e) => {
-                const value = e.target.value;
-                setSelectedStorageType(value);
+                const id = e.target.value;
+                const st = storageTypesFromDB.find(s => s.id == id);
 
-                // trouver l'objet dans la DB
-                const item = storageTypesFromDB.find(st => st.name === value);
-                if (item) setSelectedStorageId(item.id);
+                setSelectedStorageId(id);
+                setSelectedStorageType(st ? st.name : "");
               }}
               className="w-full mb-4 p-2 border rounded"
             >
+              <option value="">-- Choisir --</option>
+
               {storageTypesFromDB.map((st) => (
-                <option key={st.id} value={st.name}>{st.name}</option>
+                <option key={st.id} value={st.id}>
+                  {st.name}
+                </option>
               ))}
             </select>
 
@@ -468,6 +482,7 @@ const handleAddZone = () => {
               onChange={(e) => setSelectedStorageSize(e.target.value)}
               className="w-full mb-4 p-2 border rounded"
             >
+              <option value="0">-- Choisir --</option>
               {storageSizes.map((size) => (
                 <option key={size} value={size}>{size}</option>
               ))}
@@ -495,101 +510,74 @@ const handleAddZone = () => {
       {/* SVG */}
       <svg viewBox="0 0 600 600" className="w-full h-[500px] border">
         
-{/* 🔥 ZONES (cliquables) */}
-{
-  zonePositions
-    .filter(zone => zone.wUnits > 0 && zone.hUnits > 0 && zone.name) // <-- ici on filtre les zones valides
-    .map((zone) => (
-      <g
-        key={zone.id}
-        onClick={() => onSelectZone(zone)}
-        style={{ cursor: "pointer" }}
-      >
-        <rect
-          x={zone.x}
-          y={zone.y}
-          width={zone.w - 20}
-          height={zone.h - 20}
-          fill={dragOverZone === zone.id ? "#ff7300ff" : zone.color}
-          stroke="#111827"
-          strokeWidth="2"
-        />
-        {/* ❌ CROIX SUPPRESSION ZONE (si aucune storage dedans) */}
-        {storages.filter(s =>
-          s.x != null && s.y != null &&
-          s.x >= zone.x &&
-          s.x + s.w <= zone.x + zone.w &&
-          s.y >= zone.y &&
-          s.y + s.h <= zone.y + zone.h
-        ).length === 0 && (
-          <text
-            x={zone.x + (zone.w - 20) - 15}
-            y={zone.y + 15}
-            fontSize="20"
-            fill="red"
-            style={{ cursor: "pointer", fontWeight: "bold" }}
-            onClick={(e) => {
-              e.stopPropagation();
-              if (window.confirm("Voulez-vous vraiment supprimer cette zone ?")) {
-                setZones(prev => prev.filter(z => z.id !== zone.id));
+        {/* 🔥 ZONES (cliquables) */}
+        {zonePositions.map((zone) => (
+          <g
+            key={zone.id}
+            onClick={() => onSelectZone(zone)}
+            style={{ cursor: "pointer" }}
+          >
+            <rect
+              x={zone.x}
+              y={zone.y}
+              width={zone.w - 20}
+              height={zone.h - 20}
+              fill={dragOverZone === zone.id ? "#FFD700" : zone.color}
+              stroke="#111827"
+              strokeWidth="2"
+            />
+            <text
+              x={zone.x + zone.w / 2}
+              y={zone.y + 20}
+              textAnchor="middle"
+              fontSize="12"
+              fill="#111827"
+            >
+              {zone.name}
+            </text>
+          </g>
+        ))}
+
+        {inPopin && storages.map((child) => (
+          <g
+            key={child.localId}
+            style={{ cursor: "pointer" }}
+            onClick={() => {
+              const parentZone = zonePositions.find(z => z.id === child.parent_id);
+              const displayName = parentZone ? `${child.name} [${parentZone.name}]` : child.name;
+              onSelectStorage({ ...child, displayName });
+
+              // Si on est sur mobile et en popin, on peut fermer la popin / passer à la suite
+              if (inPopin && window.innerWidth <= 768) {
+                // Ici tu peux déclencher la fermeture de la popin ou la navigation
+                // ex: setShowHomeZonePopin(false)
               }
             }}
           >
-            ×
-          </text>
-        )}
-
-        <text
-          x={zone.x + zone.w / 2}
-          y={zone.y + 20}
-          textAnchor="middle"
-          fontSize="12"
-          fill="#111827"
-        >
-          {zone.name}
-        </text>
-      </g>
-    ))
-}
-{inPopin && storages.map((child) => {
-  const parentZone = zonePositions.find(z => z.id === child.parent_id);
-  const displayName = parentZone ? `${child.name} [${parentZone.name}]` : child.name;
-
-  return (
-    <g
-      key={child.localId}
-      style={{ cursor: "pointer" }}
-      onClick={() => onSelectStorage({ ...child, displayName })}
-    >
-      <rect
-        x={child.x}
-        y={child.y}
-        width={child.w}
-        height={child.h}
-        fill="#60A5FA"
-        stroke="#111827"
-        strokeWidth="2"
-      />
-      <text
-        x={child.x + child.w / 2}
-        y={child.y + child.h / 2}
-        textAnchor="middle"
-        alignmentBaseline="middle"
-        fontSize="12"
-        fill="#111827"
-      >
-        {child.name}
-      </text>
-    </g>
-  );
-})}
-
+            <rect
+              x={child.x}
+              y={child.y}
+              width={child.w}
+              height={child.h}
+              fill="#60A5FA"
+              stroke="#111827"
+              strokeWidth="2"
+            />
+            <text
+              x={child.x + child.w / 2}
+              y={child.y + child.h / 2}
+              textAnchor="middle"
+              fontSize="12"
+              fill="#111827"
+            >
+              {child.name}
+            </text>
+          </g>
+        ))}
 
         {/* 🔥 STOCKAGES (cliquables même dans Draggable) */}
 {!inPopin &&
-  storages
-    .filter(child => child.x != null && child.y != null)
-    .map((child) => {
+  storages.map((child) => {
     const handleSelect = () => {
       const parentZone = zonePositions.find((z) => z.id === child.parent_id);
       const displayName = parentZone
@@ -642,23 +630,6 @@ const handleAddZone = () => {
             stroke="#111827"
             strokeWidth="2"
           />
-          {/* ❌ CROIX SUPPRESSION STORAGE */}
-          <text
-            x={child.w - 15}
-            y={15}
-            fontSize="18"
-            fill="red"
-            style={{ cursor: "pointer", fontWeight: "bold" }}
-            onClick={(e) => {
-              e.stopPropagation(); // empêche d’ouvrir le stockage
-              if (window.confirm("Voulez-vous vraiment supprimer ce stock ?")) {
-                setStorages(prev => prev.filter(s => s.localId !== child.localId));
-              }
-            }}
-          >
-            ×
-          </text>
-
           <text
             x={child.w / 2}
             y={child.h / 2}
@@ -680,17 +651,6 @@ const handleAddZone = () => {
 
 
       </svg>
-
-      {!inPopin && (
-        <div className="grid grid-cols-1 gap-4 mb-4">
-          <button
-            onClick={handleSave}
-            className="w-full px-4 py-2 bg-purple-500 text-white rounded"
-          >
-            Sauvegarder la Maison
-          </button>
-        </div>
-      )}
     </div>
   );
 }

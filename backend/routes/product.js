@@ -5,10 +5,9 @@ const router = express.Router();
 
 router.post("/create", async (req, res) => {
   try {
-    const { ing_id, amount, unit_id, stock_id, expiry} = req.body;
+    const { ing_id, amount, unit_id, stock_id, expiry, homeId} = req.body;
 
-    console.log("create product");
-    console.log("ing_id, amount, unit_id, stock_id, expiry : ",ing_id, amount, unit_id, stock_id, expiry);
+    console.log("ing_id, amount, unit_id, stock_id, expiry, homeId : ",ing_id, amount, unit_id, stock_id, expiry, homeId);
 
     if (!amount || !stock_id || !expiry) {
       return res.status(400).json({ error: "missing fields" });
@@ -47,10 +46,10 @@ router.post("/create", async (req, res) => {
 
     // 🆕 sinon : insertion normale
     const insert = await pool.query(
-      `INSERT INTO "Product" (ing_id, amount, unit_id, stock_id, expiry)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO "Product" (ing_id, amount, unit_id, stock_id, expiry, home_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [ing_id || null, amount, unit_id || null, stock_id, expiry]
+      [ing_id || null, amount, unit_id || null, stock_id, expiry, homeId]
     );
 
     res.json({
@@ -70,20 +69,18 @@ router.get("/getProducts/:homeId", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT p.id, p.ing_id, p.amount, p.unit_id, p.stock_id, p.expiry,
+      `SELECT p.id, p.ing_id, p.amount, p.unit_id, p.stock_id, p.expiry, p.home_id,
               i.name AS ingredient_name, u.name AS unit_name
        FROM "Product" p
        JOIN "Ingredient" i ON p.ing_id = i.id
        LEFT JOIN "Unit" u ON p.unit_id = u.id
-       WHERE p.stock_id IN (
-         SELECT id FROM "homes_storages" WHERE home_id = $1
-       )`,
+       WHERE p.home_id = $1 AND (p.stock_id IS NULL 
+          OR p.stock_id IN (SELECT id FROM "homes_storages" WHERE home_id = $1))`, // Fermeture correcte de la parenthèse
       [homeId]
     );
 
-    // 🔥 Toujours renvoyer un tableau, même vide !
     return res.json(result.rows);
-
+    
   } catch (error) {
     console.error("Erreur lors de la récupération des produits:", error);
     return res.status(500).json({ error: "Une erreur s'est produite" });
@@ -106,73 +103,64 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-router.post("/move", async (req, res) => {
+router.put("/update/:id", async (req, res) => {
   try {
-    const { product_id, new_stock_id } = req.body;
+    const productId = req.params.id;
+    const { ing_id, quantity, unit_id, stock_id, expiry, homeId } = req.body;
 
-    if (!product_id || !new_stock_id) {
+    console.log("update product");
+    console.log("ing_id, quantity, unit_id, stock_id, expiry, homeId : ",ing_id, quantity, unit_id, stock_id, expiry, homeId);
+
+    if (!quantity || !stock_id || !expiry) {
       return res.status(400).json({ error: "missing fields" });
     }
 
-    // Récupération du produit original
-    const origin = await pool.query(
-      `SELECT * FROM "Product" WHERE id = $1`,
-      [product_id]
-    );
-
-    if (origin.rows.length === 0) {
-      return res.status(404).json({ error: "product not found" });
-    }
-
-    const prod = origin.rows[0];
-
-    // Vérifier si un produit identique existe déjà dans la nouvelle storage
-    const existing = await pool.query(
-      `SELECT id, amount
-       FROM "Product"
-       WHERE ing_id = $1 AND unit_id = $2 AND expiry = $3 AND stock_id = $4`,
-      [prod.ing_id, prod.unit_id, prod.expiry, new_stock_id]
-    );
-
-    if (existing.rows.length > 0) {
-      const target = existing.rows[0];
-
-      // Fusion : ajout des quantités
-      const newAmount = Number(target.amount) + Number(prod.amount);
-
-      await pool.query(
-        `UPDATE "Product" SET amount = $1 WHERE id = $2`,
-        [newAmount, target.id]
+    // ⚠️ Vérifier si un produit identique existe déjà dans ce stockage
+    if (ing_id) {
+      const existing = await pool.query(
+        `SELECT id, amount
+         FROM "Product"
+         WHERE ing_id = $1 AND stock_id = $2 AND expiry = $3 AND id <> $4`,
+        [ing_id, stock_id, expiry, productId]
       );
 
-      // supprimer l'ancien produit
-      await pool.query(`DELETE FROM "Product" WHERE id = $1`, [product_id]);
+      if (existing.rows.length > 0) {
+        const existingProduct = existing.rows[0];
 
-      return res.json({
-        ok: true,
-        merged: true,
-        targetProductId: target.id,
-        newAmount
-      });
+        // 🔥 Fusionner les quantités
+        const newAmount = Number(existingProduct.amount) + Number(quantity);
+
+        await pool.query(
+          `UPDATE "Product"
+           SET amount = $1
+           WHERE id = $2`,
+          [newAmount, existingProduct.id]
+        );
+
+        // Supprimer l’ancien produit modifié
+        await pool.query(`DELETE FROM "Product" WHERE id = $1`, [productId]);
+
+        return res.json({
+          ok: true,
+          merged: true,
+          productId: existingProduct.id,
+          newAmount
+        });
+      }
     }
 
-    // Pas de fusion → simple déplacement
+    // Sinon, mise à jour normale
     await pool.query(
       `UPDATE "Product"
-       SET stock_id = $1
-       WHERE id = $2`,
-      [new_stock_id, product_id]
+       SET ing_id = $1, amount = $2, unit_id = $3, stock_id = $4, expiry = $5, home_id = $6
+       WHERE id = $7`,
+      [ing_id || null, quantity, unit_id || null, stock_id, expiry, homeId, productId]
     );
 
-    return res.json({
-      ok: true,
-      merged: false,
-      movedId: product_id
-    });
-
+    res.json({ ok: true, merged: false, productId });
   } catch (e) {
-    console.error("ERROR /product/move:", e);
-    return res.status(500).json({ error: e.message });
+    console.error("ERROR /product/update:", e);
+    res.status(500).json({ error: e.message });
   }
 });
 

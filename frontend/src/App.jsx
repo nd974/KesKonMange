@@ -21,63 +21,33 @@ function AppRoutes() {
   const navigate = useNavigate();
 
   const hideMobileNav = ["/login", "/profiles"].includes(location.pathname);
-
   const [home_id, setHomeId] = useState(null);
+
   const [isLoading, setIsLoading] = useState(true);
-  const [serverError, setServerError] = useState(false);
-
-  const isLocal = window.location.hostname === "localhost";
-
-  async function checkBackend() {
-    try {
-      const res = await fetch("https://keskonmange.onrender.com/home/homes-get/1");
-      return res.ok;
-    } catch {
-      return false;
-    }
-  }
 
   useEffect(() => {
-    async function init() {
-      const backendOK = await checkBackend();
+    async function loadHome() {
+      // 🔹 Lis la valeur actuelle de home_id depuis IndexedDB
+      const currentHomeId = await refreshHomeId();
+      setHomeId(currentHomeId);
 
-      if (!backendOK) {
-        setServerError(true);
-        return;
+      const profileId = localStorage.getItem("profile_id");
+
+      if (!currentHomeId && location.pathname !== "/login") {
+        navigate("/login", { replace: true });
+      } else if (currentHomeId && !profileId && location.pathname !== "/profiles") {
+        navigate("/profiles", { replace: true });
       }
-
-      async function loadHome() {
-        const currentHomeId = await refreshHomeId();
-        setHomeId(currentHomeId);
-
-        const profileId = localStorage.getItem("profile_id");
-
-        if (!currentHomeId && location.pathname !== "/login") {
-          navigate("/login", { replace: true });
-        } else if (currentHomeId && !profileId && location.pathname !== "/profiles") {
-          navigate("/profiles", { replace: true });
-        }
-
-        setIsLoading(false);
-      }
-
-      await loadHome();
+      setIsLoading(false);
     }
 
-    init();
+    loadHome();
   }, [location.pathname, navigate]);
 
-  // ❗ N'afficher l'erreur QUE si on n'est PAS en local
-  if (serverError && !isLocal) {
-    return (
-      <div className="flex flex-col justify-center items-center h-screen text-center">
-        <h1 className="text-3xl font-bold mb-4">🚨 Serveur indisponible</h1>
-        <p className="text-lg text-gray-600">Notre service est temporairement hors-ligne.</p>
-        <p className="text-lg text-gray-600">Veuillez réessayer dans quelques minutes.</p>
-      </div>
-    );
-  }
-
+  
+  
+  
+  
   if (isLoading) {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -85,6 +55,7 @@ function AppRoutes() {
       </div>
     );
   }
+
 
   return (
     <>
@@ -97,9 +68,13 @@ function AppRoutes() {
           <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} />} />
           <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
           <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id} />} />
+
           <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} />} />
+
           <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
           <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+
+
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </div>
@@ -108,9 +83,6 @@ function AppRoutes() {
     </>
   );
 }
-
-
-
 
 export default function App() {
   return (

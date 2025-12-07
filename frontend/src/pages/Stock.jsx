@@ -1,43 +1,47 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import HomeZone from "../components/HomeZone";
+import ModalProducts from "../components/ModalProducts";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Stock({ homeId }) {
-  const [selectedStorage, setSelectedStorage] = useState(null);
+  const [storages, setStorages] = useState([]);
+  const [selectedStorage, setSelectedStorage] = useState("all");
+
   const [search, setSearch] = useState("");
   const [unitFilter, setUnitFilter] = useState("");
   const [sortColumn, setSortColumn] = useState(null);
   const [sortOrder, setSortOrder] = useState("asc");
-  const [ingredients, setIngredients] = useState([]); // Stocke les ingrédients récupérés
-  const [loading, setLoading] = useState(true); // Indicateur de chargement
+
+  const [ingredients, setIngredients] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const [editProduct, setEditProduct] = useState(null);
+  const [showModal, setShowModal] = useState(false);
+
   const nb_day_postmeal = 7;
   const today = new Date();
-  console.log("Récupération2 des ingrédients pour le homeId:", homeId);
-  // Fonction pour récupérer les produits pour un homeId spécifique
+
+  // Récupération ingrédients
   useEffect(() => {
-    console.log("Récupération des ingrédients pour le homeId:", homeId);
     const fetchIngredients = async () => {
       setLoading(true);
       try {
         const response = await fetch(`${API_URL}/product/getProducts/${homeId}`);
-        console.log(response);
         const data = await response.json();
-        setIngredients(data); // Mise à jour des ingrédients avec les données récupérées
+        setIngredients(data);
       } catch (error) {
-        console.error("Erreur lors de la récupération des produits:", error);
+        console.error("Erreur:", error);
       } finally {
         setLoading(false);
       }
     };
-
     fetchIngredients();
   }, [homeId]);
 
   function formatDate(dateStr) {
-    const date = new Date(dateStr);
-    return date.toLocaleDateString("fr-FR"); // Format français sans heures, minutes et secondes
+    return new Date(dateStr).toLocaleDateString("fr-FR");
   }
 
   function getExpirationStatus(dateStr) {
@@ -46,22 +50,6 @@ export default function Stock({ homeId }) {
     if (diff < 0) return "expired";
     if (diff <= nb_day_postmeal) return "soon";
     return "ok";
-  }
-
-
-  function sortIngredients(list) {
-    if (!sortColumn) return list;
-    return [...list].sort((a, b) => {
-      let v1 = a[sortColumn];
-      let v2 = b[sortColumn];
-      if (sortColumn === "expiration") {
-        v1 = new Date(v1);
-        v2 = new Date(v2);
-      }
-      if (v1 < v2) return sortOrder === "asc" ? -1 : 1;
-      if (v1 > v2) return sortOrder === "asc" ? 1 : -1;
-      return 0;
-    });
   }
 
   function handleSort(column) {
@@ -73,29 +61,98 @@ export default function Stock({ homeId }) {
     }
   }
 
-  const displayedIngredients = selectedStorage
-    ? sortIngredients(
-        ingredients
-          .filter(i => i.stock_id === selectedStorage.id)
-          .filter(i => i.ingredient_name.toLowerCase().includes(search.toLowerCase()))
-          .filter(i => (unitFilter ? i.unit_name === unitFilter : true))
-      )
-    : [];
+  // Filtrage
+  const filteredIngredients = ingredients
+.filter(i => {
+  // Voir tout
+  if (selectedStorage === "all") return true;
 
-  const displayedIngredientsNull = selectedStorage
-    ? sortIngredients(
-        ingredients
-          .filter(i => i.stock_id === null)
-          .filter(i => i.ingredient_name.toLowerCase().includes(search.toLowerCase()))
-          .filter(i => (unitFilter ? i.unit_name === unitFilter : true))
-      )
-    : [];
+  // A replacer
+  if (!selectedStorage) return i.stock_id === null;
 
-  const units = [...new Set(ingredients.map(i => i.unit_name))];
+  // Si selectedStorage n'est pas un groupe → éviter crash
+  if (!selectedStorage.ids) return false;
+
+  // Filtre groupe
+  return selectedStorage.ids.includes(i.stock_id);
+})
+    .filter(i =>
+      i.ingredient_name.toLowerCase().includes(search.toLowerCase())
+    )
+    .filter(i => (unitFilter ? i.unit_name === unitFilter : true))
+    .sort((a, b) => {
+      if (!sortColumn) return 0;
+
+      let v1 = a[sortColumn];
+      let v2 = b[sortColumn];
+
+      if (sortColumn === "expiry") {
+        v1 = new Date(v1);
+        v2 = new Date(v2);
+      }
+
+      if (v1 < v2) return sortOrder === "asc" ? -1 : 1;
+      if (v1 > v2) return sortOrder === "asc" ? 1 : -1;
+
+      return 0;
+    });
+
+  // Création d'un tableau de stockages fusionnés
+const groupedStorages = Object.values(
+  storages.reduce((acc, s) => {
+    const name = s.displayName || s.name;
+
+    if (!acc[name]) {
+      acc[name] = {
+        name,
+        ids: [],
+        representative: s
+      };
+    }
+
+    acc[name].ids.push(s.id);
+
+    return acc;
+  }, {})
+);
+
+async function handleUpdateProduct(updated) {
+  if (!editProduct) return;
+
+  try {
+    const res = await fetch(`${API_URL}/product/update/${editProduct.id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(updated),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      alert("Erreur : " + data.error);
+      return;
+    }
+
+    // Mise à jour locale
+    setIngredients(prev =>
+      prev.map(p =>
+        p.id === editProduct.id
+          ? { ...p, ...updated }
+          : p
+      )
+    );
+
+    setShowModal(false);
+  } catch (e) {
+    console.error(e);
+    alert("Erreur réseau");
+  }
+}
+
+
 
   async function deleteProduct(id) {
-    const ok = confirm("Supprimer ce produit ?");
-    if (!ok) return;
+    if (!confirm("Supprimer ce produit ?")) return;
 
     try {
       const res = await fetch(`${API_URL}/product/delete/${id}`, {
@@ -105,158 +162,219 @@ export default function Stock({ homeId }) {
       const data = await res.json();
 
       if (data.ok) {
-        setIngredients((prev) => prev.filter(p => p.id !== id));
+        setIngredients(prev => prev.filter(p => p.id !== id));
       } else {
         alert("Erreur : " + data.error);
       }
 
     } catch (e) {
-      console.error(e);
       alert("Erreur réseau");
     }
   }
 
+  const units = [...new Set(ingredients.map(i => i.unit_name))];
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
+
       <Header homeId={homeId} />
 
       <div className="flex flex-col lg:flex-row gap-6 py-8">
+
+        {/* HomeZone */}
         <div className="w-full lg:w-1/3">
           <HomeZone
             key={homeId}
             homeId={homeId}
             onSelectStorage={(storage) => {
-              if (!storage) return;
-              console.log("Storage sélectionné", storage);
-              setSelectedStorage(storage);
-            }}
+              if (!storage) {
+                  setSelectedStorage(null); 
+                  return;
+              }
+
+              // créer un groupe à partir d’un stockage unique
+              setSelectedStorage({
+                  name: storage.displayName || storage.name,
+                  ids: [storage.id],
+                  representative: storage
+              });
+          }}
+
             onSelectZone={() => setSelectedStorage(null)}
+            onStoragesLoaded={setStorages}
           />
         </div>
 
+        {/* Section Liste / Recherche / filtres */}
         <div className="w-full lg:w-2/3">
-          {selectedStorage && (
-            <>
-              <div className="flex flex-col md:flex-row gap-4 items-end">
-                <div className="flex flex-col w-full md:w-1/2">
-                  <h2 className="text-xl font-semibold mb-2 pb-5">
-                    {`Ingrédients dans ${selectedStorage.displayName || selectedStorage.name}`}
-                  </h2>
-                  <label>Recherche</label>
-                  <input
-                    type="text"
-                    className="border px-3 py-1 rounded"
-                    value={search}
-                    onChange={(e) => setSearch(e.target.value)}
-                    placeholder="Nom d’ingrédient"
-                  />
-                </div>
 
-                <div className="flex flex-col w-full md:w-1/2">
-                  <label>Unité</label>
-                  <select
-                    className="border px-3 py-1 rounded"
-                    value={unitFilter}
-                    onChange={(e) => setUnitFilter(e.target.value)}
-                  >
-                    <option value="">Toutes</option>
-                    {units.map((u, i) => (
-                      <option key={i} value={u}>{u}</option>
-                    ))}
-                  </select>
-                </div>
-              </div>
+          {/* ✅ RECHERCHE en haut */}
+          <div className="mb-4">
+            <h2 className="text-xl font-semibold mb-2">
+              {selectedStorage === "all" && "Tous les ingrédients"}
+              {!selectedStorage && "Ingrédients à replacer"}
+              {selectedStorage && selectedStorage !== "all" &&
+                `Ingrédients dans ${selectedStorage.displayName || selectedStorage.name}`}
+            </h2>
 
-<table className="w-full border mt-2">
-  <thead className="bg-gray-200">
-    <tr>
-      <th
-        className="border px-2 py-1 cursor-pointer select-none"
-        onClick={() => handleSort("ingredient_name")}
-      >
-        Nom {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
-      </th>
-      <th className="border px-2 py-1">Quantité</th>
-      <th className="border px-2 py-1">Unité</th>
-      <th
-        className="border px-2 py-1 cursor-pointer select-none"
-        onClick={() => handleSort("expiry")}
-      >
-        Péremption {sortColumn === "expiry" && (sortOrder === "asc" ? " ▲" : " ▼")}
-      </th>
+            <input
+              type="text"
+              className="border px-3 py-2 rounded w-full"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Recherche un ingrédient..."
+            />
+          </div>
 
-      {/* 👉 Nouvelle colonne Action */}
-      <th className="border px-2 py-1">Action</th>
-    </tr>
-  </thead>
+          {/* ✅ FILTRES en bas */}
+          <div className="flex flex-col md:flex-row gap-4 mb-4">
 
-  <tbody>
-    {loading ? (
-      <tr>
-        <td className="border px-2 py-2 text-center" colSpan="5">
-          Chargement...
-        </td>
-      </tr>
-    ) : displayedIngredients.length > 0 ? (
-      displayedIngredients.map((ing, idx) => {
-        const status = getExpirationStatus(ing.expiry);
-        return (
-          <tr key={idx}>
-            <td className="border px-2 py-1">{ing.ingredient_name}</td>
-            <td className="border px-2 py-1">{ing.amount}</td>
-            <td className="border px-2 py-1">{ing.unit_name}</td>
+            {/* Filtre stockage */}
+            <div className="flex flex-col w-full md:w-1/2">
+              <label>Stockage</label>
+              <select
+                className="border px-3 py-2 rounded"
+                value={
+                  selectedStorage === "all"
+                    ? "all"
+                    : selectedStorage
+                      ? selectedStorage.name
+                      : ""
+                }
+                onChange={(e) => {
+                  const value = e.target.value;
 
-            <td
-              className={`border px-2 py-1
-                ${status === "expired" ? "text-red-600 font-semibold" : ""}
-                ${status === "soon" ? "text-orange-500 font-semibold" : ""}`}
-            >
-              {formatDate(ing.expiry)}
-              {status === "expired" && (
-                <span className="ml-2 text-red-600">⚠️ Expiré</span>
+                  if (value === "") {
+                    setSelectedStorage(null);      // à replacer
+                    return;
+                  }
+                  if (value === "all") {
+                    setSelectedStorage("all");     // tout
+                    return;
+                  }
+
+                  const group = groupedStorages.find(g => g.name === value);
+
+                  setSelectedStorage(group);
+                }}
+              >
+                <option value="all">Tous</option>
+                <option value="">À replacer</option>
+
+                {groupedStorages.map(g => (
+                  <option key={g.name} value={g.name}>
+                    {g.name} ({g.ids.length})
+                  </option>
+                ))}
+              </select>
+
+            </div>
+
+            {/* Filtre unité */}
+            <div className="flex flex-col w-full md:w-1/2">
+              <label>Unité</label>
+              <select
+                className="border px-3 py-2 rounded"
+                value={unitFilter}
+                onChange={(e) => setUnitFilter(e.target.value)}
+              >
+                <option value="">Toutes</option>
+                {units.map((u, i) => (
+                  <option key={i} value={u}>{u}</option>
+                ))}
+              </select>
+            </div>
+
+          </div>
+
+          {/* TABLEAU */}
+          <table className="w-full border mt-2">
+            <thead className="bg-gray-200">
+
+              <tr>
+                <th className="border px-2 py-1">Nom</th>
+                <th className="border px-2 py-1">Quantité</th>
+                <th className="border px-2 py-1">Unité</th>
+                <th className="border px-2 py-1">Péremption</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+              {loading && (
+                <tr>
+                  <td colSpan="5" className="text-center">Chargement...</td>
+                </tr>
               )}
-              {status === "soon" && (
-                <span className="ml-2 text-orange-500">⏳ Bientôt</span>
+
+              {!loading && filteredIngredients.length === 0 && (
+                <tr>
+                  <td colSpan="5" className="text-center">Aucun ingrédient</td>
+                </tr>
               )}
-            </td>
 
-            {/* 👉 Colonne Action */}
-            <td className="border px-2 py-1 text-center space-x-3">
-              <div className="flex items-center justify-center space-x-3">
-                <button
-                  className="text-blue-600 hover:text-blue-800"
-                  title="Modifier"
-                >
-                  ✏️
-                </button>
-                <button
-                  className="text-red-600 hover:text-red-800"
-                  title="Supprimer"
-                  onClick={() => deleteProduct(ing.id)}
-                >
-                  🗑️
-                </button>
-              </div>
-            </td>
-          </tr>
-        );
-      })
-    ) : (
-      <tr>
-        <td className="border px-2 py-2 text-center" colSpan="5">
-          Aucun ingrédient
-        </td>
-      </tr>
-    )}
-  </tbody>
-</table>
+              {!loading && filteredIngredients.map((ing, idx) => {
+                const status = getExpirationStatus(ing.expiry);
 
+                return (
+                  <tr key={idx}>
+                    <td
+                      className="border px-2 py-1 cursor-pointer text-blue-700 hover:underline"
+                      onClick={() => {
+                        setEditProduct(ing);   // on passe l’ingrédient entier
+                        setShowModal(true);
+                      }}
+                    >
+                    {ing.ingredient_name}
+                  </td>
 
-            </>
-          )}
+                    <td className="border px-2 py-1">{ing.amount}</td>
+                    <td className="border px-2 py-1">{ing.unit_name}</td>
+                    <td
+                      className={`border px-2 py-1
+                        ${status === "expired" ? "text-red-600 font-semibold" : ""}
+                        ${status === "soon" ? "text-orange-500 font-semibold" : ""}`}
+                    >
+                      {formatDate(ing.expiry)}
+                      {status === "expired" && (
+                        <span className="ml-2 text-red-600">⚠️ Expiré</span>
+                      )}
+                      {status === "soon" && (
+                        <span className="ml-2 text-orange-500">⏳ Bientôt</span>
+                      )}
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+
         </div>
       </div>
+
+    {showModal && editProduct && (
+      <ModalProducts
+        mode="edit"
+        open={showModal}
+        homeId={homeId}
+        manualLock={true}   // en modification → on bloque nom/marque/unité si tu veux
+        initialProduct={{
+          name: editProduct.ingredient_name,
+          brand: editProduct.brand || "",
+          quantity: editProduct.amount,
+          unit: editProduct.unit_name,
+          expiry: editProduct.expiry,
+          homeId: homeId,
+          stock_id: editProduct.stock_id,
+          ing_id: editProduct.ing_id,
+          unit_id: editProduct.unit_id,
+          storage: storages.find(s => s.id === editProduct.stock_id) || null
+        }}
+        onClose={() => setShowModal(false)}
+        onSave={handleUpdateProduct}
+      />
+    )}
+
     </div>
   );
 }
