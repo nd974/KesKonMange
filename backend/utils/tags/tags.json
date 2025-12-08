@@ -1,0 +1,132 @@
+{
+  "Catégorie": {
+    "Maraicher": {
+      "Légumes": {
+        "Racines": ["Carotte", "Panais", "Navet", "Betterave"],
+        "Tubercules": ["Pomme de terre", "Patate douce", "Manioc"],
+        "Bulbes": ["Oignon", "Ail", "Échalote"],
+        "Feuilles": ["Salade", "Épinard", "Chou Kale"],
+        "Crucifères": ["Chou", "Brocoli", "Chou-fleur"],
+        "Fruits-légumes": ["Tomate", "Aubergine", "Courgette", "Poivron"],
+        "Légumineuses fraîches": ["Haricot vert", "Pois mange-tout"]
+      },
+      "Fruits": {
+        "À pépins": ["Pomme", "Poire", "Coing"],
+        "À noyau": ["Abricot", "Pêche", "Prune", "Cerise"],
+        "Agrumes": ["Citron", "Orange", "Pamplemousse", "Clémentine"],
+        "Fruits rouges": ["Fraise", "Framboise", "Myrtille"],
+        "Tropicaux": ["Banane", "Mangue", "Ananas", "Papaye", "Litchi"]
+      },
+      "Champignons": ["Champignon de Paris", "Cèpe", "Morille", "Shiitake"],
+      "Herbes & Aromates": ["Persil", "Coriandre", "Basilic", "Thym", "Laurier", "Ciboulette"]
+    },
+
+    "Protéines animales": {
+      "Boucher": {
+        "Bœuf": [],
+        "Veau": [],
+        "Porc": [],
+        "Agneau": [],
+        "Gibier": ["Sanglier", "Chevreuil", "Lièvre"]
+      },
+      "Volaille": ["Poulet", "Dinde", "Canard", "Oie", "Pintade"],
+      "Poissonnerie": {
+        "Poissons blancs": ["Cabillaud", "Merlu", "Sole"],
+        "Poissons gras": ["Saumon", "Maquereau", "Sardine"],
+        "Crustacés": ["Crevette", "Crabe", "Homard"],
+        "Mollusques": ["Calamar", "Moule", "Huître"]
+      }
+    },
+
+    "Épicerie": {
+      "Céréales & Féculents": ["Riz", "Pâtes", "Quinoa", "Semoule", "Boulgour"],
+      "Légumineuses sèches": ["Lentilles", "Pois chiches", "Flageolets"],
+      "Farines": ["Blé", "Sarrasin", "Maïs", "Châtaigne"],
+      "Huiles & Vinaigres": ["Huile d'olive", "Tournesol", "Noix", "Vinaigre balsamique", "Vinaigre de cidre"],
+      "Épices": ["Curry", "Cumin", "Paprika", "Cannelle", "Piment"],
+      "Condiments": ["Moutarde", "Ketchup", "Mayonnaise", "Sauce soja", "Miso"],
+      "Sucre & Douceurs": ["Sucre", "Miel", "Sirop d'érable", "Chocolat"]
+    },
+
+    "Laitier & Œufs": {
+      "Lait": ["Vache", "Chèvre", "Brebis", "Avoine", "Amande", "Soja"],
+      "Crème": ["Crème fraîche", "Crème liquide"],
+      "Fromages": {
+        "Pâte dure": ["Comté", "Parmesan"],
+        "Pâte molle": ["Camembert", "Brie"],
+        "Pâte persillée": ["Roquefort", "Bleu"],
+        "Pâte fraîche": ["Mozzarella", "Ricotta", "Feta"]
+      },
+      "Beurre": [],
+      "Œufs": []
+    }
+  },
+
+  "Saison": {
+    "Hiver": ["Décembre", "Janvier", "Février"],
+    "Printemps": ["Mars", "Avril", "Mai"],
+    "Été": ["Juin", "Juillet", "Août"],
+    "Automne": ["Septembre", "Octobre", "Novembre"]
+  },
+
+  "Container": ["Frais", "Surgelé", "Conserve", "Bocaux"],
+
+  "Repas": ["Petit Déj", "Brunch", "Déjeuner", "Goûter", "Diner"],
+
+  "Régime": {
+    "Végétalien": [],
+    "Végétarien": [],
+    "Pesco-végétarien": [],
+    "Flexitarien": [],
+    "Sans Gluten": [],
+    "Sans Lactose": [],
+    "Omnivore": []
+  },
+
+  "Cuisine du monde": [
+    "Française",
+    "Italienne",
+    "Espagnole",
+    "Portugaise",
+    "Grecque",
+    "Marocaine",
+    "Tunisienne",
+    "Algérienne",
+    "Libanaise",
+    "Turque",
+    "Indienne",
+    "Pakistanaise",
+    "Thaïlandaise",
+    "Vietnamienne",
+    "Chinoise",
+    "Japonaise",
+    "Coréenne",
+    "Mexicaine",
+    "Américaine",
+    "Cajun & Créole",
+    "Brésilienne",
+    "Argentine",
+    "Éthiopienne",
+    "Ouest-Africaine",
+    "Allemande",
+    "Nordique",
+    "Russe"
+  ],
+    "Fêtes": {
+        "Fin d'année": [
+            "Noël",
+            "Saint-Sylvestre",
+            "Nouvel An",
+            "Épiphanie"
+        ],
+        "Religieuses": [
+            "Pâques",
+            "Chandeleur",
+            "Mardi Gras",
+            "Toussaint"
+        ],
+        "Traditionnelles": [
+            "Halloween"
+        ]
+    }
+}
