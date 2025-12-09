@@ -60,26 +60,26 @@ router.post("/create", async (req, res) => {
       });
       await Promise.all(insertTagPromises);
     }
-
+    console.log("ingredientsingredientsingredientsingredients :", ingredients);
     // Insertion des ingrédients
     if (Array.isArray(ingredients) && ingredients.length > 0) {
       const insertIngPromises = ingredients.map(async (ing) => {
         const { name, quantity, unit, selected } = ing;
 
         // 1. Vérifier si l’ingrédient existe
-        let ingredientResult = await pool.query(
-          `SELECT id FROM "Ingredient" WHERE name = $1`,
-          [name]
-        );
-
+        let ingredientResult = await pool.query(`SELECT id FROM "Ingredient" WHERE name=$1`, [name]);
         let ingredientId;
         if (ingredientResult.rows.length === 0) {
-          // → L’ingrédient n'existe pas, on le crée
-          let insertIngredient = await pool.query(
-            `INSERT INTO "Ingredient" (name, selected) VALUES ($1, $2) RETURNING id`,
-            [name, selected]
+          let recipeResult = await pool.query(`SELECT id FROM "Recipe" WHERE name=$1`, [name]);
+          let rec_id = null;
+          if (recipeResult.rows.length > 0) {
+            rec_id = recipeResult.rows[0].id;
+          }
+          let insertIng = await pool.query(
+            `INSERT INTO "Ingredient" (name, selected, recipe_id) VALUES ($1, $2, $3) RETURNING id`,
+            [name, selected, rec_id]
           );
-          ingredientId = insertIngredient.rows[0].id;
+          ingredientId = insertIng.rows[0].id;
         } else {
           ingredientId = ingredientResult.rows[0].id;
         }
@@ -260,12 +260,16 @@ router.put("/update/:id", async (req, res) => {
 
         // Vérifier si l’ingrédient existe
         let ingredientResult = await pool.query(`SELECT id FROM "Ingredient" WHERE name=$1`, [name]);
-
         let ingredientId;
         if (ingredientResult.rows.length === 0) {
+          let recipeResult = await pool.query(`SELECT id FROM "Recipe" WHERE name=$1`, [name]);
+          let rec_id = null;
+          if (recipeResult.rows.length > 0) {
+            rec_id = recipeResult.rows[0].id ? Number(recipeResult.rows[0].id) : null;
+          }
           let insertIng = await pool.query(
-            `INSERT INTO "Ingredient" (name, selected) VALUES ($1, $2) RETURNING id`,
-            [name, selected]
+            `INSERT INTO "Ingredient" (name, selected, recipe_id) VALUES ($1, $2, $3) RETURNING id`,
+            [name, selected, rec_id]
           );
           ingredientId = insertIng.rows[0].id;
         } else {
@@ -487,6 +491,8 @@ router.get("/get-one/:id", async (req, res) => {
       `SELECT 
           i.id, 
           i.name, 
+          i.selected,
+          i.recipe_id,
           ri.amount, 
           u.abbreviation AS unit,
           u.id AS unit_id

@@ -420,7 +420,7 @@ export default function RecipeDetail({ homeId, id: idProp }) {
                 const unit = ing.unit;
                 const name = ing.name.toLowerCase();
 
-                const amount = Number(ing.amount); // conversion en nombre
+                const amount = Number(ing.amount);
                 const displayAmount = Number.isInteger(amount) ? amount : amount.toFixed(2);
 
                 const displayQty = unit
@@ -429,13 +429,27 @@ export default function RecipeDetail({ homeId, id: idProp }) {
 
                 const deWord = unit ? (/^[aeiouyh]/i.test(name) ? "d'" : "de ") : "";
 
+                console.log("ingrédient :", ing);
+
                 return (
                   <li key={ing.id}>
-                    {displayQty} {deWord}{name}
+                    {displayQty} {deWord}
+                    {ing.recipe_id ? (
+                      <a
+                        href={`/recipe/${ing.recipe_id}`}
+                        className="text-blue-600 hover:underline"
+                      >
+                        {name}
+                      </a>
+                    ) : (
+                      name
+                    )}
                   </li>
                 );
               })}
             </ul>
+
+
 
           </section>
 

@@ -15,8 +15,6 @@ export default function RecipeAdd({ homeId }) {
   const [difficulty, setDifficulty] = useState(3);
   const [portions, setPortions] = useState(null);
 
-  
-
   // -------------------- Image --------------------
   const fileInputRef = useRef(null);
   const [dragOver, setDragOver] = useState(false);
@@ -203,6 +201,7 @@ const [ingredients, setIngredients] = useState([
 
 // Stocke localIngredients au chargement du composant pour éviter des fetch répétées
 const [localIngredients, setLocalIngredients] = useState([]);
+const [localRecipes, setlocalRecipes] = useState([]);
 
 const [loadingIngredient, setLoadingIngredient] = useState(null);
 const [warningIndex, setWarningIndex] = useState(null);
@@ -255,6 +254,19 @@ useEffect(() => {
   fetchLocalIngredients();
 }, []);
 
+useEffect(() => {
+  const fetchLocalRecipes = async () => {
+    try {
+      const res = await fetch(`${API_URL}/recipe/get-all`);
+      const data = await res.json();
+      setlocalRecipes(data);
+    } catch (err) {
+      console.error("Erreur chargement ingrédients locaux :", err);
+    }
+  };
+  fetchLocalRecipes();
+}, []);
+
 const suggestionsCache = useRef({}); // { query: suggestions }
 const lastQueryRef = useRef("");
 
@@ -265,9 +277,31 @@ const searchIngredient = (index, nameOverride) => {
   lastQueryRef.current = name;
 
   // 🔹 Suggestions locales
-  const localSuggestions = localIngredients
+  const localSuggestionsIng = localIngredients
     .filter(ing => ing.name.toLowerCase().includes(name))
     .map(ing => ({ name: ing.name.trim(), isLocal: true }));
+
+  const localSuggestionsRec = localRecipes
+    .filter(rec => rec.name.toLowerCase().includes(name))
+    .map(rec => ({ rec_id:rec.id || null, name: rec.name.trim(), isLocal: true }));
+
+  console.log("Suggestions locales ingrédient :", localSuggestionsIng);
+  console.log("Suggestions locales recette :", localSuggestionsRec);
+
+  const merged = [...localSuggestionsIng, ...localSuggestionsRec];
+
+  // Set pour tracker les noms déjà vus
+  const seenNames = new Set();
+
+  // Filtrer les doublons selon la propriété "name"
+  const localSuggestions = merged.filter(item => {
+    if (seenNames.has(item.name)) {
+      return false; // doublon → ignorer
+    }
+    seenNames.add(item.name);
+    return true; // première occurrence → garder
+  });
+     
 
   // Affiche immédiatement les locales
   setIngredients(prev => {
