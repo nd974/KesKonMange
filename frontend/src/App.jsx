@@ -14,7 +14,7 @@ import RecipeAdd from "./pages/RecipeAdd";
 
 import MobileNav from "./components/MobileNav";
 
-import {refreshHomeId } from "../session";
+import {refreshHomeId, refreshProfileId } from "../session";
 
 function AppRoutes() {
   const location = useLocation();
@@ -22,6 +22,7 @@ function AppRoutes() {
 
   const hideMobileNav = ["/login", "/profiles"].includes(location.pathname);
   const [home_id, setHomeId] = useState(null);
+  const [profile_id, setProfileId] = useState(null);
 
   const [isLoading, setIsLoading] = useState(true);
 
@@ -31,11 +32,12 @@ function AppRoutes() {
       const currentHomeId = await refreshHomeId();
       setHomeId(currentHomeId);
 
-      const profileId = localStorage.getItem("profile_id");
+      const currentProfileId = await refreshProfileId();
+      setProfileId(currentProfileId);
 
       if (!currentHomeId && location.pathname !== "/login") {
         navigate("/login", { replace: true });
-      } else if (currentHomeId && !profileId && location.pathname !== "/profiles") {
+      } else if (currentHomeId && !currentProfileId && location.pathname !== "/profiles") {
         navigate("/profiles", { replace: true });
       }
       setIsLoading(false);
@@ -63,13 +65,13 @@ function AppRoutes() {
         <Routes>
           <Route path="/login" element={<Login />} />
           <Route path="/profiles" element={<ProfileSelect key={home_id} homeId={home_id} />} />
-          <Route path="/" element={<Dashboard key={home_id} homeId={home_id} />} />
+          <Route path="/" element={<Dashboard key={home_id} homeId={home_id} profileId={profile_id} />} />
           <Route path="/recipes" element={<Recipes key={home_id} homeId={home_id} />} />
           <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} />} />
           <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
-          <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id} />} />
+          <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id}/>} />
 
-          <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} />} />
+          <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
 
           <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
           <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />

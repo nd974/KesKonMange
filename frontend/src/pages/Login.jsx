@@ -4,7 +4,7 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-import { setHomeId, getHomeId } from "../../session";
+import { setHomeId, getHomeId,setProfileId, getProfileId } from "../../session";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -14,10 +14,12 @@ export default function Login() {
   const navigate = useNavigate();
   
   useEffect(() => {
-    localStorage.removeItem("home_id");
+    // localStorage.removeItem("home_id");
     // await clearHomeId();
     setHomeId(0);
-    localStorage.removeItem("profile_id");
+    // localStorage.removeItem("profile_id");
+    // await clearProfileId();
+    setProfileId(0);
   }, []);
 
   const handleLogin = async () => {
@@ -29,7 +31,7 @@ export default function Login() {
 
     const data = await res.json();
     if (data.ok) {
-        localStorage.setItem("home_id", data.homeId);
+        // localStorage.setItem("home_id", data.homeId);
         await setHomeId(data.homeId);
         console.log("Login [data.homeId]", data.homeId, "|", "await setHomeId(data.homeId)", await getHomeId());
         navigate("/profiles");

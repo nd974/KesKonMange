@@ -6,17 +6,17 @@ import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeDetail({ homeId, id: idProp }) {
+export default function RecipeDetail({ homeId,profileId, id: idProp }) {
   const navigate = useNavigate();
   const { id: idFromUrl } = useParams();
   const id = idProp ?? idFromUrl;
 
-  const [profileId, setProfileId] = useState(null);
+  // const [profileId, setProfileId] = useState(null);
 
-  useEffect(() => {
-    const stored = localStorage.getItem("profile_id");
-    if (stored) setProfileId(JSON.parse(stored));
-  }, []);
+  // useEffect(() => {
+  //   // const stored = localStorage.getItem("profile_id");
+  //   if (profileId) setProfileId(profileId);
+  // }, [profileId]);
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);

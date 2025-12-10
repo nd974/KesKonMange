@@ -4,7 +4,7 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HEADER } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-import { setHomeId, getHomeId } from "../../session";
+import { setHomeId, getHomeId, getProfileId } from "../../session";
 
 export default function Header({homeId}) {
     const location = useLocation();
@@ -15,7 +15,8 @@ export default function Header({homeId}) {
     const [selectedHome, setSelectedHome] = useState(null);
 
     // Récupération des ids stockés en localStorage
-    const profileId = localStorage.getItem("profile_id");
+    // const profileId = localStorage.getItem("profile_id");
+    
     // const homeId = localStorage.getItem("home_id");
 
     const links = [
@@ -28,38 +29,50 @@ export default function Header({homeId}) {
 
   // 🔹 Fetch du profil logué
   useEffect(() => {
-    if (profileId) {
-        fetch(`${API_URL}/home/get/${profileId}`)
-            .then((res) => res.json())
-            .then((data) => setProfile(data))
-            .catch((err) => console.error("Erreur profil:", err));
-    }
-  }, [profileId]);
+    const fetchData = async () => {
+      const profileId = await getProfileId();
+      if (profileId) {
+          fetch(`${API_URL}/home/get/${profileId}`)
+              .then((res) => res.json())
+              .then((data) => setProfile(data))
+              .catch((err) => console.error("Erreur profil:", err));
+      }
+    };
+
+    fetchData();
+  }, []);
+
 
   // 🔹 Fetch des homes liés au profil logué
-    useEffect(() => {
-    if (profileId) {
+  useEffect(() => {
+    const fetchHomes = async () => {
+      const profileId = await getProfileId();
+      if (profileId) {
         const currentHomeId = parseInt(homeId, 10);
         fetch(`${API_URL}/home/homes-get/${profileId}`)
-        .then((res) => res.json())
-        .then((data) => {
+          .then((res) => res.json())
+          .then((data) => {
             const sortedHomes = data.sort((a, b) => {
-            if (a.id === currentHomeId) return -1;
-            if (b.id === currentHomeId) return 1;
-            return 0;
+              if (a.id === currentHomeId) return -1;
+              if (b.id === currentHomeId) return 1;
+              return 0;
             });
             setHomes(sortedHomes);
             setSelectedHome(sortedHomes.find((h) => h.id === currentHomeId));
-        })
-        .catch((err) => console.error("Erreur homes:", err));
-    }
-    }, [profileId, homeId]);
+          })
+          .catch((err) => console.error("Erreur homes:", err));
+      }
+    };
+
+    fetchHomes();
+  }, [homeId]);
+
 
   // 🔹 Changement de home dans le menu déroulant
   const handleChangeHome = async (event) => {
     const newHomeId = event.target.value;
     setSelectedHome(homes.find((h) => h.id === parseInt(newHomeId)));
-    localStorage.setItem("home_id", newHomeId);
+    // localStorage.setItem("home_id", newHomeId);
     await setHomeId(newHomeId);
     window.location.reload(); // recharge la page pour appliquer le changement
   };

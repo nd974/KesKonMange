@@ -11,7 +11,7 @@ dayjs.locale("fr");
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Dashboard({ homeId }) {
+export default function Dashboard({ homeId, profileId}) {
   const [loading, setLoading] = useState(false); // TODO CHARGEMENT
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -80,7 +80,7 @@ export default function Dashboard({ homeId }) {
   };
 
   const updateSubscriptionState = async (menuId) => {
-    const profileId = localStorage.getItem("profile_id");
+    // const profileId = localStorage.getItem("profile_id");
     console.log("menuObj", menuId);
     if (profileId && menuId) {
       const subscribed = await checkSubscription(menuId, profileId);
@@ -210,7 +210,7 @@ export default function Dashboard({ homeId }) {
     if (subscribing) return; // 🔹 bloquer les clics multiples
     setSubscribing(true);
 
-    const profileId = localStorage.getItem("profile_id");
+    // const profileId = localStorage.getItem("profile_id");
     const current = subscriptionState[menuId] === true;
 
     try {

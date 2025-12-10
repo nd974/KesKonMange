@@ -7,7 +7,7 @@ import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-import { refreshHomeId} from "../../session";
+import { refreshHomeId, refreshProfileId, setProfileId, getProfileId} from "../../session";
 
 // ------------------------------ TODO ----------------------------------------
 // import { requestWebPushToken } from "../config/firebase";
@@ -23,6 +23,7 @@ export default function ProfileSelect({homeId}) {
     // ------------------------------ TODO ----------------------------------------
     // 1️⃣ Supprimer le token actuel côté serveur
     // const currentProfileId = localStorage.getItem("profile_id");
+    // const currentProfileId = getProfileId();
     // if (currentProfileId) {
     //   fetch(`${API_URL}/profile/remove-token`, {
     //     method: "POST",
@@ -30,6 +31,7 @@ export default function ProfileSelect({homeId}) {
     //     body: JSON.stringify({ profileId: currentProfileId }),
     //   });
     //   localStorage.removeItem("profile_id");
+    //   setProfileId(0)
     // }
     // -----------------------------------*----------------------------------------
 
@@ -41,7 +43,8 @@ export default function ProfileSelect({homeId}) {
   }, [homeId]);
 
   const handleSelectProfile = async (profileId) => {
-    localStorage.setItem("profile_id", profileId);
+    // localStorage.setItem("profile_id", profileId);
+    setProfileId(profileId);
     
 // ------------------------------ TODO ----------------------------------------
     // 3️⃣ Enregistrer le nouveau push token pour ce profil
@@ -59,6 +62,7 @@ export default function ProfileSelect({homeId}) {
 
 
   refreshHomeId();
+  refreshProfileId();
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#6b926f] text-white font-nunito">
