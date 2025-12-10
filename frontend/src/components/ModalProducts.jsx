@@ -61,6 +61,8 @@ useEffect(() => {
   setStep(1);
 }, [open, initialProduct]);
 
+console.log("ModalProducts [form]", form);
+
 
 
   // ----------------------------
@@ -213,6 +215,7 @@ useEffect(() => {
         setForm({ ...form, stock_id: storage.id });
         setStep(4); // ➜ passer à l'étape finale
       }}
+      inPopinStorageSelect={form.stock_id}
     />
 
     <button

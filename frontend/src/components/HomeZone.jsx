@@ -3,7 +3,7 @@ import Draggable from "react-draggable";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStoragesLoaded, inPopin = false}) {
+export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStoragesLoaded, inPopinStorageSelect = null}) {
   const [zones, setZones] = useState([]);
   const [storages, setStorages] = useState([]);
   const [dragOverZone, setDragOverZone] = useState(null);
@@ -28,6 +28,21 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
 
   const [draggedStorageIds, setDraggedStorageIds] = useState({});
 
+  const [selectedStorageLocalId, setSelectedStorageLocalId] = useState(null);
+
+
+  const isSelected = (child) => {
+    console.log("isSelected [child]", child);
+    console.log("isSelected [selectedStorageLocalId]", selectedStorageLocalId);
+    console.log("isSelected [inPopinStorageSelect]", inPopinStorageSelect);
+    console.log("isSelected [child.id]", child.instance_id);
+    if (inPopinStorageSelect) {
+      return Number(child.id) === Number(inPopinStorageSelect);
+    }
+    return child.localId === selectedStorageLocalId;
+  };
+
+  console.log("HomeZone [inPopinStorageSelect]", inPopinStorageSelect);
 
   // -------------------------------------
   // 🔄 CHARGEMENT LISTES : ZONES + TYPES STOCKAGES
@@ -351,14 +366,14 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
       hover:shadow-xl
       transition-shadow
     ">
-      {!inPopin && (
+      {!inPopinStorageSelect && (
         <h1 className="text-2xl font-bold mb-4 text-center">
           Plan Maison
         </h1>
       )}
 
       {/* Boutons */}
-      {!inPopin && (
+      {!inPopinStorageSelect && (
         <div className="grid grid-cols-4 gap-4 mb-4">
           <button
             onClick={() => setShowZoneModal(true)}
@@ -393,7 +408,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
 
             {/* POPIN AJOUT ZONE */}
 
-      {!inPopin && showZoneModal && (
+      {!inPopinStorageSelect && showZoneModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-80">
             <h2 className="text-xl font-semibold mb-4">Nouvelle zone</h2>
@@ -450,7 +465,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
       )}
 
       {/* POPIN AJOUT STOCKAGE */}
-      {!inPopin && showStorageModal && (
+      {!inPopinStorageSelect && showStorageModal && (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
           <div className="bg-white p-6 rounded shadow-lg w-80">
             <h2 className="text-xl font-semibold mb-4">Nouveau stockage</h2>
@@ -538,7 +553,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
           </g>
         ))}
 
-        {inPopin && storages.map((child) => (
+        {inPopinStorageSelect && storages.map((child) => (
           <g
             key={child.localId}
             style={{ cursor: "pointer" }}
@@ -548,7 +563,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
               onSelectStorage({ ...child, displayName });
 
               // Si on est sur mobile et en popin, on peut fermer la popin / passer à la suite
-              if (inPopin && window.innerWidth <= 768) {
+              if (inPopinStorageSelect && window.innerWidth <= 768) {
                 // Ici tu peux déclencher la fermeture de la popin ou la navigation
                 // ex: setShowHomeZonePopin(false)
               }
@@ -559,7 +574,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
               y={child.y}
               width={child.w}
               height={child.h}
-              fill="#60A5FA"
+              fill={isSelected(child) ? "#ff7300ff" : "#60A5FA"}
               stroke="#111827"
               strokeWidth="2"
             />
@@ -576,9 +591,10 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
         ))}
 
         {/* 🔥 STOCKAGES (cliquables même dans Draggable) */}
-{!inPopin &&
+{!inPopinStorageSelect &&
   storages.map((child) => {
     const handleSelect = () => {
+      setSelectedStorageLocalId(child.localId);
       const parentZone = zonePositions.find((z) => z.id === child.parent_id);
       const displayName = parentZone
         ? `${child.name} [${parentZone.name}]`
@@ -626,7 +642,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
             y={0}
             width={child.w}
             height={child.h}
-            fill="#60A5FA"
+            fill={child.localId === selectedStorageLocalId ? "#ff7300ff" : "#60A5FA"}  // <- NEW
             stroke="#111827"
             strokeWidth="2"
           />

@@ -335,13 +335,20 @@ async function handleUpdateProduct(updated) {
                         ${status === "expired" ? "text-red-600 font-semibold" : ""}
                         ${status === "soon" ? "text-orange-500 font-semibold" : ""}`}
                     >
-                      {formatDate(ing.expiry)}
-                      {status === "expired" && (
-                        <span className="ml-2 text-red-600">⚠️ Expiré</span>
-                      )}
-                      {status === "soon" && (
-                        <span className="ml-2 text-orange-500">⏳ Bientôt</span>
-                      )}
+                      <div className="flex flex-col md:flex-row md:items-center">
+                        <span>{formatDate(ing.expiry)}</span>
+
+                        <span
+                          className={`
+                            ${status === "expired" ? "text-red-600" : ""}
+                            ${status === "soon" ? "text-orange-500" : ""}
+                            md:ml-2
+                          `}
+                        >
+                          {(status === "expired" && "⚠️ Expiré") ||
+                          (status === "soon" && "⏳ Bientôt")}
+                        </span>
+                      </div>
                     </td>
                   </tr>
                 );
