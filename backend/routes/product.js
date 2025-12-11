@@ -103,10 +103,11 @@ router.delete("/delete/:id", async (req, res) => {
   }
 });
 
-router.put("/update/:id", async (req, res) => {
+router.put("/update/:h_id/:p_id", async (req, res) => {
   try {
-    const productId = req.params.id;
-    const { ing_id, quantity, unit_id, stock_id, expiry, homeId } = req.body;
+    const productId = req.params.p_id;
+    const homeId = req.params.h_id;
+    const { ing_id, quantity, unit_id, stock_id, expiry } = req.body;
 
     console.log("update product");
     console.log("ing_id, quantity, unit_id, stock_id, expiry, homeId : ",ing_id, quantity, unit_id, stock_id, expiry, homeId);

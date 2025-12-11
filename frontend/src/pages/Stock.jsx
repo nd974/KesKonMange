@@ -61,24 +61,25 @@ export default function Stock({ homeId }) {
     }
   }
 
-  // Filtrage
+
+function handleSort(column) {
+  if (sortColumn === column) {
+    setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+  } else {
+    setSortColumn(column);
+    setSortOrder("asc");
+  }
+}
+
+// Tri des ingrédients en fonction de la colonne sélectionnée
   const filteredIngredients = ingredients
-.filter(i => {
-  // Voir tout
-  if (selectedStorage === "all") return true;
-
-  // A replacer
-  if (!selectedStorage) return i.stock_id === null;
-
-  // Si selectedStorage n'est pas un groupe → éviter crash
-  if (!selectedStorage.ids) return false;
-
-  // Filtre groupe
-  return selectedStorage.ids.includes(i.stock_id);
-})
-    .filter(i =>
-      i.ingredient_name.toLowerCase().includes(search.toLowerCase())
-    )
+    .filter(i => {
+      if (selectedStorage === "all") return true;
+      if (!selectedStorage) return i.stock_id === null;
+      if (!selectedStorage.ids) return false;
+      return selectedStorage.ids.includes(i.stock_id);
+    })
+    .filter(i => i.ingredient_name.toLowerCase().includes(search.toLowerCase()))
     .filter(i => (unitFilter ? i.unit_name === unitFilter : true))
     .sort((a, b) => {
       if (!sortColumn) return 0;
@@ -86,6 +87,7 @@ export default function Stock({ homeId }) {
       let v1 = a[sortColumn];
       let v2 = b[sortColumn];
 
+      // Si c'est une date, il faut la convertir en objet Date
       if (sortColumn === "expiry") {
         v1 = new Date(v1);
         v2 = new Date(v2);
@@ -96,6 +98,7 @@ export default function Stock({ homeId }) {
 
       return 0;
     });
+
 
   // Création d'un tableau de stockages fusionnés
 const groupedStorages = Object.values(
@@ -120,7 +123,7 @@ async function handleUpdateProduct(updated) {
   if (!editProduct) return;
 
   try {
-    const res = await fetch(`${API_URL}/product/update/${editProduct.id}`, {
+    const res = await fetch(`${API_URL}/product/update/${homeId}/${editProduct.id}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(updated),
@@ -292,10 +295,22 @@ async function handleUpdateProduct(updated) {
             <thead className="bg-gray-200">
 
               <tr>
-                <th className="border px-2 py-1">Nom</th>
+                <th
+                  className="border px-2 py-1 cursor-pointer select-none"
+                  onClick={() => handleSort("ingredient_name")} // Utilisation de ingredient_name pour trier par nom
+                >
+                  Nom
+                  {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
+                </th>
                 <th className="border px-2 py-1">Quantité</th>
                 <th className="border px-2 py-1">Unité</th>
-                <th className="border px-2 py-1">Péremption</th>
+                <th
+                  className="border px-2 py-1 cursor-pointer select-none"
+                  onClick={() => handleSort("expiry")} // Utilisation de expiry pour trier par date d'expiration
+                >
+                  Péremption
+                  {sortColumn === "expiry" && (sortOrder === "asc" ? " ▲" : " ▼")}
+                </th>
               </tr>
 
             </thead>
