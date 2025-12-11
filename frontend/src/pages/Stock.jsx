@@ -381,6 +381,7 @@ async function handleUpdateProduct(updated) {
         homeId={homeId}
         manualLock={true}   // en modification → on bloque nom/marque/unité si tu veux
         initialProduct={{
+          id: editProduct.id,
           name: editProduct.ingredient_name,
           brand: editProduct.brand || "",
           quantity: editProduct.amount,

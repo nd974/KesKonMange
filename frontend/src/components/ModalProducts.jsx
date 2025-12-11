@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import HomeZone from "./HomeZone";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 export default function ModalProducts({
   homeId,
   mode,
@@ -45,6 +47,7 @@ useEffect(() => {
     }
 
     setForm({
+      id: initialProduct.id || "",
       name: initialProduct.name || "",
       brand: initialProduct.brand || "",
       quantity: initialProduct.quantity || "",
@@ -54,6 +57,8 @@ useEffect(() => {
       ing_id: initialProduct.ing_id || null,
       unit_id: initialProduct.unit_id || null,
     });
+
+    console.log("Initial product storage:", initialProduct);
 
     setSelectedStorage(initialProduct.storage || null);
   }
@@ -78,6 +83,27 @@ console.log("ModalProducts [form]", form);
     });
     onClose();
   };
+
+  async function deleteProduct(id) {
+    if (!confirm("Supprimer ce produit ?")) return;
+
+    try {
+      const res = await fetch(`${API_URL}/product/delete/${id}`, {
+        method: "DELETE"
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        setIngredients(prev => prev.filter(p => p.id !== id));
+      } else {
+        alert("Erreur : " + data.error);
+      }
+
+    } catch (e) {
+      alert("Erreur réseau");
+    }
+  }
 
   if (!open) return null;
 
@@ -156,13 +182,25 @@ console.log("ModalProducts [form]", form);
             />
             </div>
 
-            {/* Bouton Continuer */}
-            <button
-            className="bg-green-600 text-white p-2 rounded w-full mt-2"
-            onClick={() => setStep(2)}
-            >
-            Continuer →
-            </button>
+            {/* ---- BOUTON SUPPRIMER (uniquement en édition) ---- */}
+            <div className="flex gap-2 mt-2">
+              {form.id && (
+                <button
+                  onClick={() => deleteProduct(form.id)}
+                  className="bg-red-600 text-white p-2 rounded w-1/2"
+                >
+                  🗑️ Supprimer le produit
+                </button>
+              )}
+
+              <button
+                className="bg-green-600 text-white p-2 rounded w-1/2"
+                onClick={() => setStep(2)}
+              >
+                Continuer →
+              </button>
+            </div>
+
 
         </div>
         )}

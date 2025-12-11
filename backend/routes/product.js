@@ -95,8 +95,8 @@ router.delete("/delete/:id", async (req, res) => {
       `DELETE FROM "Product" WHERE id = $1`,
       [id]
     );
-
     return res.json({ ok: true, deletedId: id });
+
   } catch (e) {
     console.error("ERROR /product/delete:", e);
     return res.status(500).json({ error: e.message });
