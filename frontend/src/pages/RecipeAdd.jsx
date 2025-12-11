@@ -279,11 +279,11 @@ const searchIngredient = (index, nameOverride) => {
   // 🔹 Suggestions locales
   const localSuggestionsIng = localIngredients
     .filter(ing => ing.name.toLowerCase().includes(name))
-    .map(ing => ({ name: ing.name.trim(), isLocal: true }));
+    .map(ing => ({ name: ing.name.trim(), isIng: true }));
 
   const localSuggestionsRec = localRecipes
     .filter(rec => rec.name.toLowerCase().includes(name))
-    .map(rec => ({ rec_id:rec.id || null, name: rec.name.trim(), isLocal: true }));
+    .map(rec => ({ rec_id:rec.id || null, name: rec.name.trim(), isRec: true }));
 
   console.log("Suggestions locales ingrédient :", localSuggestionsIng);
   console.log("Suggestions locales recette :", localSuggestionsRec);
@@ -994,10 +994,14 @@ const StarRating = ({ value, onChange }) => {
       <button
         type="button"
         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600"
-        onClick={() => searchIngredient(i)}
+        onClick={() => {
+          lastQueryRef.current = "";     // ← obligatoire
+          searchIngredient(i, ingredients[i].name); 
+        }}
       >
         {loadingIngredient === i ? "⏳" : "🔍"}
       </button>
+
 
       {/* Suggestions */}
       {ing.suggestions.length > 0 && (
@@ -1008,7 +1012,7 @@ const StarRating = ({ value, onChange }) => {
               <li
                 key={j}
                 className={`p-2 hover:bg-gray-100 cursor-pointer ${
-                  s.isLocal ? "text-accentGreen font-bold" : "text-yellow-700"
+                  s.isRec ? "text-orange-600" : s.isIng ? "text-green-600" : "text-yellow-600"
                 }`}
                 onMouseDown={() => selectSuggestion(i, s.name)}
               >
@@ -1077,10 +1081,13 @@ const StarRating = ({ value, onChange }) => {
       >
         <h3 className="text-lg font-semibold mb-2">ℹ️ Informations sur les suggestions</h3>
         <p className="text-gray-700 mb-2">
-          Les suggestions <span className="font-bold text-accentGreen">en vert</span> proviennent de notre base de données.
+          Les suggestions <span className="font-bold text-accentGreen">en vert [Ingredient]</span> proviennent de notre base de données.
+        </p>
+        <p className="text-gray-700 mb-2">
+          Les suggestions <span className="font-bold text-orange-600">en orange [Recette]</span> proviennent de notre base de données.
         </p>
         <p className="text-gray-700">
-          Les suggestions <span className="font-bold text-yellow-700">en beige</span> proviennent de l’API OpenFoodFacts.
+          Les suggestions <span className="font-bold text-yellow-600">en beige</span> proviennent de l’API OpenFoodFacts.
         </p>
         <div className="text-right mt-4">
           <button

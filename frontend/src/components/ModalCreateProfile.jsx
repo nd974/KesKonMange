@@ -2,6 +2,8 @@ import React, { useState } from "react";
 import { CLOUDINARY_AVATAR5_DEFAULT, CLOUDINARY_RES } from "../config/constants";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { getHomeId } from "../../session";
+
 export default function ModalCreateProfile({ onClose, onCreated }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -16,7 +18,7 @@ export default function ModalCreateProfile({ onClose, onCreated }) {
     setLoading(true);
 
     try {
-      const home_id = localStorage.getItem("home_id"); // clé telle que stockée précédemment
+      const home_id  = await getHomeId();
       if (!home_id) {
         setError("Aucun home sélectionné. Reconnecte-toi.");
         setLoading(false);

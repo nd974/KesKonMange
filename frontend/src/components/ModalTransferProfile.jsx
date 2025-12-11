@@ -1,6 +1,8 @@
 import React, { useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { getHomeId } from "../../session";
+
 export default function ModalTransferProfile({ onClose, onTransferred }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -12,7 +14,7 @@ export default function ModalTransferProfile({ onClose, onTransferred }) {
     setLoading(true);
 
     try {
-      const home_id = localStorage.getItem("home_id");
+      const home_id  = await getHomeId();
       if (!home_id) {
         setError("Aucun home sélectionné. Reconnecte-toi.");
         setLoading(false);
