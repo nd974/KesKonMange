@@ -343,7 +343,11 @@ async function handleUpdateProduct(updated) {
                     {ing.ingredient_name}
                   </td>
 
-                    <td className="border px-2 py-1">{ing.amount}</td>
+                    <td className="border px-2 py-1">
+                      {parseFloat(ing.amount) % 1 === 0
+                        ? parseInt(ing.amount, 10)
+                        : parseFloat(ing.amount).toFixed(2)}
+                    </td>
                     <td className="border px-2 py-1">{ing.unit_name}</td>
                     <td
                       className={`border px-2 py-1

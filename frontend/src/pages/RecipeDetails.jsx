@@ -442,7 +442,9 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
                         {name}
                       </a>
                     ) : (
-                      name
+                      <>
+                        {name} {ing.selected ? "🍏" : "❓"}
+                      </>
                     )}
                   </li>
                 );
