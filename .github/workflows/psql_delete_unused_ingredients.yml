@@ -19,6 +19,7 @@ jobs:
           PGPASSWORD: ${{ secrets.PGPASSWORD }}
           PGDATABASE: ${{ secrets.PGDATABASE }}
           PGPORT: ${{ secrets.PGPORT }}
+          PGSSLMODE: require
         run: |
           echo "DELETE FROM \"Ingredient\"
                 WHERE NOT EXISTS (
