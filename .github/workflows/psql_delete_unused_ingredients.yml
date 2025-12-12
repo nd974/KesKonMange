@@ -21,9 +21,12 @@ jobs:
           PGPORT: ${{ secrets.PGPORT }}
           PGSSLMODE: require
         run: |
-          echo "DELETE FROM \"Ingredient\"
+          echo 'DELETE FROM "Ingredient"
                 WHERE NOT EXISTS (
                     SELECT 1
                     FROM recipes_ingredients ri
-                    WHERE ri.ingredient_id = \"Ingredient\".id
-                );" | psql
+                    WHERE ri.ingredient_id = "Ingredient".id
+                );' > delete_unused_ingredients.sql
+
+          # Exécute le fichier SQL
+          psql -f delete_unused_ingredients.sql
