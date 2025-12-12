@@ -183,23 +183,24 @@ console.log("ModalProducts [form]", form);
             </div>
 
             {/* ---- BOUTON SUPPRIMER (uniquement en édition) ---- */}
-            <div className="flex gap-2 mt-2">
+            <div className="flex gap-2 mt-2 py-2 justify-center">
               {form.id && (
                 <button
                   onClick={() => deleteProduct(form.id)}
                   className="bg-red-600 text-white p-2 rounded w-1/2"
                 >
-                  🗑️ Supprimer le produit
+                  🗑️ Supprimer
                 </button>
               )}
 
               <button
-                className="bg-green-600 text-white p-2 rounded w-1/2"
+                className={`bg-green-600 text-white p-2 rounded ${form.id ? 'w-1/2' : 'w-full'}`}
                 onClick={() => setStep(2)}
               >
                 Continuer →
               </button>
             </div>
+
 
 
         </div>

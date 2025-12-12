@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 
 export default function ModalNutrition({ ing_id, onClose }) {
-    console.log("ModalNutrition ouverte pour ing_id:", ing_id);
+  console.log("ModalNutrition ouverte pour ing_id:", ing_id);
+
   const [formData, setFormData] = useState({
     amount: "",
     unit: "",
@@ -50,78 +51,134 @@ export default function ModalNutrition({ ing_id, onClose }) {
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
       <div className="bg-white p-6 rounded-md w-80">
         <h2 className="text-xl font-semibold mb-4 text-black text-center">
-          Informations nutritionnelles
+          🍏 Valeurs nutritionnelles
         </h2>
 
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Quantité"
-          name="amount"
-          value={formData.amount}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Unité (g, ml, etc.)"
-          name="unit"
-          value={formData.unit}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Protéines (g)"
-          name="proteines"
-          value={formData.proteines}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Lipides (g)"
-          name="lipides"
-          value={formData.lipides}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Glucides (g)"
-          name="glucides"
-          value={formData.glucides}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Fibres (g)"
-          name="fibres"
-          value={formData.fibres}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-3 p-2 border rounded text-black"
-          placeholder="Sucres (g)"
-          name="sucres"
-          value={formData.sucres}
-          onChange={handleChange}
-        />
-        <input
-          className="w-full mb-5 p-2 border rounded text-black"
-          placeholder="Sodium (mg)"
-          name="sodium"
-          value={formData.sodium}
-          onChange={handleChange}
-        />
+        <div className="flex gap-4 mb-4">
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-black mb-2" htmlFor="amount">
+              Quantité
+            </label>
+            <input
+              className="w-full p-2 border rounded text-black"
+              placeholder="Quantité"
+              name="amount"
+              value={formData.amount}
+              onChange={handleChange}
+              id="amount"
+            />
+          </div>
+          <div className="flex-1">
+            <label className="block text-sm font-medium text-black mb-2" htmlFor="unit">
+              Unité
+            </label>
+            <input
+              className="w-full p-2 border rounded text-black"
+              placeholder="Unité (g, ml, ...)"
+              name="unit"
+              value={formData.unit}
+              onChange={handleChange}
+              id="unit"
+            />
+          </div>
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-black mb-2" htmlFor="proteines">
+            Protéines (g)
+          </label>
+          <input
+            className="w-full p-2 border rounded text-black"
+            placeholder="Protéines (g)"
+            name="proteines"
+            value={formData.proteines}
+            onChange={handleChange}
+            id="proteines"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-black mb-2" htmlFor="lipides">
+            Lipides (g)
+          </label>
+          <input
+            className="w-full p-2 border rounded text-black"
+            placeholder="Lipides (g)"
+            name="lipides"
+            value={formData.lipides}
+            onChange={handleChange}
+            id="lipides"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-black mb-2" htmlFor="glucides">
+            Glucides (g)
+          </label>
+          <input
+            className="w-full p-2 border rounded text-black"
+            placeholder="Glucides (g)"
+            name="glucides"
+            value={formData.glucides}
+            onChange={handleChange}
+            id="glucides"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-black mb-2" htmlFor="fibres">
+            Fibres (g)
+          </label>
+          <input
+            className="w-full p-2 border rounded text-black"
+            placeholder="Fibres (g)"
+            name="fibres"
+            value={formData.fibres}
+            onChange={handleChange}
+            id="fibres"
+          />
+        </div>
+
+        <div className="mb-4">
+          <label className="block text-sm font-medium text-black mb-2" htmlFor="sucres">
+            Sucres (g)
+          </label>
+          <input
+            className="w-full p-2 border rounded text-black"
+            placeholder="Sucres (g)"
+            name="sucres"
+            value={formData.sucres}
+            onChange={handleChange}
+            id="sucres"
+          />
+        </div>
+
+        <div className="mb-5">
+          <label className="block text-sm font-medium text-black mb-2" htmlFor="sodium">
+            Sodium (mg)
+          </label>
+          <input
+            className="w-full p-2 border rounded text-black"
+            placeholder="Sodium (mg)"
+            name="sodium"
+            value={formData.sodium}
+            onChange={handleChange}
+            id="sodium"
+          />
+        </div>
 
         <div className="flex justify-between">
-          <button
-            onClick={handleSave}
-            className="bg-blue-500 text-white px-6 py-2 rounded"
-          >
-            Sauvegarder
-          </button>
           <button
             onClick={onClose}
             className="bg-gray-500 text-white px-6 py-2 rounded"
           >
             Fermer
+          </button>
+          <button
+            onClick={handleSave}
+            className="bg-blue-500 text-white px-6 py-2 rounded"
+          >
+            Sauvegarder
           </button>
         </div>
       </div>

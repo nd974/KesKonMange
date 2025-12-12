@@ -1,6 +1,7 @@
 import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
+import { FullStar, HalfStar, EmptyStar } from "../components/Stars";
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -36,6 +37,9 @@ export default function RecipeCard({ recipe , homeId}) {
   const hiddenTags = sortedTags.slice(4, sortedTags.length);
   const remaining = sortedTags.length - visibleTags.length;
 
+  const [averageNote, setAverageNote] = useState(0);
+  const [votesCount, setVotesCount] = useState(0); // Add this state for votes count
+
   // Modal add to menu
   const [showAddToMenuModal, setShowAddToMenuModal] = useState(false);
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -44,8 +48,7 @@ export default function RecipeCard({ recipe , homeId}) {
   const [menuDate, setMenuDate] = useState("");
   const [selectedMealTagId, setSelectedMealTagId] = useState([]);
   const [repasTags, setRepasTags] = useState([]);
-    
-    
+
   // Récupérer tags repas
   async function fetchTagsRepas() {
     try {
@@ -69,7 +72,6 @@ export default function RecipeCard({ recipe , homeId}) {
   }
 
   async function addToMenu() {
-
     if (!selectedRecipe) return;
     const payload = selectedMenuId
       ? { menu_id: selectedMenuId, recipe_id: selectedRecipe.id }
@@ -91,6 +93,30 @@ export default function RecipeCard({ recipe , homeId}) {
       alert("Impossible d'ajouter la recette au menu.", err);
     }
   }
+
+  async function loadRating(id) {
+    console.log("loadRating for recipe id:", id);
+    if (!id) return;
+    try {
+      const res = await fetch(`${API_URL}/recipe/getRating`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ recipeId: id }),
+      });
+      const data = await res.json();
+      if (data.ok) {
+        setAverageNote(data.averageNote);
+        setVotesCount(data.votesCount); // Set votes count
+      }
+      console.log("loadRating data:", data);
+    } catch (e) {
+      console.error("Erreur loadRating:", e);
+    }
+  }
+
+  useEffect(() => {
+    loadRating(recipe.id);
+  }, [recipe.id]); // Add recipe.id to dependency array for rerun on recipe change
   
   return (
     <div
@@ -159,10 +185,21 @@ export default function RecipeCard({ recipe , homeId}) {
         }`}
       >
 
-      {/* 🔹 level => a remplacer par note */}
-      {"⭐".repeat(parseInt(recipe.level) || 0)}
-      </div>
+        {/* 🔹 Affichage des étoiles (note) */}
+        {votesCount > 0 && (
+          <div className="flex items-center gap-2 mt-2 text-yellow-500">
+            <div className="flex gap-1">
+              {Array.from({ length: 5 }, (_, i) => {
+                const starNum = i + 1;
 
+                if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
+                if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
+                return <EmptyStar key={i} />;
+              })}
+            </div>
+          </div>
+        )}
+      </div>
 
       {/* Modal Add to Menu */}
       {showAddToMenuModal && (
@@ -180,8 +217,9 @@ export default function RecipeCard({ recipe , homeId}) {
                 >
                   <option value="">-- Nouveau menu --</option>
                   {menus.map(m => (
-                    
-                    <option key={m.id} value={m.id}>{m.date.slice(0, 10).split('-').reverse().join('/')} -- {m.tag.name}</option>
+                    <option key={m.id} value={m.id}>
+                      {m.date.slice(0, 10).split('-').reverse().join('/')} -- {m.tag.name}
+                    </option>
                   ))}
                 </select>
               </>
@@ -239,8 +277,6 @@ export default function RecipeCard({ recipe , homeId}) {
           </div>
         </div>
       )}
-      
     </div>
-
   );
 }
