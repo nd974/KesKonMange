@@ -1,0 +1,28 @@
+name: Delete unused ingredients
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * *'  # Tous les jours à 1h du matin (un peu après la suppression des menus)
+
+jobs:
+  delete-ingredients:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Delete unused ingredients
+        env:
+          PGHOST: ${{ secrets.PGHOST }}
+          PGUSER: ${{ secrets.PGUSER }}
+          PGPASSWORD: ${{ secrets.PGPASSWORD }}
+          PGDATABASE: ${{ secrets.PGDATABASE }}
+          PGPORT: ${{ secrets.PGPORT }}
+        run: |
+          echo "DELETE FROM \"Ingredient\"
+                WHERE NOT EXISTS (
+                    SELECT 1
+                    FROM recipes_ingredients ri
+                    WHERE ri.ingredient_id = \"Ingredient\".id
+                );" | psql

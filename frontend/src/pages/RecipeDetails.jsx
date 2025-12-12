@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import { FullStar, HalfStar, EmptyStar } from "../components/Stars";
+import ModalNutrition from "../components/ModalNutrition";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -35,6 +36,8 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
 
   const [similar, setSimilar] = useState([]);
 
+  const [showModalNutrition, setShowModalNutrition] = useState(false);
+  const [selectedIngId, setSelectedIngId] = useState(null);
 
   // === Fetch recette ===
   useEffect(() => {
@@ -415,42 +418,59 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
           <section className="mt-8">
             <h2 className="text-xl font-semibold mb-2">🥕 Ingrédients</h2>
 
-            <ul className="list-disc list-inside space-y-1">
-              {recipe.ingredients?.map((ing) => {
-                const unit = ing.unit;
-                const name = ing.name.toLowerCase();
+          <ul className="list-disc list-inside space-y-1">
+            {recipe.ingredients?.map((ing) => {
+              const unit = ing.unit;
+              const name = ing.name.toLowerCase();
 
-                const amount = Number(ing.amount);
-                const displayAmount = Number.isInteger(amount) ? amount : amount.toFixed(2);
+              const amount = Number(ing.amount);
+              const displayAmount = Number.isInteger(amount) ? amount : amount.toFixed(2);
 
-                const displayQty = unit
-                  ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
-                  : displayAmount;
+              const displayQty = unit
+                ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
+                : displayAmount;
 
-                const deWord = unit ? (/^[aeiouyh]/i.test(name) ? "d'" : "de ") : "";
+              const deWord = unit ? (/^[aeiouyh]/i.test(name) ? "d'" : "de ") : "";
 
-                console.log("ingrédient :", ing);
-
-                return (
-                  <li key={ing.id}>
-                    {displayQty} {deWord}
-                    {ing.recipe_id ? (
-                      <a
-                        href={`/recipe/${ing.recipe_id}`}
-                        className="text-blue-600 hover:underline"
+              return (
+                <li key={ing.id}>
+                  {displayQty} {deWord}
+                  {ing.recipe_id ? (
+                    <a
+                      href={`/recipe/${ing.recipe_id}`}
+                      className="text-blue-600 hover:underline"
+                    >
+                      {name}
+                    </a>
+                  ) : (
+                    <>
+                      {name}
+                      <span
+                        onClick={() => {
+                          console.log("Ingrédient cliqué:", ing.id);
+                          setSelectedIngId(ing.selected);     // TODO ing.id 👈 On stocke l’ingrédient cliqué
+                          setShowModalNutrition(true);  // 👈 On ouvre la modal
+                        }}
+                        style={{ cursor: "pointer", marginLeft: "8px" }}
                       >
-                        {name}
-                      </a>
-                    ) : (
-                      <>
-                        {name} {ing.selected ? "🍏" : "❓"}
-                      </>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
+                        {ing.selected ? "🍏" : "❓"}
+                      </span>
+                    </>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
 
+          {/* La modal est rendue UNE SEULE FOIS, en bas */}
+          {showModalNutrition && (
+            <ModalNutrition
+              ing_id={selectedIngId}                // 👈 L’id du bon ingrédient
+              onClose={() => setShowModalNutrition(false)}
+            />
+          )}
+
+            
 
 
           </section>
