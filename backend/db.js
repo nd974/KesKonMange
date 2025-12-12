@@ -8,7 +8,7 @@ let pool;
 
 if (!global.pgPool) {
   global.pgPool = new Pool({
-    connectionString: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}.oregon-postgres.render.com/${process.env.DB_NAME}`,
+    connectionString: `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@${process.env.DB_HOST}/${process.env.DB_NAME}`,
     ssl: { rejectUnauthorized: false },
     max: 10,                 // ️⭐ garder les connexions ouvertes
     idleTimeoutMillis: 300000, // ️⭐ 5 minutes
