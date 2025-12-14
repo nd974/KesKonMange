@@ -371,7 +371,7 @@ export default function Dashboard({ homeId, profileId}) {
 
                   <h6 style={{ fontStyle: "italic", textDecoration: "underline" }} className="flex py-2">
                     {"Composition du menu : "}{selectedMenusForDay[activeMenuIndex]?.recipes.length}{" "}
-                    {selectedMenusForDay[activeMenuIndex]?.recipes.length === 1 ? "élément" : "éléments"}
+                    {selectedMenusForDay[activeMenuIndex]?.recipes.length === 1 ? "plat" : "plats"}
                   </h6>
 
 

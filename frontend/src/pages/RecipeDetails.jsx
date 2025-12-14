@@ -263,7 +263,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
           <img 
             src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
             alt="Pâtes à la carbonara"
-            className="w-full h-80 object-cover rounded-md mb-6"
+            className="w-full h-100 object-cover rounded-md mb-6"
           />
           {/* Nom et tags */}
           <div className="flex flex-wrap items-center justify-between mb-3">

@@ -112,21 +112,32 @@
     "Nordique",
     "Russe"
   ],
-    "Fêtes": {
-        "Fin d'année": [
-            "Noël",
-            "Saint-Sylvestre",
-            "Nouvel An",
-            "Épiphanie"
-        ],
-        "Religieuses": [
-            "Pâques",
-            "Chandeleur",
-            "Mardi Gras",
-            "Toussaint"
-        ],
-        "Traditionnelles": [
-            "Halloween"
-        ]
-    }
+  "Fêtes": {
+      "Fin d'année": [
+          "Noël",
+          "Saint-Sylvestre",
+          "Nouvel An",
+          "Épiphanie"
+      ],
+      "Religieuses": [
+          "Pâques",
+          "Chandeleur",
+          "Mardi Gras",
+          "Toussaint"
+      ],
+      "Traditionnelles": [
+          "Halloween"
+      ]
+  },
+  "Plats": [
+    "Pizza",
+    "Gratin",
+    "Soupe",
+    "Burger",
+    "Tarte",
+    "Sandwich",
+    "Quiche",
+    "Ragoût",
+    "Sorbet"
+  ]
 }
