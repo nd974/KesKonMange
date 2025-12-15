@@ -766,7 +766,7 @@ const StarRating = ({ value, onChange }) => {
               <input
                 type="number"
                 min="0"
-                max="999"
+                max="9999"
                 value={value}
                 onChange={(e) =>
                   setTime({ ...time, [key]: e.target.value ? e.target.valueAsNumber : "" })

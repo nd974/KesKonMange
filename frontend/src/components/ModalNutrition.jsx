@@ -1,172 +1,259 @@
 import React, { useState, useEffect } from "react";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 export default function ModalNutrition({ ing_id, onClose }) {
-  console.log("ModalNutrition ouverte pour ing_id:", ing_id);
+  const [groups, setGroups] = useState([]);
+  const [openGroups, setOpenGroups] = useState({});
+  const [showInputModal, setShowInputModal] = useState(false); // Gérer l'affichage de la modal pour entrer les données
+  const [inputData, setInputData] = useState(""); // Champ pour entrer les données nutritionnelles
+  const [parsedData, setParsedData] = useState([]);
 
-  const [formData, setFormData] = useState({
-    amount: "",
-    unit: "",
-    proteines: "",
-    lipides: "",
-    glucides: "",
-    fibres: "",
-    sucres: "",
-    sodium: "",
-  });
-
-  // Charger les données de l'ingrédient si ing_id change
-  useEffect(() => {
-    if (ing_id) {
-      // Ici tu peux récupérer les données via une API ou depuis ton parent
-      console.log("Chargement des données pour l'ingrédient", ing_id);
-
-      // Exemple : pré-remplissage (à adapter selon ton modèle de données)
-      setFormData({
-        amount: "50",
-        unit: "g",
-        proteines: "5",
-        lipides: "3",
-        glucides: "20",
-        fibres: "2",
-        sucres: "5",
-        sodium: "100",
-      });
-    }
-  }, [ing_id]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({
+  // Fonction pour activer/désactiver la section du groupe
+  const toggleGroup = (groupId) => {
+    setOpenGroups((prev) => ({
       ...prev,
-      [name]: value,
+      [groupId]: !prev[groupId],
     }));
   };
 
-  const handleSave = () => {
-    console.log("Données sauvegardées pour ing_id", ing_id, formData);
-    onClose(); // Ferme la modal après sauvegarde
+  // Charger les données nutritionnelles lors du montage du composant
+  useEffect(() => {
+    if (!ing_id) return;
+
+    const fetchNutrition = async () => {
+      try {
+        const resAll = await fetch(`${API_URL}/nutrition/nutrients-all`);
+        const allNutrients = await resAll.json();
+
+        const resValues = await fetch(
+          `${API_URL}/nutrition/nutrition-get/${ing_id}`
+        );
+        const values = (await resValues.json()) || [];
+
+        const grouped = {};
+        allNutrients.forEach((n) => {
+          const groupId = n.group_id;
+          if (!grouped[groupId]) {
+            grouped[groupId] = {
+              id: groupId,
+              label: n.group_label,
+              children: [],
+              totalValue: 0, // total initialisé
+              totalKey: "",  // pour stocker le code exact
+            };
+          }
+
+          const nutrientKey = n.nutrient_key || `unknown_${n.nutrient_id}`;
+          const nutrientValue = values.find((v) => v.nutrient_key === nutrientKey)?.value ?? 0;
+
+          if (nutrientKey.startsWith("total_")) {
+            grouped[groupId].totalValue = nutrientValue;
+            grouped[groupId].totalKey = nutrientKey;
+          } else {
+            grouped[groupId].children.push({
+              key: nutrientKey,
+              label: n.nutrient_label,
+              value: nutrientValue,
+            });
+          }
+        });
+
+        setGroups(Object.values(grouped));
+      } catch (err) {
+        console.error("Erreur fetch nutrition", err);
+        setGroups([]);
+      }
+    };
+
+    fetchNutrition();
+  }, [ing_id]);
+
+  // Sauvegarder les modifications
+  const handleSave = async () => {
+    try {
+      const payload = groups.flatMap((group) => [
+        ...group.children.map((c) => ({ nutrient_key: c.key, value: c.value })),
+        group.totalKey ? { nutrient_key: group.totalKey, value: group.totalValue } : [],
+      ]);
+
+      await fetch(`${API_URL}/nutrition/nutrition-save/${ing_id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ nutrients: payload }),
+      });
+
+      alert("Valeurs nutritionnelles sauvegardées !");
+      onClose();
+    } catch (err) {
+      console.error("Erreur sauvegarde nutrition", err);
+      alert("Erreur lors de la sauvegarde des valeurs nutritionnelles.");
+    }
+  };
+
+  // Fonction pour analyser et parser les données
+const parseNutritionData = (text) => {
+  // Diviser le texte par des sauts de ligne et nettoyer les espaces inutiles
+  const lines = text.split("\n").map((line) => line.trim()).filter(Boolean);
+
+  // Créer un tableau d'objets de type { nutrient, value }
+  const data = [];
+
+  // Expression régulière améliorée pour capturer les nutriments et leurs valeurs avec différentes unités
+  const regex = /([a-zA-Z\s\(\)\-\,\.\d]+(?:\(\d+:\d+\)|ω?[0-9\-:]+)?)\s*(\d+(\.\d+)?\s?(g|mg|µg|kcal|kJ|NE|IU|%)?)/i;
+
+  lines.forEach((line) => {
+    const match = line.match(regex);
+
+    if (match) {
+      let nutrient = match[1].trim();  // Nom du nutriment
+      let value = match[2]?.trim();     // Valeur et unité
+
+      // Nettoyer les noms de nutriments si nécessaire (ex: retirer des chiffres à la fin des noms)
+      if (nutrient.match(/\d+$/)) {
+        nutrient = nutrient.replace(/\d+$/, '').trim();
+      }
+
+      // Vérifier que la valeur existe et qu'elle est bien formatée
+      if (value) {
+        // Ajouter un objet {nutrient, value} dans le tableau
+        data.push({ nutrient, value });
+      }
+    }
+  });
+
+  // Filtrer les lignes inutiles comme "pour 100g" et autres annotations non nutritionnelles
+  const filteredData = data.filter(item => !item.nutrient.toLowerCase().includes("pour"));
+
+  console.log("Données analysées:", filteredData); // Afficher les données analysées dans les logs
+  return filteredData;
+};
+
+
+
+
+  const handleTotalChange = (groupId, value) => {
+    setGroups((prev) =>
+      prev.map((group) =>
+        group.id !== groupId ? group : { ...group, totalValue: value }
+      )
+    );
+  };
+
+  const handleChildChange = (groupId, childKey, value) => {
+    setGroups((prev) =>
+      prev.map((group) =>
+        group.id !== groupId
+          ? group
+          : {
+              ...group,
+              children: group.children.map((child) =>
+                child.key === childKey ? { ...child, value } : child
+              ),
+            }
+      )
+    );
+  };
+
+  // Fonction pour soumettre les données
+  const handleSubmit = () => {
+    const data = parseNutritionData(inputData);
+    if (data.length > 0) {
+      setParsedData(data); // Mettre à jour l'état avec les données extraites
+      setShowInputModal(false); // Ferme la modal après l'enregistrement des données
+      setInputData(""); // Réinitialise le champ de texte après soumission
+    } else {
+      alert("Aucune donnée valide n'a été trouvée.");
+    }
   };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-md w-80">
-        <h2 className="text-xl font-semibold mb-4 text-black text-center">
+      <div className="bg-white p-6 rounded-md w-96">
+        <h2 className="text-xl font-semibold text-black text-center">
           🍏 Valeurs nutritionnelles
         </h2>
+        <p className="text-sm text-gray-600 mb-4 text-center">
+          pour 100g
+        </p>
 
-        <div className="flex gap-4 mb-4">
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-black mb-2" htmlFor="amount">
-              Quantité
-            </label>
-            <input
-              className="w-full p-2 border rounded text-black"
-              placeholder="Quantité"
-              name="amount"
-              value={formData.amount}
-              onChange={handleChange}
-              id="amount"
-            />
-          </div>
-          <div className="flex-1">
-            <label className="block text-sm font-medium text-black mb-2" htmlFor="unit">
-              Unité
-            </label>
-            <input
-              className="w-full p-2 border rounded text-black"
-              placeholder="Unité (g, ml, ...)"
-              name="unit"
-              value={formData.unit}
-              onChange={handleChange}
-              id="unit"
-            />
-          </div>
+        {/* Bouton pour ouvrir la modal d'entrée des données */}
+        <div className="flex justify-center mb-4">
+          <button
+            className="bg-blue-500 text-white px-4 py-2 rounded"
+            onClick={() => setShowInputModal(true)} // Ouvrir la modal d'entrée des données
+          >
+            Entrer les données nutritionnelles
+          </button>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-2" htmlFor="proteines">
-            Protéines (g)
-          </label>
-          <input
-            className="w-full p-2 border rounded text-black"
-            placeholder="Protéines (g)"
-            name="proteines"
-            value={formData.proteines}
-            onChange={handleChange}
-            id="proteines"
-          />
+        {/* Tableau des valeurs nutritionnelles */}
+        <div className="max-h-[400px] overflow-y-auto border rounded mb-4">
+          <table className="w-full text-sm">
+            <tbody>
+              {groups.map((group) => {
+                return (
+                  <React.Fragment key={`group_${group.id}`}>
+                    <tr
+                      className="bg-gray-200 cursor-pointer"
+                      onClick={() => toggleGroup(group.id)}
+                    >
+                      <td className="border px-2 py-1 font-semibold text-black flex justify-between items-center">
+                        <div className="flex items-center">
+                          {group.children.length > 0 && (
+                            <span className="inline-block w-4 text-center mr-2">
+                              {openGroups[group.id] ? "▼" : "▶"}
+                            </span>
+                          )}
+                          <span>{group.label}</span>
+                        </div>
+                        {group.totalKey && !["Vitamines", "Minéraux", "Autres constituants"].includes(group.label) &&(
+                          <input
+                            type="number"
+                            className="w-16 p-1 border rounded text-black text-right bg-gray-200"
+                            value={group.totalValue}
+                            onChange={(e) =>
+                              handleTotalChange(group.id, Number(e.target.value))
+                            }
+                          />
+                        )}
+                      </td>
+                    </tr>
+
+                    {openGroups[group.id] &&
+                      group.children.map((child) => {
+                        return (
+                          <tr key={child.key}>
+                            <td colSpan={2} className="border px-2 py-1 text-black">
+                              <div className="grid grid-cols-3 items-center gap-2">
+                                <div className="col-span-2 text-left">{child.label}</div>
+                                <div className="col-span-1">
+                                  <input
+                                    type="number"
+                                    className="w-full p-1 border rounded text-black"
+                                    value={child.value}
+                                    onChange={(e) =>
+                                      handleChildChange(
+                                        group.id,
+                                        child.key,
+                                        Number(e.target.value)
+                                      )
+                                    }
+                                  />
+                                </div>
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </React.Fragment>
+                );
+              })}
+            </tbody>
+          </table>
         </div>
 
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-2" htmlFor="lipides">
-            Lipides (g)
-          </label>
-          <input
-            className="w-full p-2 border rounded text-black"
-            placeholder="Lipides (g)"
-            name="lipides"
-            value={formData.lipides}
-            onChange={handleChange}
-            id="lipides"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-2" htmlFor="glucides">
-            Glucides (g)
-          </label>
-          <input
-            className="w-full p-2 border rounded text-black"
-            placeholder="Glucides (g)"
-            name="glucides"
-            value={formData.glucides}
-            onChange={handleChange}
-            id="glucides"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-2" htmlFor="fibres">
-            Fibres (g)
-          </label>
-          <input
-            className="w-full p-2 border rounded text-black"
-            placeholder="Fibres (g)"
-            name="fibres"
-            value={formData.fibres}
-            onChange={handleChange}
-            id="fibres"
-          />
-        </div>
-
-        <div className="mb-4">
-          <label className="block text-sm font-medium text-black mb-2" htmlFor="sucres">
-            Sucres (g)
-          </label>
-          <input
-            className="w-full p-2 border rounded text-black"
-            placeholder="Sucres (g)"
-            name="sucres"
-            value={formData.sucres}
-            onChange={handleChange}
-            id="sucres"
-          />
-        </div>
-
-        <div className="mb-5">
-          <label className="block text-sm font-medium text-black mb-2" htmlFor="sodium">
-            Sodium (mg)
-          </label>
-          <input
-            className="w-full p-2 border rounded text-black"
-            placeholder="Sodium (mg)"
-            name="sodium"
-            value={formData.sodium}
-            onChange={handleChange}
-            id="sodium"
-          />
-        </div>
-
+        {/* Boutons de fermeture et de sauvegarde */}
         <div className="flex justify-between">
           <button
             onClick={onClose}
@@ -182,6 +269,36 @@ export default function ModalNutrition({ ing_id, onClose }) {
           </button>
         </div>
       </div>
+
+      {/* Modal d'entrée des données nutritionnelles */}
+      {showInputModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white p-6 rounded-md w-96">
+            <h2 className="text-xl font-semibold text-black text-center">
+              🍏 Entrer les données nutritionnelles
+            </h2>
+            <textarea
+              value={inputData}
+              onChange={(e) => setInputData(e.target.value)}
+              placeholder="Collez ici vos données nutritionnelles..."
+              className="w-full p-2 border border-gray-300 rounded mb-4"
+              rows={6}
+            />
+            <button
+              onClick={handleSubmit}
+              className="bg-blue-500 text-white px-4 py-2 rounded"
+            >
+              Analyser
+            </button>
+            <button
+              onClick={() => setShowInputModal(false)}
+              className="bg-gray-500 text-white px-4 py-2 rounded mt-4"
+            >
+              Fermer
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

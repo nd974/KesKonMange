@@ -39,6 +39,15 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
   const [showModalNutrition, setShowModalNutrition] = useState(false);
   const [selectedIngId, setSelectedIngId] = useState(null);
 
+  const formatTime = (minutes) => {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+
+    if (h === 0) return `${m}min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h${m}`;
+  };
+
   // === Fetch recette ===
   useEffect(() => {
     async function fetchRecipe() {
@@ -345,19 +354,19 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 text-sm py-4">
             <div>
               <span className="font-semibold block">Préparation</span>
-              <span>{recipe.time_prep} min</span>
+              <span>{formatTime(recipe.time_prep)}</span>
             </div>
             <div>
               <span className="font-semibold block">Cuisson</span>
-              <span>{recipe.time_cook} min</span>
+              <span>{formatTime(recipe.time_cook)}</span>
             </div>
             <div>
               <span className="font-semibold block">Repos</span>
-              <span>{recipe.time_rest} min</span>
+              <span>{formatTime(recipe.time_rest)}</span>
             </div>
             <div>
               <span className="font-semibold block">Nettoyage</span>
-              <span>{recipe.time_clean} min</span>
+              <span>{formatTime(recipe.time_clean)}</span>
             </div>
           </div>
 
@@ -448,7 +457,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
                       <span
                         onClick={() => {
                           console.log("Ingrédient cliqué:", ing.id);
-                          setSelectedIngId(ing.selected);     // TODO ing.id 👈 On stocke l’ingrédient cliqué
+                          setSelectedIngId(ing.id);     // TODO ing.id 👈 On stocke l’ingrédient cliqué
                           setShowModalNutrition(true);  // 👈 On ouvre la modal
                         }}
                         style={{ cursor: "pointer", marginLeft: "8px" }}
@@ -486,19 +495,18 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
                   key={s.id}
                   className="p-4 bg-white rounded-2xl shadow-md border border-gray-100"
                 >
-                  <div className="font-medium mb-2">
+                  <div className="font-medium mb-2 whitespace-pre-line">
                     {s.number}. {s.description}
                   </div>
 
                   {(s.time > 0 || s.level > 0) && (
                     <div className="flex justify-between items-center text-sm text-gray-500">
                       {/* Temps */}
-                      <div>{s.time > 0 ? `⏱️ ${s.time} min` : <span>&nbsp;</span>}</div>
+                      <div>{s.time > 0 ? `⏱️ ${formatTime(s.time)}` : <span>&nbsp;</span>}</div>
 
                       {/* Level */}
                       <div className="text-accentGreen">
-                        {"★".repeat(Math.round(s.level)) +
-                          "☆".repeat(5 - Math.round(s.level))}
+                        {s.level > 0 ? "★".repeat(Math.round(s.level)) + "☆".repeat(5 - Math.round(s.level)) : ""}
                       </div>
                     </div>
                   )}
@@ -518,24 +526,24 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
               <p className="text-gray-500 mb-4">Aucun commentaire pour l’instant.</p>
             )}
 
-{comments.map((c, i) => (
-  <div key={i} className="border-t pt-3 mt-3">
-    
-    <div className="flex items-center justify-between">
-      {/* Username en gras à gauche */}
-      <p className="font-semibold">{c.username}</p>
+            {comments.map((c, i) => (
+              <div key={i} className="border-t pt-3 mt-3 whitespace-pre-line">
+                
+                <div className="flex items-center justify-between">
+                  {/* Username en gras à gauche */}
+                  <p className="font-semibold">{c.username}</p>
 
-      {/* Étoiles à droite */}
-      {c.note > 0 && (
-        <p className="text-yellow-500 text-sm font-medium">
-          {"★".repeat(c.note)}{"☆".repeat(5 - c.note)}
-        </p>
-      )}
-    </div>
+                  {/* Étoiles à droite */}
+                  {c.note > 0 && (
+                    <p className="text-yellow-500 text-sm font-medium">
+                      {"★".repeat(c.note)}{"☆".repeat(5 - c.note)}
+                    </p>
+                  )}
+                </div>
 
-    <p>{c.comment}</p>
-  </div>
-))}
+                <p>{c.comment}</p>
+              </div>
+            ))}
 
 
 

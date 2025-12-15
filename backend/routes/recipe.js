@@ -360,6 +360,7 @@ router.put("/update/:id", async (req, res) => {
 
     // 4. Réinsérer les steps
     if (Array.isArray(steps) && steps.length > 0) {
+      console.log("Inserting steps:", steps);
       const stepsPromises = steps.map(async (step, index) => {
 
         // Créer step
