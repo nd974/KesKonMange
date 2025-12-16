@@ -203,29 +203,29 @@ const [ingredients, setIngredients] = useState([
 const [localIngredients, setLocalIngredients] = useState([]);
 const [localRecipes, setlocalRecipes] = useState([]);
 
-const [loadingIngredient, setLoadingIngredient] = useState(null);
+// const [loadingIngredient, setLoadingIngredient] = useState(null);
 const [warningIndex, setWarningIndex] = useState(null);
 
 const [showIngredientInfo, setShowIngredientInfo] = useState(false);
 
-function useDebounce(value, delay) {
-  const [debounced, setDebounced] = useState(value);
+// function useDebounce(value, delay) {
+//   const [debounced, setDebounced] = useState(value);
 
-  useEffect(() => {
-    const timer = setTimeout(() => setDebounced(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
+//   useEffect(() => {
+//     const timer = setTimeout(() => setDebounced(value), delay);
+//     return () => clearTimeout(timer);
+//   }, [value, delay]);
 
-  return debounced;
-}
+//   return debounced;
+// }
 
-function debounce(func, wait) {
-  let timeout;
-  return (...args) => {
-    clearTimeout(timeout);
-    timeout = setTimeout(() => func(...args), wait);
-  };
-}
+// function debounce(func, wait) {
+//   let timeout;
+//   return (...args) => {
+//     clearTimeout(timeout);
+//     timeout = setTimeout(() => func(...args), wait);
+//   };
+// }
 
 // const debouncedName = useDebounce(ing.name, 500);
 // Dans ton composant RecipeAdd
@@ -325,51 +325,51 @@ const searchIngredient = (index, nameOverride) => {
   }
 
   // 🔹 Fetch API OpenFoodFacts en arrière-plan
-  (async () => {
-    setLoadingIngredient(index);
-    try {
-      console.log("Fetch Api OpenFact ...");
-      const resAPI = await fetch(
-        `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(
-          name
-        )}&search_simple=1&json=1&page_size=10`
-      );
-      console.log("Fetch fini .");
-      const dataAPI = await resAPI.json();
+  // (async () => {
+  //   setLoadingIngredient(index);
+  //   try {
+  //     console.log("Fetch Api OpenFact ...");
+  //     const resAPI = await fetch(
+  //       `https://world.openfoodfacts.org/cgi/search.pl?action=process&search_terms=${encodeURIComponent(
+  //         name
+  //       )}&search_simple=1&json=1&page_size=10`
+  //     );
+  //     console.log("Fetch fini .");
+  //     const dataAPI = await resAPI.json();
 
-      const apiSuggestions = (dataAPI.products || [])
-        .map(p => p.product_name)
-        .filter(Boolean)
-        .map(s => s.trim())
-        .filter(s => s.toLowerCase().includes(name))
-        .map(s => ({ name: s, isLocal: false }));
+  //     const apiSuggestions = (dataAPI.products || [])
+  //       .map(p => p.product_name)
+  //       .filter(Boolean)
+  //       .map(s => s.trim())
+  //       .filter(s => s.toLowerCase().includes(name))
+  //       .map(s => ({ name: s, isLocal: false }));
 
-      // 🔹 Fusion locales + API
-      console.log("Fusion suggestions...");
-      const suggestions = [...localSuggestions, ...apiSuggestions];
+  //     // 🔹 Fusion locales + API
+  //     console.log("Fusion suggestions...");
+  //     const suggestions = [...localSuggestions, ...apiSuggestions];
 
-      // 🔹 Mettre à jour le cache
-      suggestionsCache.current[name] = apiSuggestions;
+  //     // 🔹 Mettre à jour le cache
+  //     suggestionsCache.current[name] = apiSuggestions;
 
-      // 🔹 Mettre à jour le state
-      setIngredients(prev => {
-        const updated = [...prev];
-        updated[index].suggestions = suggestions;
-        updated[index].warning = suggestions.length === 0;
-        return updated;
-      });
-      console.log("Affichage suggestions.");
-    } catch (err) {
-      console.error("Erreur fetch API OpenFoodFacts :", err);
-      setIngredients(prev => {
-        const updated = [...prev];
-        updated[index].warning = true;
-        return updated;
-      });
-    } finally {
-      setLoadingIngredient(null);
-    }
-  })();
+  //     // 🔹 Mettre à jour le state
+  //     setIngredients(prev => {
+  //       const updated = [...prev];
+  //       updated[index].suggestions = suggestions;
+  //       updated[index].warning = suggestions.length === 0;
+  //       return updated;
+  //     });
+  //     console.log("Affichage suggestions.");
+  //   } catch (err) {
+  //     console.error("Erreur fetch API OpenFoodFacts :", err);
+  //     setIngredients(prev => {
+  //       const updated = [...prev];
+  //       updated[index].warning = true;
+  //       return updated;
+  //     });
+  //   } finally {
+  //     setLoadingIngredient(null);
+  //   }
+  // })();
 };
 
 
@@ -984,14 +984,14 @@ const StarRating = ({ value, onChange }) => {
         <button
           type="button"
           onClick={() => setWarningIndex(i)}
-          className="absolute right-10 top-1/2 -translate-y-1/2 text-orange-500 font-bold"
+          className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-500 font-bold"
         >
-          i
+          ⚠️
         </button>
       )}
 
       {/* 🔍 Loupe */}
-      <button
+      {/* <button
         type="button"
         className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600"
         onClick={() => {
@@ -1000,7 +1000,7 @@ const StarRating = ({ value, onChange }) => {
         }}
       >
         {loadingIngredient === i ? "⏳" : "🔍"}
-      </button>
+      </button> */}
 
 
       {/* Suggestions */}
@@ -1056,7 +1056,8 @@ const StarRating = ({ value, onChange }) => {
         ⚠️ Attention
       </h3>
       <p className="text-gray-700">
-        L’ingrédient que vous avez saisi n’est pas reconnu ou n’a pas de suggestions valides.
+        L’ingrédient est introuvable. <br /><br />
+        Veuillez vérifier l’orthographe et mettre la premiere lettre en majuscule afin de le stocker en BDD.
       </p>
       <div className="text-right mt-4">
         <button
