@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
-import { CLOUDINARY_RES, CLOUDINARY_API } from "../config/constants";
+import { CLOUDINARY_RES, CLOUDINARY_API, Unit_Item_List } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -191,12 +191,21 @@ const addStep = () =>
       .catch(err => console.error("Erreur chargement utensils:", err));
   }, []);
 
-  // -------------------- Ingrédients --------------------
 
 // -------------------- Ingrédients --------------------
 const [ingredients, setIngredients] = useState([
-  { name: "", quantity: "", unit: "", suggestions: [], selected: false, warning: false }
+  {
+    name: "",
+    quantity: "",
+    unit: "",
+    quantity_item: "",
+    unit_item: "",
+    suggestions: [],
+    selected: false,
+    warning: false
+  }
 ]);
+
 
 
 // Stocke localIngredients au chargement du composant pour éviter des fetch répétées
@@ -593,6 +602,8 @@ useEffect(() => {
           name: ing.name,
           quantity: ing.amount,
           unit: ing.unit,
+          quantity_item: ing.amount_item,
+          unit_item: ing.unit_item,
           suggestions: [],
           selected: true,
         }))
@@ -913,102 +924,134 @@ const StarRating = ({ value, onChange }) => {
   </button>
 </h2>
 
-{ingredients.map((ing, i) => (
-  <div key={i} className="flex items-center gap-2 mb-3">
+{ingredients.map((ing, i) => {
+  const showItemUnit = Unit_Item_List.includes(ing.unit);
 
-    {/* Quantité */}
-    <input
-      type="number"
-      min="0"
-      step="0.01"
-      value={ing.quantity}
-      onChange={(e) =>
-        setIngredients(prev => {
-          const updated = [...prev];
-          updated[i].quantity = e.target.value;
-          return updated;
-        })
-      }
-      className="border rounded p-2 w-20"
-      placeholder="Qté"
-    />
-
-    {/* Unité */}
-    <select
-      value={ing.unit}
-      onChange={(e) =>
-        setIngredients(prev => {
-          const updated = [...prev];
-          updated[i].unit = e.target.value;
-          return updated;
-        })
-      }
-      className="border rounded p-2 w-18 bg-white"
+  return (
+    <div
+      key={i}
+      className="border rounded-lg p-4 mb-4 bg-gray-50 shadow-sm"
     >
-      <option value="">-</option>
-      {units.map((u) => (
-        <option key={u.id} value={u.abbreviation}>
-          {u.abbreviation}
-        </option>
-      ))}
-    </select>
+      {/* 🔹 Ligne quantités */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-2">
 
-    {/* Nom + Loupe */}
-    <div className="relative flex-1">
+        {/* Qte */}
+        <input
+          type="number"
+          min="0"
+          step="0.01"
+          value={ing.quantity}
+          onChange={(e) => {
+            const updated = [...ingredients];
+            updated[i].quantity = e.target.value;
+            setIngredients(updated);
+          }}
+          className="border rounded p-2 w-full"
+          placeholder="Qté"
+        />
 
-<input
-  type="text"
-  value={ing.name}
-  onChange={(e) => {
-    const inputValue = e.target.value;
-    setIngredients(prev => {
-      const updated = [...prev];
-      updated[i].name = inputValue;
-      updated[i].selected = false;
-      // ⚠️ NE PAS toucher aux suggestions ici
-      return updated;
-    });
+        {/* Unit */}
+        <select
+          value={ing.unit}
+          onChange={(e) => {
+            const updated = [...ingredients];
+            updated[i].unit = e.target.value;
+            setIngredients(updated);
+          }}
+          className="border rounded p-2 w-full bg-white"
+        >
+          <option value="">-</option>
+          {units.map((u) => (
+            <option key={u.id} value={u.abbreviation}>
+              {u.abbreviation}
+            </option>
+          ))}
+        </select>
 
-    debounceSearchIngredient(i, inputValue); // lance la recherche
-  }}
-  className={`border rounded p-2 w-full pr-16 ${
-    ing.warning ? "border-orange-400 border-2" : "border-gray-300"
-  }`}
-  placeholder="Nom ingrédient"
-/>
+        {/* Qte_item */}
+        {showItemUnit ? (
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={ing.quantity_item || ""}
+            onChange={(e) => {
+              const updated = [...ingredients];
+              updated[i].quantity_item = e.target.value;
+              setIngredients(updated);
+            }}
+            className="border rounded p-2 w-full"
+            placeholder="Qté item"
+          />
+        ) : (
+          <div className="hidden md:block" />
+        )}
 
+        {/* Unit_item */}
+        {showItemUnit ? (
+          <select
+            value={ing.unit_item || ""}
+            onChange={(e) => {
+              const updated = [...ingredients];
+              updated[i].unit_item = e.target.value;
+              setIngredients(updated);
+            }}
+            className="border rounded p-2 w-full bg-white"
+          >
+            <option value="">-</option>
+          {units.map((u) => (
+            <option key={u.id} value={u.abbreviation}>
+              {u.abbreviation}
+            </option>
+          ))}
+          </select>
+        ) : (
+          <div className="hidden md:block" />
+        )}
+      </div>
 
+      {/* 🔸 Nom ingrédient + suppression */}
+      <div className="relative flex items-center gap-2">
+        <input
+          type="text"
+          value={ing.name}
+          onChange={(e) => {
+            const updated = [...ingredients];
+            updated[i].name = e.target.value;
+            updated[i].selected = false;
+            setIngredients(updated);
+            debounceSearchIngredient(i, e.target.value);
+          }}
+          className={`border rounded p-2 w-full ${
+            ing.warning ? "border-orange-400 border-2" : "border-gray-300"
+          }`}
+          placeholder="Nom ingrédient"
+        />
 
-      {/* 🟧 Icône warning */}
-      {ing.warning && (
+        {/* ⚠️ warning */}
+        {ing.warning && (
+          <button
+            type="button"
+            onClick={() => setWarningIndex(i)}
+            className="text-orange-500"
+          >
+            ⚠️
+          </button>
+        )}
+
+        {/* ❌ supprimer */}
         <button
           type="button"
-          onClick={() => setWarningIndex(i)}
-          className="absolute right-2 top-1/2 -translate-y-1/2 text-orange-500 font-bold"
+          onClick={() => removeIngredient(i)}
+          className="text-red-500"
         >
-          ⚠️
+          ❌
         </button>
-      )}
 
-      {/* 🔍 Loupe */}
-      {/* <button
-        type="button"
-        className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-600"
-        onClick={() => {
-          lastQueryRef.current = "";     // ← obligatoire
-          searchIngredient(i, ingredients[i].name); 
-        }}
-      >
-        {loadingIngredient === i ? "⏳" : "🔍"}
-      </button> */}
-
-
-      {/* Suggestions */}
-      {ing.suggestions.length > 0 && (
-        <ul className="absolute bg-white border rounded shadow w-full mt-1 z-50 max-h-40 overflow-auto">
-          {ing.suggestions
-            .sort((a, b) => (b.isLocal ? 1 : 0) - (a.isLocal ? 1 : 0)) // locales en haut
-            .map((s, j) => (
+        {/* Suggestions */}
+        {ing.suggestions.length > 0 && (
+          <ul className="absolute left-0 top-full bg-white border rounded shadow w-full mt-1 z-50 max-h-40 overflow-auto">
+            {ing.suggestions.map((s, j) => (              
               <li
                 key={j}
                 className={`p-2 hover:bg-gray-100 cursor-pointer ${
@@ -1016,23 +1059,17 @@ const StarRating = ({ value, onChange }) => {
                 }`}
                 onMouseDown={() => selectSuggestion(i, s.name)}
               >
-                {s.name}
+                <b>{s.name}</b>
               </li>
             ))}
-        </ul>
-      )}
+          </ul>
+        )}
+      </div>
     </div>
+  );
+})}
 
-    {/* Supprimer l’ingrédient */}
-    <button
-      className="text-red-500"
-      type="button"
-      onClick={() => removeIngredient(i)}
-    >
-      ❌
-    </button>
-  </div>
-))}
+
 
   <button
     type="button"
@@ -1082,13 +1119,10 @@ const StarRating = ({ value, onChange }) => {
       >
         <h3 className="text-lg font-semibold mb-2">ℹ️ Informations sur les suggestions</h3>
         <p className="text-gray-700 mb-2">
-          Les suggestions <span className="font-bold text-accentGreen">en vert [Ingredient]</span> proviennent de notre base de données.
+          Les suggestions<span className="font-bold text-accentGreen"> en vert </span>sont des <span className="font-bold text-accentGreen">ingrédients</span>.
         </p>
         <p className="text-gray-700 mb-2">
-          Les suggestions <span className="font-bold text-orange-600">en orange [Recette]</span> proviennent de notre base de données.
-        </p>
-        <p className="text-gray-700">
-          Les suggestions <span className="font-bold text-yellow-600">en beige</span> proviennent de l’API OpenFoodFacts.
+          Les suggestions<span className="font-bold text-orange-600"> en orange </span>sont des <span className="font-bold text-orange-600">recettes</span>.
         </p>
         <div className="text-right mt-4">
           <button

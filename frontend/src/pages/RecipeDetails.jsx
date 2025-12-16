@@ -439,11 +439,31 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
                 ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
                 : displayAmount;
 
-              const deWord = unit ? (/^[aeiouyh]/i.test(name) ? "d'" : "de ") : "";
+              const hasItemUnit = ing.amount_item && ing.unit_item;
+
+              // de / d'
+              const deWord = unit
+                ? /^[aeiouyh]/i.test(name)
+                  ? "d'"
+                  : "de "
+                : "";
 
               return (
                 <li key={ing.id}>
-                  {displayQty} {deWord}
+                  {/* 🔹 Quantité principale */}
+                  {displayQty}
+
+                  {/* 🔹 Quantité item (si existe) */}
+                  {hasItemUnit && (
+                    <>
+                      {" "}
+                      [{ing.amount_item}{ing.unit_item}]
+                    </>
+                  )}
+
+                  {/* 🔹 de / d' */}
+                  {" "}
+                  {deWord}
                   {ing.recipe_id ? (
                     <a
                       href={`/recipe/${ing.recipe_id}`}

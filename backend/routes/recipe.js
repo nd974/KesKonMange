@@ -10,6 +10,8 @@ router.post("/create", async (req, res) => {
 
       const missingFields = [];
 
+      console.log("INGGGGGGGGGGGGG:", ingredients);
+
       // Vérifier string vide ou absent
       if (!recipeName || recipeName.trim() === '') missingFields.push('Nom de la recette manquant');
 
@@ -64,45 +66,87 @@ router.post("/create", async (req, res) => {
     // Insertion des ingrédients
     if (Array.isArray(ingredients) && ingredients.length > 0) {
       const insertIngPromises = ingredients.map(async (ing) => {
-        const { name, quantity, unit, selected } = ing;
+        const {
+          name,
+          quantity,
+          unit,
+          quantity_item,
+          unit_item,
+          selected
+        } = ing;
 
-        // 1. Vérifier si l’ingrédient existe
-        let ingredientResult = await pool.query(`SELECT id FROM "Ingredient" WHERE name=$1`, [name]);
+        // 1️⃣ Ingrédient
+        let ingredientResult = await pool.query(
+          `SELECT id FROM "Ingredient" WHERE name = $1`,
+          [name]
+        );
+
         let ingredientId;
         if (ingredientResult.rows.length === 0) {
-          let recipeResult = await pool.query(`SELECT id FROM "Recipe" WHERE name=$1`, [name]);
-          let rec_id = null;
-          if (recipeResult.rows.length > 0) {
-            rec_id = recipeResult.rows[0].id;
-          }
-          let insertIng = await pool.query(
-            `INSERT INTO "Ingredient" (name, selected, recipe_id) VALUES ($1, $2, $3) RETURNING id`,
+          let recipeResult = await pool.query(
+            `SELECT id FROM "Recipe" WHERE name = $1`,
+            [name]
+          );
+
+          const rec_id =
+            recipeResult.rows.length > 0
+              ? recipeResult.rows[0].id
+              : null;
+
+          const insertIng = await pool.query(
+            `INSERT INTO "Ingredient" (name, selected, recipe_id)
+            VALUES ($1, $2, $3)
+            RETURNING id`,
             [name, selected, rec_id]
           );
+
           ingredientId = insertIng.rows[0].id;
         } else {
           ingredientId = ingredientResult.rows[0].id;
         }
 
-        // 2. Récupérer l’ID de l’unité
+        // 2️⃣ Unit principale
         const unitResult = await pool.query(
           `SELECT id FROM "Unit" WHERE abbreviation = $1`,
           [unit]
         );
+        const unitId =
+          unitResult.rows.length > 0 ? unitResult.rows[0].id : null;
 
-        const unitId = unitResult.rows.length > 0 ? unitResult.rows[0].id : null;
+        // 3️⃣ Unit item (optionnelle)
+        let unitItemId = null;
+        if (unit_item) {
+          const unitItemResult = await pool.query(
+            `SELECT id FROM "Unit" WHERE abbreviation = $1`,
+            [unit_item]
+          );
+          unitItemId =
+            unitItemResult.rows.length > 0
+              ? unitItemResult.rows[0].id
+              : null;
+        }
 
-        // 3. Insérer dans recipes_ingredients
+        // 4️⃣ Insert relation
         await pool.query(
           `
-          INSERT INTO recipes_ingredients (recipe_id, ingredient_id, amount, unit_id)
-          VALUES ($1, $2, $3, $4)
+          INSERT INTO recipes_ingredients
+          (recipe_id, ingredient_id, amount, unit_id, amount_item, unit_item_id)
+          VALUES ($1, $2, $3, $4, $5, $6)
           `,
-          [recipeId, ingredientId, quantity, unitId]
+          [
+            recipeId,
+            ingredientId,
+            quantity || null,
+            unitId,
+            quantity_item || null,
+            unitItemId
+          ]
         );
       });
+
       await Promise.all(insertIngPromises);
     }
+
 
     // Ajout dans recipes_utensils(recipe_id, utensil_id)
     if (Array.isArray(ustensiles) && ustensiles.length > 0) {
@@ -222,6 +266,24 @@ router.put("/update/:id", async (req, res) => {
     }
 
     // --------------------------------------
+    // 🚀 0. UPDATE base Ingredient si la recette est utlise en ingredient
+    // --------------------------------------
+    const ingredientLinkedRes = await pool.query(
+      `SELECT id FROM "Ingredient" WHERE recipe_id = $1 LIMIT 1`,
+      [recipeId]
+    );
+
+    // 🔁 Si trouvé → mettre à jour le nom de l'ingrédient
+    if (ingredientLinkedRes.rows.length > 0) {
+      await pool.query(
+        `UPDATE "Ingredient"
+        SET name = $1
+        WHERE recipe_id = $2`,
+        [recipeName, recipeId]
+      );
+    }
+
+    // --------------------------------------
     // 🚀 1. UPDATE base de la recette
     // --------------------------------------
     await pool.query(
@@ -252,50 +314,94 @@ router.put("/update/:id", async (req, res) => {
     // --------------------------------------
     // 🚀 3. RESET + INSERT INGRÉDIENTS
     // --------------------------------------
-    await pool.query(`DELETE FROM recipes_ingredients WHERE recipe_id=$1`, [recipeId]);
+    await pool.query(
+      `DELETE FROM recipes_ingredients WHERE recipe_id = $1`,
+      [recipeId]
+    );
 
     if (Array.isArray(ingredients) && ingredients.length > 0) {
       const ingPromises = ingredients.map(async (ing) => {
-        const { name, quantity, unit, selected } = ing;
+        const {
+          name,
+          quantity,
+          unit,
+          quantity_item,
+          unit_item,
+          selected
+        } = ing;
 
-        // Vérifier si l’ingrédient existe
-        let ingredientResult = await pool.query(`SELECT id FROM "Ingredient" WHERE name=$1`, [name]);
+        // 1️⃣ Ingrédient
+        let ingredientResult = await pool.query(
+          `SELECT id FROM "Ingredient" WHERE name = $1`,
+          [name]
+        );
+
         let ingredientId;
         if (ingredientResult.rows.length === 0) {
-          let recipeResult = await pool.query(`SELECT id FROM "Recipe" WHERE name=$1`, [name]);
-          let rec_id = null;
-          if (recipeResult.rows.length > 0) {
-            rec_id = recipeResult.rows[0].id ? Number(recipeResult.rows[0].id) : null;
-          }
-          let insertIng = await pool.query(
-            `INSERT INTO "Ingredient" (name, selected, recipe_id) VALUES ($1, $2, $3) RETURNING id`,
+          let recipeResult = await pool.query(
+            `SELECT id FROM "Recipe" WHERE name = $1`,
+            [name]
+          );
+
+          const rec_id =
+            recipeResult.rows.length > 0
+              ? Number(recipeResult.rows[0].id)
+              : null;
+
+          const insertIng = await pool.query(
+            `INSERT INTO "Ingredient" (name, selected, recipe_id)
+            VALUES ($1, $2, $3)
+            RETURNING id`,
             [name, selected, rec_id]
           );
+
           ingredientId = insertIng.rows[0].id;
         } else {
           ingredientId = ingredientResult.rows[0].id;
         }
 
-        // Récupérer l’unité
+        // 2️⃣ Unit principale
         const unitResult = await pool.query(
-          `SELECT id FROM "Unit" WHERE abbreviation=$1`,
+          `SELECT id FROM "Unit" WHERE abbreviation = $1`,
           [unit]
         );
+        const unitId =
+          unitResult.rows.length > 0 ? unitResult.rows[0].id : null;
 
-        const unitId = unitResult.rows.length > 0 ? unitResult.rows[0].id : null;
+        // 3️⃣ Unit item (optionnelle)
+        let unitItemId = null;
+        if (unit_item) {
+          const unitItemResult = await pool.query(
+            `SELECT id FROM "Unit" WHERE abbreviation = $1`,
+            [unit_item]
+          );
+          unitItemId =
+            unitItemResult.rows.length > 0
+              ? unitItemResult.rows[0].id
+              : null;
+        }
 
-        // Insérer la relation
+        // 4️⃣ Insert relation
         await pool.query(
           `
-          INSERT INTO recipes_ingredients (recipe_id, ingredient_id, amount, unit_id)
-          VALUES ($1, $2, $3, $4)
+          INSERT INTO recipes_ingredients
+          (recipe_id, ingredient_id, amount, unit_id, amount_item, unit_item_id)
+          VALUES ($1, $2, $3, $4, $5, $6)
           `,
-          [recipeId, ingredientId, quantity, unitId]
+          [
+            recipeId,
+            ingredientId,
+            quantity || null,
+            unitId,
+            quantity_item || null,
+            unitItemId
+          ]
         );
       });
 
       await Promise.all(ingPromises);
     }
+
 
     // --------------------------------------
     // 🚀 4. RESET + INSERT USTENSILES
@@ -489,17 +595,27 @@ router.get("/get-one/:id", async (req, res) => {
     recipe.utensils = utensilRes.rows || [];
 
     const ingredientRes = await pool.query(
-      `SELECT 
-          i.id, 
-          i.name, 
-          i.selected,
-          i.recipe_id,
-          ri.amount, 
-          u.abbreviation AS unit,
-          u.id AS unit_id
-      FROM "recipes_ingredients" ri
+      `
+      SELECT 
+        i.id, 
+        i.name, 
+        i.selected,
+        i.recipe_id,
+
+        ri.amount, 
+        u.abbreviation AS unit,
+        u.id AS unit_id,
+
+        ri.amount_item,
+        ui.abbreviation AS unit_item,
+        ui.id AS unit_item_id
+
+      FROM recipes_ingredients ri
       JOIN "Ingredient" i ON i.id = ri.ingredient_id
-      LEFT JOIN "Unit" u ON u.id = ri.unit_id
+
+      LEFT JOIN "Unit" u  ON u.id  = ri.unit_id
+      LEFT JOIN "Unit" ui ON ui.id = ri.unit_item_id
+
       WHERE ri.recipe_id = $1`,
       [id]
     );

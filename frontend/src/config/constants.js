@@ -38,3 +38,11 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
 
 export const CLOUDINARY_PRESET_RECIPE = "Recettes";
 export const CLOUDINARY_RECETTE_NOTFOUND = "v1764321553/ImageNotFound_ktjs1j.webp";
+
+
+
+
+
+
+
+export const Unit_Item_List = ["pièce", "tranche"];
