@@ -90,7 +90,7 @@ router.get("/getProducts/:homeId", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT p.id, p.ing_id, p.amount, p.unit_id, p.amount_item, p.unit_item_id, p.stock_id, p.expiry, p.home_id,
-              i.name AS ingredient_name, u.name AS unit_name, ui.name AS unit_item_name
+              i.name AS ingredient_name, u.name AS unit_name, ui.name AS unit_item_name, i.recipe_id
        FROM "Product" p
        JOIN "Ingredient" i ON p.ing_id = i.id
        LEFT JOIN "Unit" u ON p.unit_id = u.id

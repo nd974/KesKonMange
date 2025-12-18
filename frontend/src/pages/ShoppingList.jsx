@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
 import Header from "../components/Header";
 import BarCodeScanner from "../components/BarCodeScanner";
@@ -78,6 +78,18 @@ const Unit_hasBuy = [
     fetchIngredients();
   }, [homeId]);
   // console.log("Fetched products:", products)
+
+  // const [allRecipes, setAllRecipes] = useState([]);
+
+  // useEffect(() => {
+  //   const loadRecipes = async () => {
+  //     const res = await fetch(`${API_URL}/recipe/get-all`);
+  //     const data = await res.json();
+  //     setAllRecipes(data);
+  //   };
+  //   loadRecipes();
+  // }, []);
+  const recipeCacheRef = useRef({});
 
   // --------------------------------------
   // 🔍 SCAN + FETCH OPENFOODFACTS
@@ -215,91 +227,7 @@ const Unit_hasBuy = [
     setSelectedMenus([...selectedMenus, { ...menu, recipes: recipesWithIngredients }]);
   };
 
-const generateShoppingList = () => {
-  const allIngredients = [];
 
-  selectedMenus.forEach((menu) => {
-    menu.recipes?.forEach((recipe) => {
-      recipe.ingredients?.forEach((ing) => {
-        console.log("Processing ingredient:", ing);
-        allIngredients.push({
-          name: ing.name,
-          ing_id: ing.id,
-          amount: Number(ing.amount || 0),
-          unit: ing.unit,
-          unit_id: ing.unit_id,
-          amount_item: Number(ing.amount_item || 0),
-          unit_item: ing.unit_item,
-          unit_item_id: ing.unit_item_id
-        });
-        console.log("All ingredients so far:", allIngredients);
-      });
-    });
-  });
-
-  const merged = allIngredients.reduce((acc, ing) => {
-    const isBuyable = Unit_hasBuy.includes(ing.unit_id);
-
-    // 👉 clé différente selon le type d’unité
-    // pour les unités non achetables, on ne garde qu'une occurrence
-    const key = isBuyable
-      ? `${ing.ing_id}-${ing.unit_id}`
-      : `${ing.ing_id}`;
-
-    if (!acc[key]) {
-      acc[key] = { ...ing };
-    } else {
-      // 🔹 Pour les unités achetables, on cumule la quantité
-      if (isBuyable) {
-        acc[key].amount += ing.amount;
-      }
-      // 🔹 Pour les non-achetables, on ne fait rien → juste 1 occurrence
-    }
-
-    return acc;
-  }, {});
-
-  const shoppingList = [];
-
-  Object.values(merged).forEach((ingredient) => {
-    const productInStock = products.find(
-      (p) => p.ing_id === ingredient.ing_id
-    );
-
-    const isBuyable = Unit_hasBuy.includes(ingredient.unit_id);
-
-    // 🔸 Unité NON achetable → juste une ligne
-    if (!isBuyable) {
-      if (productInStock) return;
-
-      shoppingList.push({
-        name: ingredient.name,
-        ing_id: ingredient.ing_id,
-        amount: 1,
-        unit: null,
-        unit_id: null,
-      });
-
-      return;
-    }
-
-    // 🔸 Unité achetable → calcul quantité restante
-    let remainingAmount = ingredient.amount;
-
-    if (productInStock && productInStock.unit_id === ingredient.unit_id) {
-      remainingAmount -= Number(productInStock.amount || 0);
-    }
-
-    if (remainingAmount > 0) {
-      shoppingList.push({
-        ...ingredient,
-        amount: remainingAmount,
-      });
-    }
-  });
-
-  return shoppingList;
-};
 
 
 
@@ -389,7 +317,251 @@ const menuStatus = useMemo(() => {
   return status;
 }, [products, selectedMenus]);
 
+// const recipeById = useMemo(() => {
+//   const map = {};
+//   allRecipes.forEach(r => {
+//     map[r.id] = r;
+//   });
+//   return map;
+// }, [allRecipes]);
 
+// const expandIngredient = (ingredient, multiplier = 1, visited = new Set()) => {
+//   if (!ingredient.recipe_id) {
+//     return [{
+//       ...ingredient,
+//       amount: ingredient.amount * multiplier
+//     }];
+//   }
+
+//   const recipe = recipeById[ingredient.recipe_id];
+
+//   // ❗ recette absente → fallback (important)
+//   if (!recipe || !recipe.ingredients?.length) {
+//     return [{
+//       ...ingredient,
+//       amount: ingredient.amount * multiplier
+//     }];
+//   }
+
+//   if (visited.has(recipe.id)) {
+//     console.warn("Boucle recette:", recipe.id);
+//     return [];
+//   }
+
+//   visited.add(recipe.id);
+
+//   let result = [];
+
+//   recipe.ingredients.forEach(subIng => {
+//     result.push(
+//       ...expandIngredient(
+//         {
+//           name: subIng.name,
+//           ing_id: subIng.id,
+//           recipe_id: subIng.recipe_id,
+//           amount: Number(subIng.amount || 1),
+//           unit: subIng.unit,
+//           unit_id: subIng.unit_id,
+//           amount_item: Number(subIng.amount_item || 0),
+//           unit_item: subIng.unit_item,
+//           unit_item_id: subIng.unit_item_id
+//         },
+//         ingredient.amount * multiplier, // 🔥 multiplication correcte
+//         visited
+//       )
+//     );
+//   });
+
+//   return result;
+// };
+
+const expandIngredientAsync = async (
+  ingredient,
+  multiplier = 1,
+  visited = new Set()
+) => {
+  // 👉 ingrédient simple
+  if (!ingredient.recipe_id) {
+    return [{
+      ...ingredient,
+      amount: ingredient.amount * multiplier,
+    }];
+  }
+
+  // 🛑 protection boucle
+  if (visited.has(ingredient.recipe_id)) {
+    console.warn("Boucle de recette détectée:", ingredient.recipe_id);
+    return [];
+  }
+
+  visited.add(ingredient.recipe_id);
+
+  // 🔥 cache
+  if (!recipeCacheRef.current[ingredient.recipe_id]) {
+    const res = await fetch(
+      `${API_URL}/recipe/get-one/${ingredient.recipe_id}`
+    );
+    if (!res.ok) {
+      console.warn("Recette introuvable:", ingredient.recipe_id);
+      return [{
+        ...ingredient,
+        amount: ingredient.amount * multiplier,
+      }];
+    }
+    recipeCacheRef.current[ingredient.recipe_id] = await res.json();
+  }
+
+  const recipe = recipeCacheRef.current[ingredient.recipe_id];
+
+  if (!recipe.ingredients?.length) {
+    return [{
+      ...ingredient,
+      amount: ingredient.amount * multiplier,
+    }];
+  }
+
+  let expanded = [];
+
+  for (const subIng of recipe.ingredients) {
+    expanded.push(
+      ...(await expandIngredientAsync(
+        {
+          name: subIng.name,
+          ing_id: subIng.id,
+          recipe_id: subIng.recipe_id,
+          amount: Number(subIng.amount || 1),
+          unit: subIng.unit,
+          unit_id: subIng.unit_id,
+          amount_item: Number(subIng.amount_item || 0),
+          unit_item: subIng.unit_item,
+          unit_item_id: subIng.unit_item_id,
+        },
+        ingredient.amount * multiplier,
+        visited
+      ))
+    );
+  }
+
+  return expanded;
+};
+
+
+const mergeIngredients = (ingredients) => {
+  return Object.values(
+    ingredients.reduce((acc, ing) => {
+      const isBuyable = Unit_hasBuy.includes(ing.unit_id);
+
+      // clé de fusion
+      const key = isBuyable
+        ? `${ing.ing_id}-${ing.unit_id}`
+        : `${ing.ing_id}`;
+
+      if (!acc[key]) {
+        acc[key] = { ...ing };
+      } else {
+        if (isBuyable) {
+          acc[key].amount += ing.amount;
+        }
+        // non achetable → on garde 1 occurrence
+      }
+
+      return acc;
+    }, {})
+  );
+};
+
+const generateShoppingList = async () => {
+  const allIngredients = [];
+
+  for (const menu of selectedMenus) {
+    for (const recipe of menu.recipes || []) {
+      for (const ing of recipe.ingredients || []) {
+
+        const baseIngredient = {
+          name: ing.name,
+          ing_id: ing.id,
+          recipe_id: ing.recipe_id,
+          amount: Number(ing.amount || 1),
+          unit: ing.unit,
+          unit_id: ing.unit_id,
+          amount_item: Number(ing.amount_item || 0),
+          unit_item: ing.unit_item,
+          unit_item_id: ing.unit_item_id
+        };
+
+        const expanded = await expandIngredientAsync(baseIngredient);
+        allIngredients.push(...expanded);
+      }
+    }
+  }
+
+  // 🔥 fusion eau / farine / etc
+  const mergedIngredients = mergeIngredients(allIngredients);
+
+  // 🔽 soustraction stock (identique à avant)
+  const shoppingList = [];
+
+  mergedIngredients.forEach((ingredient) => {
+    const productInStock = products.find(
+      (p) => p.ing_id === ingredient.ing_id
+    );
+
+    const isBuyable = Unit_hasBuy.includes(ingredient.unit_id);
+
+    if (!isBuyable) {
+      if (!productInStock) {
+        shoppingList.push({
+          name: ingredient.name,
+          ing_id: ingredient.ing_id,
+          amount: 1,
+          unit: null,
+          unit_id: null,
+        });
+      }
+      return;
+    }
+
+    let remainingAmount = ingredient.amount;
+
+    if (productInStock && productInStock.unit_id === ingredient.unit_id) {
+      remainingAmount -= Number(productInStock.amount || 0);
+    }
+
+    if (remainingAmount > 0) {
+      shoppingList.push({
+        ...ingredient,
+        amount: Number(remainingAmount.toFixed(2)),
+      });
+    }
+  });
+
+  return shoppingList;
+};
+
+const [shoppingList, setShoppingList] = useState([]);
+const [shoppingLoading, setShoppingLoading] = useState(false);
+
+useEffect(() => {
+  const buildShoppingList = async () => {
+    setShoppingLoading(true);
+    try {
+      const list = await generateShoppingList();
+      setShoppingList(list);
+    } catch (e) {
+      console.error("Erreur génération shopping list:", e);
+      setShoppingList([]);
+    } finally {
+      setShoppingLoading(false);
+    }
+  };
+
+  // recalcul quand ça a du sens
+  if (selectedMenus.length > 0) {
+    buildShoppingList();
+  } else {
+    setShoppingList([]);
+  }
+}, [selectedMenus, products]);
 
   // --------------------------------------
   // 🔹 RENDER
@@ -487,82 +659,83 @@ const menuStatus = useMemo(() => {
             Ingrédient manquants pour les Menus :
           </h3>
 
-          {generateShoppingList().length === 0 ? (
-            <p className="text-sm text-gray-500">Aucun ingrédient à acheter</p>
-          ) : (
-            <ul className="list-disc list-inside space-y-1">
-              {generateShoppingList().map((item, idx) => {
-                const isBuyable = Unit_hasBuy.includes(item.unit_id);
+{shoppingLoading ? (
+  <p className="text-sm text-gray-500">Calcul en cours…</p>
+) : shoppingList.length === 0 ? (
+  <p className="text-sm text-gray-500">Aucun ingrédient à acheter</p>
+) : (
+  <ul className="list-disc list-inside space-y-1">
+    {shoppingList.map((item, idx) => {
+      const isBuyable = Unit_hasBuy.includes(item.unit_id);
 
-                const name = item.name.toLowerCase();
-                const amount = Number(item.amount || 1);
-                const displayAmount = Number.isInteger(amount)
-                  ? amount
-                  : amount.toFixed(2);
+      const name = item.name.toLowerCase();
+      const amount = Number(item.amount || 1);
+      const displayAmount = Number.isInteger(amount)
+        ? amount
+        : amount.toFixed(2);
 
-                // 🔹 CAS 1 : unité achetable → affichage EXISTANT (inchangé)
-                if (isBuyable) {
-                  const unit = item.unit;
-                  const displayQty = unit
-                    ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
-                    : displayAmount;
+      if (isBuyable) {
+        const unit = item.unit;
+        const displayQty = unit
+          ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
+          : displayAmount;
 
-                  // Ajouter la quantité item/unit_item entre crochets si dispo
-                  const itemQty = item.amount_item ? `[${item.amount_item}${item.unit_item || ""}]` : "";
+        const itemQty = item.amount_item
+          ? `[${item.amount_item}${item.unit_item || ""}]`
+          : "";
 
-                  const deWord = unit
-                    ? /^[aeiouyh]/i.test(name)
-                      ? "d'"
-                      : "de "
-                    : "";
+        const deWord = unit
+          ? /^[aeiouyh]/i.test(name)
+            ? "d'"
+            : "de "
+          : "";
 
-                  return (
-                    <li
-                      key={idx}
-                      className="cursor-pointer hover:text-blue-600 transition"
-                      onClick={() =>
-                        openManualPopinWithPreset(
-                          item.name,
-                          item.amount,  
-                          item.unit,       
-                          item.amount_item,
-                          item.unit_item,
-                          item.ing_id,
-                          item.unit_id,
-                          item.unit_item_id
-                        )
-                      }
-                    >
-                      {displayQty} {itemQty} {deWord}{name}
-                    </li>
-                  );
-                }
+        return (
+          <li
+            key={idx}
+            className="cursor-pointer hover:text-blue-600 transition"
+            onClick={() =>
+              openManualPopinWithPreset(
+                item.name,
+                item.amount,
+                item.unit,
+                item.amount_item,
+                item.unit_item,
+                item.ing_id,
+                item.unit_id,
+                item.unit_item_id
+              )
+            }
+          >
+            {displayQty} {itemQty} {deWord}{name}
+          </li>
+        );
+      }
 
-                // 🔹 CAS 2 : unité NON achetable → affichage [xX]
-                return (
-                  <li
-                    key={idx}
-                    className="cursor-pointer hover:text-blue-600 transition"
-                    onClick={() =>
-                      openManualPopinWithPreset(
-                        item.name,
-                        1,
-                        null,
-                        null,
-                        null,
-                        item.ing_id,
-                        null,
-                        null
-                      )
-                    }
-                  >
-                    {name} [x1]
-                  </li>
-                );
-              })}
-            </ul>
+      return (
+        <li
+          key={idx}
+          className="cursor-pointer hover:text-blue-600 transition"
+          onClick={() =>
+            openManualPopinWithPreset(
+              item.name,
+              1,
+              null,
+              null,
+              null,
+              item.ing_id,
+              null,
+              null
+            )
+          }
+        >
+          {name} [x1]
+        </li>
+      );
+    })}
+  </ul>
+)}
 
-          )}
         </div>
       </div>
 
