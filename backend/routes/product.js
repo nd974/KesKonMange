@@ -63,6 +63,25 @@ router.post("/create", async (req, res) => {
 
 
 // ---------------------------
+// DEL PRODUCTS
+// ---------------------------
+router.delete("/delete/:id", async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    await pool.query(
+      `DELETE FROM "Product" WHERE id = $1`,
+      [id]
+    );
+
+    return res.json({ ok: true, deletedId: id });
+  } catch (e) {
+    console.error("ERROR /product/delete:", e);
+    return res.status(500).json({ error: e.message });
+  }
+});
+
+// ---------------------------
 // GET PRODUCTS
 // ---------------------------
 router.get("/getProducts/:homeId", async (req, res) => {
@@ -89,7 +108,7 @@ router.get("/getProducts/:homeId", async (req, res) => {
 });
 
 // ---------------------------
-// DELETE PRODUCT
+// UPDATE PRODUCT
 // ---------------------------
 router.put("/update/:h_id/:p_id", async (req, res) => {
   try {

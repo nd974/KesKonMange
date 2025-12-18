@@ -35,3 +35,34 @@ process(data)
 # Afficher les INSERTs
 for stmt in insert_statements:
     print(stmt)
+
+
+
+# ajouter Tag Fetes->noel, paques, ...
+# 🎄 Fêtes de fin d’année
+# Noël 
+# Saint-Sylvestre
+# Nouvel An
+# Épiphanie
+
+# 🐣 Fêtes religieuses & traditionnelle
+# Pâques
+# Chandeleur
+# Mardi Gras
+# Halloween
+# Toussaint
+
+# 💘 Fêtes festives & familiales
+# Saint-Valentin
+# Fête des Mères
+# Fête des Pères
+# Anniversaire
+# Fêtes d’enfants
+
+# 🕌 Fêtes du monde
+# Ramadan : #ramadan #iftar #suhur
+# Aïd el-Fitr : #aid #aidElFitr #patisseriesOrientales
+# Aïd el-Kébir : #aidElKebir #recettesAgneau
+# Hanoucca : #hanoucca #latkes #sufganiyot
+# Nouvel An chinois : #nouvelAnChinois #recetteAsiatique
+# Diwali : #diwali #recettesIndiennes

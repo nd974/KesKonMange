@@ -197,8 +197,15 @@ export default function Recipes({homeId}) {
                 xl:grid-cols-5 
                 gap-4
               ">
-                {filteredRecipes.slice(0, 15).map(recipe => (
-                  <RecipeCard key={recipe.id} recipe={recipe} homeId={homeId} />
+              {[...filteredRecipes]
+                .sort(() => Math.random() - 0.5)
+                .slice(0, 15)
+                .map(recipe => (
+                  <RecipeCard
+                    key={recipe.id}
+                    recipe={recipe}
+                    homeId={homeId}
+                  />
                 ))}
               </div>
             )}

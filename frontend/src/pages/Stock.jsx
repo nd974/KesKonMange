@@ -428,6 +428,7 @@ function DisplayIngredient({ ing }) {
           unit_item_id: editProduct.unit_item_id,
           storage: storages.find(s => s.id === editProduct.stock_id) || null
         }}
+        onDelete={deleteProduct}
         onClose={() => setShowModal(false)}
         onSave={handleUpdateProduct}
       />

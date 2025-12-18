@@ -9,6 +9,7 @@ export default function ModalProducts({
   open,
   initialProduct,
   manualLock,   // <-- AJOUT ICI
+  onDelete,
   onClose,
   onSave
 }) {
@@ -103,26 +104,10 @@ useEffect(() => {
     onClose();
   };
 
-  async function deleteProduct(id) {
-    if (!confirm("Supprimer ce produit ?")) return;
-
-    try {
-      const res = await fetch(`${API_URL}/product/delete/${id}`, {
-        method: "DELETE"
-      });
-
-      const data = await res.json();
-
-      if (data.ok) {
-        setIngredients(prev => prev.filter(p => p.id !== id));
-      } else {
-        alert("Erreur : " + data.error);
-      }
-
-    } catch (e) {
-      alert("Erreur réseau");
-    }
-  }
+  const handleDelete = async () => {
+    await onDelete(form.id);
+    onClose();
+  };
 
   if (!open) return null;
 
@@ -233,7 +218,7 @@ useEffect(() => {
             <div className="flex gap-2 mt-2 py-2 justify-center">
               {form.id && (
                 <button
-                  onClick={() => deleteProduct(form.id)}
+                  onClick={handleDelete}
                   className="bg-red-600 text-white p-2 rounded w-1/2"
                 >
                   🗑️ Supprimer
