@@ -175,7 +175,36 @@ async function handleUpdateProduct(updated) {
     }
   }
 
-  const units = [...new Set(ingredients.map(i => i.unit_name))];
+  
+
+  // Composant pour afficher quantité + unité + quantité item
+function DisplayIngredient({ ing }) {
+  if (!ing) return null;
+
+  const unit = ing.unit_name || "";
+  const amount = Number(ing.amount || 0);
+  const displayAmount = Number.isInteger(amount) ? amount : amount.toFixed(2);
+
+  const displayQty = unit
+    ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
+    : displayAmount;
+
+  const hasItemUnit = ing.amount_item && ing.unit_item_name;
+  let displayAmountItem = null;
+  let amountItem = Number(ing.amount_item || 0);
+  if (hasItemUnit) {
+    displayAmountItem = Number.isInteger(amountItem) ? amountItem : amountItem.toFixed(2);
+  }
+
+  return (
+    <>
+      {displayQty}
+      {hasItemUnit && <> de {displayAmountItem} {ing.unit_item_name}</>}
+    </>
+  );
+}
+
+// const units = [...new Set(ingredients.map(i => i.unit_name))];
 
   return (
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
@@ -233,7 +262,7 @@ async function handleUpdateProduct(updated) {
           <div className="flex flex-col md:flex-row gap-4 mb-4">
 
             {/* Filtre stockage */}
-            <div className="flex flex-col w-full md:w-1/2">
+            <div className="flex flex-col w-full md:w-full">{/*md:w-1/2*/}
               <label>Stockage</label>
               <select
                 className="border px-3 py-2 rounded"
@@ -273,7 +302,7 @@ async function handleUpdateProduct(updated) {
 
             </div>
 
-            {/* Filtre unité */}
+            {/* Filtre unité
             <div className="flex flex-col w-full md:w-1/2">
               <label>Unité</label>
               <select
@@ -286,7 +315,7 @@ async function handleUpdateProduct(updated) {
                   <option key={i} value={u}>{u}</option>
                 ))}
               </select>
-            </div>
+            </div> */}
 
           </div>
 
@@ -303,7 +332,7 @@ async function handleUpdateProduct(updated) {
                   {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
                 </th>
                 <th className="border px-2 py-1">Quantité</th>
-                <th className="border px-2 py-1">Unité</th>
+                {/* <th className="border px-2 py-1">Unité</th> */}
                 <th
                   className="border px-2 py-1 cursor-pointer select-none"
                   onClick={() => handleSort("expiry")} // Utilisation de expiry pour trier par date d'expiration
@@ -343,12 +372,11 @@ async function handleUpdateProduct(updated) {
                     {ing.ingredient_name}
                   </td>
 
-                    <td className="border px-2 py-1">
-                      {parseFloat(ing.amount) % 1 === 0
-                        ? parseInt(ing.amount, 10)
-                        : parseFloat(ing.amount).toFixed(2)}
-                    </td>
-                    <td className="border px-2 py-1">{ing.unit_name}</td>
+                  <td className="border px-2 py-1">
+                    <DisplayIngredient ing={ing} />
+                  </td>
+
+                    {/* <td className="border px-2 py-1">{ing.unit_name}</td> */}
                     <td
                       className={`border px-2 py-1
                         ${status === "expired" ? "text-red-600 font-semibold" : ""}
@@ -390,11 +418,14 @@ async function handleUpdateProduct(updated) {
           brand: editProduct.brand || "",
           quantity: editProduct.amount,
           unit: editProduct.unit_name,
+          quantity_item: editProduct.amount_item || "",
+          unit_item: editProduct.unit_item_name || "",
           expiry: editProduct.expiry,
           homeId: homeId,
           stock_id: editProduct.stock_id,
           ing_id: editProduct.ing_id,
           unit_id: editProduct.unit_id,
+          unit_item_id: editProduct.unit_item_id,
           storage: storages.find(s => s.id === editProduct.stock_id) || null
         }}
         onClose={() => setShowModal(false)}

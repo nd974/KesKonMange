@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import dayjs from "dayjs";
 import Header from "../components/Header";
 import BarCodeScanner from "../components/BarCodeScanner";
@@ -19,6 +19,8 @@ export default function ShoppingList({ homeId }) {
     name: "",
     quantity: "",
     unit: "",
+    quantity_item: "",
+    unit_item: "",
     brand: "",
     ean: "",
   });
@@ -29,6 +31,53 @@ export default function ShoppingList({ homeId }) {
 
   const [showScannerPopin, setShowScannerPopin] = useState(false);
   const [showFinalPopin, setShowFinalPopin] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const [products, setProducts] = useState([]);
+const Unit_hasBuy = [
+  // 🧪 Volumes
+  1,  // millilitre (mL)
+  2,  // centilitre (cL)
+  3,  // décilitre (dL)
+  4,  // litre (L)
+  8,  // pint
+  9,  // quart
+  10, // gallon
+
+  // ⚖️ Poids
+  11, // milligramme
+  12, // gramme
+  13, // kilogramme
+  14, // ounce
+  15, // once (fr)
+  16, // pound
+  17, // livre fr
+
+  // 🧺 Unités physiques (achat)
+  20, // pièce
+  21, // tranche
+  22, // gousse
+  23, // tête
+  24, // feuille
+];
+
+  useEffect(() => {
+    const fetchIngredients = async () => {
+      setLoading(true);
+      try {
+        const response = await fetch(`${API_URL}/product/getProducts/${homeId}`);
+        const data = await response.json();
+        setProducts(data);
+      } catch (error) {
+        console.error("Erreur:", error);
+      } finally {
+        setLoading(false);
+      }
+      
+    };
+    fetchIngredients();
+  }, [homeId]);
+  // console.log("Fetched products:", products)
 
   // --------------------------------------
   // 🔍 SCAN + FETCH OPENFOODFACTS
@@ -90,17 +139,20 @@ export default function ShoppingList({ homeId }) {
   // --------------------------------------
   // 🆕 OUVRIR MODALE AVEC PRÉREMPLISSAGE (depuis ingrédients menus)
   // --------------------------------------
-  const openManualPopinWithPreset = (name, amount = "", unit = "", ing_id = null, unit_id = null) => {
+  const openManualPopinWithPreset = (name, amount = "", unit = "", amount_item = "", unit_item = "", ing_id = null, unit_id = null, unit_item_id = null) => {
     setManualLock(true);
 
     setManualValues({
       name,
       quantity: amount,
       unit,
+      quantity_item: amount_item,
+      unit_item: unit_item,
       brand: "",
       ean: "",
       ing_id,
       unit_id,
+      unit_item_id,
     });
 
     setWizardStep(1);
@@ -163,38 +215,94 @@ export default function ShoppingList({ homeId }) {
     setSelectedMenus([...selectedMenus, { ...menu, recipes: recipesWithIngredients }]);
   };
 
-  const generateShoppingList = () => {
-    const allIngredients = [];
+const generateShoppingList = () => {
+  const allIngredients = [];
 
-    selectedMenus.forEach((menu) => {
-      menu.recipes?.forEach((recipe) => {
-        recipe.ingredients?.forEach((ing) => {
-          allIngredients.push({
-            name: ing.name,
-            amount: ing.amount,
-            unit: ing.unit,
-            unit_id: ing.unit_id,
-            ing_id: ing.id,
-            recipeName: recipe.name,
-            menuDate: menu.date,
-          });
+  selectedMenus.forEach((menu) => {
+    menu.recipes?.forEach((recipe) => {
+      recipe.ingredients?.forEach((ing) => {
+        console.log("Processing ingredient:", ing);
+        allIngredients.push({
+          name: ing.name,
+          ing_id: ing.id,
+          amount: Number(ing.amount || 0),
+          unit: ing.unit,
+          unit_id: ing.unit_id,
+          amount_item: Number(ing.amount_item || 0),
+          unit_item: ing.unit_item,
+          unit_item_id: ing.unit_item_id
         });
+        console.log("All ingredients so far:", allIngredients);
       });
     });
+  });
 
-    const merged = allIngredients.reduce((acc, ing) => {
-      const key = `${ing.name.toLowerCase()}-${ing.unit || ""}`;
-      if (acc[key]) {
-        acc[key].amount =
-          Number(acc[key].amount || 0) + Number(ing.amount || 0);
-      } else {
-        acc[key] = { ...ing, amount: Number(ing.amount || 0) };
+  const merged = allIngredients.reduce((acc, ing) => {
+    const isBuyable = Unit_hasBuy.includes(ing.unit_id);
+
+    // 👉 clé différente selon le type d’unité
+    // pour les unités non achetables, on ne garde qu'une occurrence
+    const key = isBuyable
+      ? `${ing.ing_id}-${ing.unit_id}`
+      : `${ing.ing_id}`;
+
+    if (!acc[key]) {
+      acc[key] = { ...ing };
+    } else {
+      // 🔹 Pour les unités achetables, on cumule la quantité
+      if (isBuyable) {
+        acc[key].amount += ing.amount;
       }
-      return acc;
-    }, {});
+      // 🔹 Pour les non-achetables, on ne fait rien → juste 1 occurrence
+    }
 
-    return Object.values(merged);
-  };
+    return acc;
+  }, {});
+
+  const shoppingList = [];
+
+  Object.values(merged).forEach((ingredient) => {
+    const productInStock = products.find(
+      (p) => p.ing_id === ingredient.ing_id
+    );
+
+    const isBuyable = Unit_hasBuy.includes(ingredient.unit_id);
+
+    // 🔸 Unité NON achetable → juste une ligne
+    if (!isBuyable) {
+      if (productInStock) return;
+
+      shoppingList.push({
+        name: ingredient.name,
+        ing_id: ingredient.ing_id,
+        amount: 1,
+        unit: null,
+        unit_id: null,
+      });
+
+      return;
+    }
+
+    // 🔸 Unité achetable → calcul quantité restante
+    let remainingAmount = ingredient.amount;
+
+    if (productInStock && productInStock.unit_id === ingredient.unit_id) {
+      remainingAmount -= Number(productInStock.amount || 0);
+    }
+
+    if (remainingAmount > 0) {
+      shoppingList.push({
+        ...ingredient,
+        amount: remainingAmount,
+      });
+    }
+  });
+
+  return shoppingList;
+};
+
+
+
 
   const groupedMenus = menus.reduce((acc, m) => {
     acc[m.date] = acc[m.date] || [];
@@ -215,11 +323,15 @@ export default function ShoppingList({ homeId }) {
         ing_id: finalProduct.ing_id ?? null,
         amount: finalProduct.quantity,
         unit_id: finalProduct.unit_id ?? null,
+        amount_item: finalProduct.quantity_item || null,
+        unit_item_id: finalProduct.unit_item_id || null,
         stock_id: finalProduct.stock_id,
         expiry: finalProduct.expiry,
         home_storage_id: finalProduct.storage?.id || null,
         homeId: homeId,
       };
+
+      console.log("Inserting product with body:", body);
 
       const res = await fetch(`${API_URL}/product/create`, {
         method: "POST",
@@ -239,6 +351,45 @@ export default function ShoppingList({ homeId }) {
       alert("Erreur lors de l’ajout du produit");
     }
   };
+
+const menuStatus = useMemo(() => {
+  const status = {};
+
+  // on parcourt tous les menus (sélectionnés)
+  selectedMenus.forEach(menu => {
+    let missing = 0;
+    let inStock = 0;
+
+    menu.recipes?.forEach(recipe => {
+      recipe.ingredients?.forEach(ing => {
+        const neededAmount = Number(ing.amount || 1);
+
+        // chercher dans les produits existants
+        const productInStock =
+          products.find(p => String(p.ing_id) === String(ing.id)) ||
+          products.find(p => String(p.ingredient_id) === String(ing.id));
+
+        const stockAmount = Number(productInStock?.amount || 0);
+
+        // si unité achetable → comparer quantité
+        if (Unit_hasBuy.includes(ing.unit_id)) {
+          if (stockAmount >= neededAmount) inStock += 1;
+          else missing += 1;
+        } else {
+          // unité non-achetable → juste 1 occurrence
+          if (!productInStock) missing += 1;
+          else inStock += 1;
+        }
+      });
+    });
+
+    status[menu.id] = { missing, inStock };
+  });
+
+  return status;
+}, [products, selectedMenus]);
+
+
 
   // --------------------------------------
   // 🔹 RENDER
@@ -261,7 +412,7 @@ export default function ShoppingList({ homeId }) {
           <button
             onClick={() => {
               setManualLock(false);
-              setManualValues({ name: "", quantity: "", unit: "", brand: "", ean: "" });
+              setManualValues({ name: "", quantity: "", unit: "", quantity_item: "", unit_item: "", brand: "", ean: "" });
               setWizardStep(1);
             }}
             className="flex-1 bg-accentGreen text-white p-3 rounded-lg flex items-center justify-center gap-2"
@@ -305,9 +456,24 @@ export default function ShoppingList({ homeId }) {
                         {menu.tagName || "—"}
                       </div>
                     </div>
-                    <div className="text-right">
-                      {menu.recipes?.length || 0} 🍽️
-                    </div>
+<div className="text-right flex flex-col items-end text-sm">
+  {menuStatus[menu.id] && (
+    <>
+      {menuStatus[menu.id].inStock > 0 && (
+        <span className="text-green-500 font-bold">{menuStatus[menu.id].inStock}✅</span>
+      )}
+      {menuStatus[menu.id].missing > 0 && (
+        <span className="text-red-500 font-bold ml-1">{menuStatus[menu.id].missing}❌</span>
+      )}
+    </>
+  )}
+</div>
+
+
+
+
+
+
                   </div>
                 );
               })
@@ -326,23 +492,53 @@ export default function ShoppingList({ homeId }) {
           ) : (
             <ul className="list-disc list-inside space-y-1">
               {generateShoppingList().map((item, idx) => {
-                const unit = item.unit;
+                const isBuyable = Unit_hasBuy.includes(item.unit_id);
+
                 const name = item.name.toLowerCase();
                 const amount = Number(item.amount || 1);
                 const displayAmount = Number.isInteger(amount)
                   ? amount
                   : amount.toFixed(2);
 
-                const displayQty = unit
-                  ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
-                  : displayAmount;
+                // 🔹 CAS 1 : unité achetable → affichage EXISTANT (inchangé)
+                if (isBuyable) {
+                  const unit = item.unit;
+                  const displayQty = unit
+                    ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
+                    : displayAmount;
 
-                const deWord = unit
-                  ? /^[aeiouyh]/i.test(name)
-                    ? "d'"
-                    : "de "
-                  : "";
+                  // Ajouter la quantité item/unit_item entre crochets si dispo
+                  const itemQty = item.amount_item ? `[${item.amount_item}${item.unit_item || ""}]` : "";
 
+                  const deWord = unit
+                    ? /^[aeiouyh]/i.test(name)
+                      ? "d'"
+                      : "de "
+                    : "";
+
+                  return (
+                    <li
+                      key={idx}
+                      className="cursor-pointer hover:text-blue-600 transition"
+                      onClick={() =>
+                        openManualPopinWithPreset(
+                          item.name,
+                          item.amount,  
+                          item.unit,       
+                          item.amount_item,
+                          item.unit_item,
+                          item.ing_id,
+                          item.unit_id,
+                          item.unit_item_id
+                        )
+                      }
+                    >
+                      {displayQty} {itemQty} {deWord}{name}
+                    </li>
+                  );
+                }
+
+                // 🔹 CAS 2 : unité NON achetable → affichage [xX]
                 return (
                   <li
                     key={idx}
@@ -350,19 +546,22 @@ export default function ShoppingList({ homeId }) {
                     onClick={() =>
                       openManualPopinWithPreset(
                         item.name,
-                        item.amount,
-                        item.unit,
+                        1,
+                        null,
+                        null,
+                        null,
                         item.ing_id,
-                        item.unit_id
+                        null,
+                        null
                       )
                     }
                   >
-                    {displayQty} {deWord}
-                    {name}
+                    {name} [x1]
                   </li>
                 );
               })}
             </ul>
+
           )}
         </div>
       </div>
@@ -398,6 +597,7 @@ export default function ShoppingList({ homeId }) {
           ...manualValues,
           ing_id: manualValues.ing_id,
           unit_id: manualValues.unit_id,
+          unit_item_id: manualValues.unit_item_id,
           expiry: expirationDate,
           storage: selectedStorage
         }}

@@ -22,11 +22,14 @@ export default function ModalProducts({
     brand: "",
     quantity: "",
     unit: "",
+    quantity_item: "",
+    unit_item: "",
     ean: "",
     expiry: "",
     stock_id: null,
     ing_id: null,
     unit_id: null,
+    unit_item_id: null,
   });
 
   const [selectedStorage, setSelectedStorage] = useState(null);
@@ -46,16 +49,20 @@ useEffect(() => {
       formattedExpiry = d.toISOString().split("T")[0];
     }
 
+    console.log("initialProduct.unit_item_id----------------------------", initialProduct.unit_item_id);
     setForm({
       id: initialProduct.id || "",
       name: initialProduct.name || "",
+      ing_id: initialProduct.ing_id || null,
       brand: initialProduct.brand || "",
       quantity: initialProduct.quantity || "",
       unit: initialProduct.unit || "",
+      unit_id: initialProduct.unit_id || null,
+      quantity_item: initialProduct.quantity_item || "",
+      unit_item: initialProduct.unit_item || "",
+      unit_item_id: initialProduct.unit_item_id || null,
       expiry: formattedExpiry,
       stock_id: initialProduct.stock_id || null,
-      ing_id: initialProduct.ing_id || null,
-      unit_id: initialProduct.unit_id || null,
     });
 
     console.log("Initial product storage:", initialProduct);
@@ -66,13 +73,25 @@ useEffect(() => {
   setStep(1);
 }, [open, initialProduct]);
 
-console.log("ModalProducts [form]", form);
+// console.log("ModalProducts [form]", form);
 
 
 
   // ----------------------------
   // HANDLERS
   // ----------------------------
+  const isStep1Valid = () => {
+    if (form.unit_item) {
+      if (!form.quantity_item || Number(form.quantity_item) <= 0) {
+        return false;
+      }
+    }
+    if (!form.quantity || Number(form.quantity) <= 0) {
+      return false;
+    }
+    return true;
+  };
+
   const handleNext = () => setStep(step + 1);
   const handlePrev = () => setStep(step - 1);
 
@@ -182,6 +201,34 @@ console.log("ModalProducts [form]", form);
             />
             </div>
 
+            {form.unit_item && (
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-1">Quantité Item</label>
+                <input
+                    type="number"
+                    value={form.quantity_item}
+                    min="0.01"
+                    step="0.01"
+                    onChange={(e) => setForm({ ...form, quantity_item: e.target.value })}
+                    className="w-full p-2 border rounded"
+                />
+              </div>
+            )}
+            {form.unit_item && (
+              <div className="mb-4">
+              <label className="block text-sm font-medium mb-1">Unité Item</label>
+              <input
+                  type="text"
+                  value={form.unit_item}
+                  disabled={manualLock}
+                  onChange={(e) => setForm({ ...form, unit_item: e.target.value })}
+                  className={`w-full p-2 border rounded ${
+                  manualLock ? "bg-gray-100 text-gray-500" : ""
+                  }`}
+              />
+              </div>
+            )}
+
             {/* ---- BOUTON SUPPRIMER (uniquement en édition) ---- */}
             <div className="flex gap-2 mt-2 py-2 justify-center">
               {form.id && (
@@ -194,11 +241,20 @@ console.log("ModalProducts [form]", form);
               )}
 
               <button
-                className={`bg-green-600 text-white p-2 rounded ${form.id ? 'w-1/2' : 'w-full'}`}
-                onClick={() => setStep(2)}
+                disabled={!isStep1Valid()}
+                className={`p-2 rounded text-white ${
+                  isStep1Valid()
+                    ? "bg-green-600"
+                    : "bg-gray-400 cursor-not-allowed"
+                } ${form.id ? "w-1/2" : "w-full"}`}
+                onClick={() => {
+                  if (!isStep1Valid()) return;
+                  setStep(2);
+                }}
               >
                 Continuer →
               </button>
+
             </div>
 
 

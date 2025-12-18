@@ -20,9 +20,16 @@ jobs:
           PGDATABASE: ${{ secrets.PGDATABASE }}
           PGPORT: ${{ secrets.PGPORT }}
         run: |
-          echo "DELETE FROM \"Ingredient\"
-                WHERE NOT EXISTS (
-                    SELECT 1
-                    FROM recipes_ingredients ri
-                    WHERE ri.ingredient_id = \"Ingredient\".id
-                );" | psql
+          echo "
+          DELETE FROM \"Ingredient\"
+          WHERE NOT EXISTS (
+              SELECT 1
+              FROM recipes_ingredients ri
+              WHERE ri.ingredient_id = \"Ingredient\".id
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM \"Product\" p
+              WHERE p.ing_id = \"Ingredient\".id
+          );
+          " | psql
