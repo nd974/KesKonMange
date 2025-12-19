@@ -380,6 +380,7 @@ export default function Dashboard({ homeId, profileId}) {
                     <RecipeDetail
                       key={selectedRecipe?.id}
                       homeId={homeId}
+                      profileId={profileId}
                       id={selectedRecipe?.id}
                     />
                   </div>

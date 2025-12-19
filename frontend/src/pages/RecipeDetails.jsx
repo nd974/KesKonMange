@@ -91,6 +91,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
 
   // === Fetch commentaires publics (exclut celui du profil actuel) ===
   useEffect(() => {
+    console.log("recipeId:", id, "profileId:", profileId);
     if (!profileId) return;
     async function loadComments() {
       try {
@@ -99,6 +100,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ recipeId: id, profileId }),
         });
+        
         const data = await res.json();
         if (data.ok) {
           const filtered = data.comments

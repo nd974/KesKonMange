@@ -1,6 +1,5 @@
 import { useState, useEffect } from "react";
 import HomeZone from "./HomeZone";
-import {Unit_Item_List} from "../config/constants.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -60,7 +59,7 @@ useEffect(() => {
       formattedExpiry = d.toISOString().split("T")[0];
     }
 
-    console.log("initialProduct.unit_item_id----------------------------", initialProduct.unit_item_id);
+    console.log("initialProduct.unit_item_id----------------------------", initialProduct.unit_item);
     setForm({
       id: initialProduct.id || "",
       name: initialProduct.name || "",
@@ -76,6 +75,8 @@ useEffect(() => {
       stock_id: initialProduct.stock_id || null,
     });
 
+    console.log("form",form);
+
     console.log("Initial product storage:", initialProduct);
 
     setSelectedStorage(initialProduct.storage || null);
@@ -83,8 +84,6 @@ useEffect(() => {
 
   setStep(1);
 }, [open, initialProduct]);
-
-console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
 
 // console.log("ModalProducts [form]", form);
 
@@ -99,7 +98,7 @@ console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
         return false;
       }
     }
-    if (form.name == "" || !form.quantity || Number(form.quantity) <= 0) {
+    if (!form.quantity || Number(form.quantity) <= 0) {
       return false;
     }
     return true;
@@ -147,9 +146,7 @@ console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
 
             {/* Nom */}
             <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Nom du produit<span className="text-red-500"><b>*</b></span>
-            </label>
+            <label className="block text-sm font-medium mb-1">Nom du produit</label>
             <input
                 type="text"
                 value={form.name}
@@ -180,9 +177,7 @@ console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
 
             {/* Quantité (toujours editable) */}
             <div className="mb-4">
-            <label className="block text-sm font-medium mb-1">
-              Quantité<span className="text-red-500"><b>*</b></span>
-            </label>
+            <label className="block text-sm font-medium mb-1">Quantité</label>
             <input
                 type="number"
                 value={form.quantity}
@@ -194,22 +189,33 @@ console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
             {/* Unité */}
             <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Unité</label>
-             <select
-                value={form.unit_id || ""}
-                onChange={(e) => setForm({ ...form, unit_id: e.target.value, unit: e.target.selectedOptions[0].text })}
+              {/* <input
+                  type="text"
+                  value={form.unit}
+                  disabled={manualLock}
+                  onChange={(e) => setForm({ ...form, unit: e.target.value })}
+                  className={`w-full p-2 border rounded ${
+                  manualLock ? "bg-gray-100 text-gray-500" : ""
+                  }`}
+              /> */}
+              <select
+                value={form.unit}
+                onChange={(e) => setForm({ ...form, unit: e.target.value })}
                 disabled={manualLock}
-                className={`w-full p-2 border rounded ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
+                className={`w-full p-2 border rounded ${
+                  manualLock ? "bg-gray-100 text-gray-500" : ""
+                  }`}
               >
                 <option value="">-</option>
-                {units.map((unit) => (
-                  <option key={unit.id} value={unit.id}>
-                    {unit.name}
+                {units.map((u) => (
+                  <option key={u.id} value={form.unit}>
+                    {u.name}
                   </option>
                 ))}
               </select>
             </div>
 
-            {Unit_Item_List.includes(form.unit) && (
+            {form.unit_item && (
               <div className="mb-4">
                 <label className="block text-sm font-medium mb-1">Quantité Item</label>
                 <input
@@ -222,22 +228,33 @@ console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
                 />
               </div>
             )}
-            {Unit_Item_List.includes(form.unit) && (
+            {form.unit_item && (
               <div className="mb-4">
               <label className="block text-sm font-medium mb-1">Unité Item</label>
-              <select
-                  value={form.unit_item_id || ""}
-                  onChange={(e) => setForm({ ...form, unit_item_id: e.target.value, unit_item: e.target.selectedOptions[0].text })}
+              {/* <input
+                  type="text"
+                  value={form.unit_item}
                   disabled={manualLock}
-                  className={`w-full p-2 border rounded ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
-                >
-                  <option value="">-</option>
-                  {units.map((unit) => (
-                    <option key={unit.id} value={unit.id}>
-                      {unit.name}
-                    </option>
-                  ))}
-                </select>
+                  onChange={(e) => setForm({ ...form, unit_item: e.target.value })}
+                  className={`w-full p-2 border rounded ${
+                  manualLock ? "bg-gray-100 text-gray-500" : ""
+                  }`}
+              /> */}
+              <select
+                value={form.unit_item}
+                onChange={(e) => setForm({ ...form, unit_item: e.target.value })}
+                disabled={manualLock}
+                className={`w-full p-2 border rounded ${
+                  manualLock ? "bg-gray-100 text-gray-500" : ""
+                  }`}
+              >
+                <option value="">-</option>
+                {units.map((ui) => (
+                  <option key={ui.id} value={ui.name}>
+                    {ui.name}
+                  </option>
+                ))}
+              </select>
               </div>
             )}
 
@@ -314,15 +331,15 @@ console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
     </h2>
 
     <HomeZone
-      key={homeId}
       homeId={homeId}
+      inPopin={true}
       onSelectZone={() => {}}
       onSelectStorage={(storage) => {
         setSelectedStorage(storage);
         setForm({ ...form, stock_id: storage.id });
         setStep(4); // ➜ passer à l'étape finale
       }}
-      inPopinStorageSelect={true}
+      inPopinStorageSelect={form.stock_id}
     />
 
     <button

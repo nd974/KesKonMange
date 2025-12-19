@@ -451,9 +451,9 @@ const mergeIngredients = (ingredients) => {
     ingredients.reduce((acc, ing) => {
       const isBuyable = Unit_hasBuy.includes(ing.unit_id);
 
-      // clé de fusion
+      // 🔑 clé de fusion améliorée
       const key = isBuyable
-        ? `${ing.ing_id}-${ing.unit_id}`
+        ? `${ing.ing_id}-${ing.unit_id}-${ing.amount_item || 0}-${ing.unit_item_id || 0}`
         : `${ing.ing_id}`;
 
       if (!acc[key]) {
@@ -462,13 +462,14 @@ const mergeIngredients = (ingredients) => {
         if (isBuyable) {
           acc[key].amount += ing.amount;
         }
-        // non achetable → on garde 1 occurrence
+        // non achetable → une seule occurrence
       }
 
       return acc;
     }, {})
   );
 };
+
 
 const generateShoppingList = async () => {
   const allIngredients = [];
@@ -772,7 +773,6 @@ useEffect(() => {
           unit_id: manualValues.unit_id,
           unit_item_id: manualValues.unit_item_id,
           expiry: expirationDate,
-          storage: selectedStorage
         }}
         manualLock={manualLock}   // ← NOUVEAU ICI
         onClose={() => setWizardStep(null)}
