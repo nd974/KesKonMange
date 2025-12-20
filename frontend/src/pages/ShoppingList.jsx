@@ -36,6 +36,7 @@ export default function ShoppingList({ homeId }) {
   const [products, setProducts] = useState([]);
 const Unit_hasBuy = [
   // 🧪 Volumes
+  null,
   1,  // millilitre (mL)
   2,  // centilitre (cL)
   3,  // décilitre (dL)
@@ -389,6 +390,7 @@ const mergeIngredients = (ingredients) => {
     ingredients.reduce((acc, ing) => {
       const isBuyable = Unit_hasBuy.includes(ing.unit_id);
 
+
       // Clé de fusion : on combine l'ID de l'ingrédient, l'unité et les autres critères
       const key = isBuyable
         ? `${ing.ing_id}-${ing.unit_id}-${ing.amount_item || 0}-${ing.unit_item_id || 0}`
@@ -454,7 +456,7 @@ const generateShoppingList = async () => {
           ing_id: ingredient.ing_id,
           amount: 1,
           unit: null,
-          unit_id: null,
+          unit_id: 0,
         });
       }
       return;
@@ -608,6 +610,9 @@ useEffect(() => {
   <ul className="list-disc list-inside space-y-1">
     {shoppingList.map((item, idx) => {
       const isBuyable = Unit_hasBuy.includes(item.unit_id);
+      if (item.name=="Origan"){
+        console.log("origan:", item.unit_id, Unit_hasBuy.includes(item.unit_id));
+      }
 
       const name = item.name.toLowerCase();
       const amount = Number(item.amount || 1);
