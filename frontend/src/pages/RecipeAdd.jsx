@@ -297,7 +297,7 @@ const searchIngredient = (index, nameOverride) => {
   console.log("Suggestions locales ingrédient :", localSuggestionsIng);
   console.log("Suggestions locales recette :", localSuggestionsRec);
 
-  const merged = [...localSuggestionsIng, ...localSuggestionsRec];
+  const merged = [...localSuggestionsRec ,...localSuggestionsIng];
 
   // Set pour tracker les noms déjà vus
   const seenNames = new Set();

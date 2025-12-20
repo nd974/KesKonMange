@@ -77,18 +77,7 @@ const Unit_hasBuy = [
     };
     fetchIngredients();
   }, [homeId]);
-  // console.log("Fetched products:", products)
 
-  // const [allRecipes, setAllRecipes] = useState([]);
-
-  // useEffect(() => {
-  //   const loadRecipes = async () => {
-  //     const res = await fetch(`${API_URL}/recipe/get-all`);
-  //     const data = await res.json();
-  //     setAllRecipes(data);
-  //   };
-  //   loadRecipes();
-  // }, []);
   const recipeCacheRef = useRef({});
 
   // --------------------------------------
@@ -225,6 +214,7 @@ const Unit_hasBuy = [
     );
 
     setSelectedMenus([...selectedMenus, { ...menu, recipes: recipesWithIngredients }]);
+    console.log("selectedMenus : ", selectedMenus)
   };
 
 
@@ -317,70 +307,12 @@ const menuStatus = useMemo(() => {
   return status;
 }, [products, selectedMenus]);
 
-// const recipeById = useMemo(() => {
-//   const map = {};
-//   allRecipes.forEach(r => {
-//     map[r.id] = r;
-//   });
-//   return map;
-// }, [allRecipes]);
-
-// const expandIngredient = (ingredient, multiplier = 1, visited = new Set()) => {
-//   if (!ingredient.recipe_id) {
-//     return [{
-//       ...ingredient,
-//       amount: ingredient.amount * multiplier
-//     }];
-//   }
-
-//   const recipe = recipeById[ingredient.recipe_id];
-
-//   // ❗ recette absente → fallback (important)
-//   if (!recipe || !recipe.ingredients?.length) {
-//     return [{
-//       ...ingredient,
-//       amount: ingredient.amount * multiplier
-//     }];
-//   }
-
-//   if (visited.has(recipe.id)) {
-//     console.warn("Boucle recette:", recipe.id);
-//     return [];
-//   }
-
-//   visited.add(recipe.id);
-
-//   let result = [];
-
-//   recipe.ingredients.forEach(subIng => {
-//     result.push(
-//       ...expandIngredient(
-//         {
-//           name: subIng.name,
-//           ing_id: subIng.id,
-//           recipe_id: subIng.recipe_id,
-//           amount: Number(subIng.amount || 1),
-//           unit: subIng.unit,
-//           unit_id: subIng.unit_id,
-//           amount_item: Number(subIng.amount_item || 0),
-//           unit_item: subIng.unit_item,
-//           unit_item_id: subIng.unit_item_id
-//         },
-//         ingredient.amount * multiplier, // 🔥 multiplication correcte
-//         visited
-//       )
-//     );
-//   });
-
-//   return result;
-// };
-
 const expandIngredientAsync = async (
   ingredient,
   multiplier = 1,
   visited = new Set()
 ) => {
-  // 👉 ingrédient simple
+  // ingrédient simple
   if (!ingredient.recipe_id) {
     return [{
       ...ingredient,
@@ -388,21 +320,18 @@ const expandIngredientAsync = async (
     }];
   }
 
-  // 🛑 protection boucle
+  // protection boucle
   if (visited.has(ingredient.recipe_id)) {
-    console.warn("Boucle de recette détectée:", ingredient.recipe_id);
+    console.warn("Boucle recette:", ingredient.recipe_id);
     return [];
   }
 
   visited.add(ingredient.recipe_id);
 
-  // 🔥 cache
+  // cache recette
   if (!recipeCacheRef.current[ingredient.recipe_id]) {
-    const res = await fetch(
-      `${API_URL}/recipe/get-one/${ingredient.recipe_id}`
-    );
+    const res = await fetch(`${API_URL}/recipe/get-one/${ingredient.recipe_id}`);
     if (!res.ok) {
-      console.warn("Recette introuvable:", ingredient.recipe_id);
       return [{
         ...ingredient,
         amount: ingredient.amount * multiplier,
@@ -412,17 +341,21 @@ const expandIngredientAsync = async (
   }
 
   const recipe = recipeCacheRef.current[ingredient.recipe_id];
-
-  if (!recipe.ingredients?.length) {
-    return [{
-      ...ingredient,
-      amount: ingredient.amount * multiplier,
-    }];
-  }
+  const portions = recipe.portion || 1;
 
   let expanded = [];
 
-  for (const subIng of recipe.ingredients) {
+  for (const subIng of recipe.ingredients || []) {
+
+    // 🔥 LA LIGNE CLÉ 🔥
+    const parentPortions = ingredient.parent_portions ?? null;
+    const currentPortions = recipe.portion || 1;
+
+    const portionFactor =
+      parentPortions && parentPortions === currentPortions
+        ? ingredient.amount
+        : ingredient.amount / currentPortions;
+
     expanded.push(
       ...(await expandIngredientAsync(
         {
@@ -435,8 +368,9 @@ const expandIngredientAsync = async (
           amount_item: Number(subIng.amount_item || 0),
           unit_item: subIng.unit_item,
           unit_item_id: subIng.unit_item_id,
+          parent_portions: currentPortions, // 👈 clé ici
         },
-        ingredient.amount * multiplier,
+        multiplier * portionFactor,
         visited
       ))
     );
@@ -446,12 +380,16 @@ const expandIngredientAsync = async (
 };
 
 
+
+
+
+
 const mergeIngredients = (ingredients) => {
   return Object.values(
     ingredients.reduce((acc, ing) => {
       const isBuyable = Unit_hasBuy.includes(ing.unit_id);
 
-      // 🔑 clé de fusion améliorée
+      // Clé de fusion : on combine l'ID de l'ingrédient, l'unité et les autres critères
       const key = isBuyable
         ? `${ing.ing_id}-${ing.unit_id}-${ing.amount_item || 0}-${ing.unit_item_id || 0}`
         : `${ing.ing_id}`;
@@ -460,9 +398,9 @@ const mergeIngredients = (ingredients) => {
         acc[key] = { ...ing };
       } else {
         if (isBuyable) {
+          // Fusion des quantités pour les ingrédients achetables
           acc[key].amount += ing.amount;
         }
-        // non achetable → une seule occurrence
       }
 
       return acc;
@@ -474,10 +412,10 @@ const mergeIngredients = (ingredients) => {
 const generateShoppingList = async () => {
   const allIngredients = [];
 
+  // Boucle pour parcourir tous les menus et leurs recettes
   for (const menu of selectedMenus) {
     for (const recipe of menu.recipes || []) {
       for (const ing of recipe.ingredients || []) {
-
         const baseIngredient = {
           name: ing.name,
           ing_id: ing.id,
@@ -490,16 +428,16 @@ const generateShoppingList = async () => {
           unit_item_id: ing.unit_item_id
         };
 
-        const expanded = await expandIngredientAsync(baseIngredient);
+        const expanded = await expandIngredientAsync(baseIngredient, 1); // Calcul pour 1 portion
         allIngredients.push(...expanded);
       }
     }
   }
 
-  // 🔥 fusion eau / farine / etc
+  // Fusionner les ingrédients pour éviter les doublons et ajuster les quantités
   const mergedIngredients = mergeIngredients(allIngredients);
 
-  // 🔽 soustraction stock (identique à avant)
+  // Calcul de la liste de courses en fonction des quantités disponibles en stock
   const shoppingList = [];
 
   mergedIngredients.forEach((ingredient) => {
@@ -538,6 +476,8 @@ const generateShoppingList = async () => {
 
   return shoppingList;
 };
+
+
 
 const [shoppingList, setShoppingList] = useState([]);
 const [shoppingLoading, setShoppingLoading] = useState(false);

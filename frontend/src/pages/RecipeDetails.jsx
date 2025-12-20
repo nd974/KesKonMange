@@ -387,7 +387,8 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
 
             <div>
               <span className="font-semibold">Portions :</span>{" "}
-              {recipe.portion} personne{recipe.portion > 1 ? "s" : ""}
+              {/* {recipe.portion} personne{recipe.portion > 1 ? "s" : ""} */}
+              {recipe.portion}
             </div>
           </div>
 

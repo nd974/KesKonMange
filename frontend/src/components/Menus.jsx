@@ -76,6 +76,11 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
             const previewRecipe = firstMenu.recipes?.[0];
             const tagNames = g.menus.map((mm) => mm.tagName).filter(Boolean);
 
+            const tagCounts = g.menus.map(m => ({
+              tag: m.tagName,
+              count: m.recipes?.length || 0,
+            }));
+
             console.log("Tag names for date", g.date, ":", tagNames);
             console.log("groups", g.date, ":", groups);
 
@@ -97,9 +102,8 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
                   <div className="font-semibold text-gray-800">
                     {dayjs(g.date).format("ddd D MMM")}
                   </div>
-                  <div className="text-sm opacity-80">
-                    {tagNames.length > 0 ? tagNames.join(" / ") : "—"}
-                  </div>
+
+
                 </div>
 
                 <div
@@ -109,7 +113,25 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
                       : "bg-white/80"
                   }`}
                 >
-                  {g.menus.reduce((sum, m) => sum + (m.recipes?.length || 0), 0)} 🍽️
+                  <div className="text-sm opacity-80 text-center">
+                    {tagCounts.map((t, i) => (
+                      <span key={i}>
+                        {t.count} 🍽️
+                        {i < tagCounts.length - 1 && " / "}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="text-xs opacity-70 text-center">
+                    {tagCounts.map((t, i) => (
+                      <span key={i}>
+                        {t.tag}
+                        {i < tagCounts.length - 1 && " / "}
+                      </span>
+                    ))}
+                  </div>
+
+                  {/* {g.menus.reduce((sum, m) => sum + (m.recipes?.length || 0), 0)} 🍽️ */}
                 </div>
               </div>
             );

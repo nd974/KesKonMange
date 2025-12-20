@@ -84,7 +84,6 @@ useEffect(() => {
   setStep(1);
 }, [open, initialProduct]);
 
-console.log("FOOOOOOOOOOOOOOOOOOOOOORM : ", form);
 
 // console.log("ModalProducts [form]", form);
 
