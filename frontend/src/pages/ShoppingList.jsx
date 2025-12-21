@@ -308,6 +308,11 @@ const menuStatus = useMemo(() => {
   return status;
 }, [products, selectedMenus]);
 
+const isSharedIngredient = (ingredient) => {
+  // Vérifier si l'ingrédient est partagé entre plusieurs recettes
+  return ingredient.recipe_id === "shared"; // Remplace cette logique par la vérification appropriée pour ton cas
+};
+
 const expandIngredientAsync = async (
   ingredient,
   multiplier = 1,
@@ -326,7 +331,6 @@ const expandIngredientAsync = async (
     console.warn("Boucle recette:", ingredient.recipe_id);
     return [];
   }
-
   visited.add(ingredient.recipe_id);
 
   // cache recette
@@ -342,21 +346,18 @@ const expandIngredientAsync = async (
   }
 
   const recipe = recipeCacheRef.current[ingredient.recipe_id];
-  const portions = recipe.portion || 1;
+  const currentPortions = recipe.portion || 1;
+  const parentPortions = ingredient.parent_portions ?? null;
+
+  // ⭐ RÈGLE CLÉ
+  const portionFactor =
+    parentPortions && parentPortions === currentPortions
+      ? ingredient.amount               // ✅ PAS DE DIVISION
+      : ingredient.amount / currentPortions;
 
   let expanded = [];
 
   for (const subIng of recipe.ingredients || []) {
-
-    // 🔥 LA LIGNE CLÉ 🔥
-    const parentPortions = ingredient.parent_portions ?? null;
-    const currentPortions = recipe.portion || 1;
-
-    const portionFactor =
-      parentPortions && parentPortions === currentPortions
-        ? ingredient.amount
-        : ingredient.amount / currentPortions;
-
     expanded.push(
       ...(await expandIngredientAsync(
         {
@@ -369,7 +370,7 @@ const expandIngredientAsync = async (
           amount_item: Number(subIng.amount_item || 0),
           unit_item: subIng.unit_item,
           unit_item_id: subIng.unit_item_id,
-          parent_portions: currentPortions, // 👈 clé ici
+          parent_portions: currentPortions, // 🔥 indispensable
         },
         multiplier * portionFactor,
         visited
@@ -385,11 +386,12 @@ const expandIngredientAsync = async (
 
 
 
+
+
 const mergeIngredients = (ingredients) => {
   return Object.values(
     ingredients.reduce((acc, ing) => {
       const isBuyable = Unit_hasBuy.includes(ing.unit_id);
-
 
       // Clé de fusion : on combine l'ID de l'ingrédient, l'unité et les autres critères
       const key = isBuyable
@@ -402,6 +404,9 @@ const mergeIngredients = (ingredients) => {
         if (isBuyable) {
           // Fusion des quantités pour les ingrédients achetables
           acc[key].amount += ing.amount;
+        } else {
+          // Pour les ingrédients non achetables, on ne fusionne qu'une seule occurrence
+          acc[key].amount = Math.max(acc[key].amount, ing.amount);
         }
       }
 
@@ -409,6 +414,7 @@ const mergeIngredients = (ingredients) => {
     }, {})
   );
 };
+
 
 
 const generateShoppingList = async () => {
@@ -430,7 +436,15 @@ const generateShoppingList = async () => {
           unit_item_id: ing.unit_item_id
         };
 
-        const expanded = await expandIngredientAsync(baseIngredient, 1); // Calcul pour 1 portion
+        const recipePortions = recipe.portion || 1;
+
+        const expanded = await expandIngredientAsync(
+          {
+            ...baseIngredient,
+            parent_portions: recipePortions
+          },
+          1   // 🔥 IMPORTANT : multiplier = 1
+        );
         allIngredients.push(...expanded);
       }
     }
@@ -478,6 +492,7 @@ const generateShoppingList = async () => {
 
   return shoppingList;
 };
+
 
 
 
