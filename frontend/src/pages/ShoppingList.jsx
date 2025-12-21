@@ -351,9 +351,11 @@ const expandIngredientAsync = async (
 
   // ⭐ RÈGLE CLÉ
   const portionFactor =
-    parentPortions && parentPortions === currentPortions
-      ? ingredient.amount               // ✅ PAS DE DIVISION
-      : ingredient.amount / currentPortions;
+    ingredient.use_as_whole
+      ? ingredient.amount
+      : parentPortions && parentPortions === currentPortions
+        ? ingredient.amount
+        : ingredient.amount / currentPortions;
 
   let expanded = [];
 
