@@ -172,6 +172,7 @@ export default function Dashboard({ homeId, profileId}) {
       setRecipeIndex(idx >= 0 ? idx : 0);
     }
   };
+  
 
   // Navigation recettes
   const showPrev = () => {
@@ -276,6 +277,32 @@ export default function Dashboard({ homeId, profileId}) {
     }
   };
 
+const [localCount, setLocalCount] = useState(1);
+
+useEffect(() => {
+  const recipe = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex];
+  if (recipe) {
+    setLocalCount(recipe.count_recipe || 1);
+  }
+}, [activeMenuIndex, recipeIndex, selectedMenusForDay]);
+
+
+  const handleUpdateCountRecipe = async (menuId, recipeId, count_recipe) => {
+    try {
+      const res = await fetch(`${API_URL}/menu/update-count/${menuId}/${recipeId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ count_recipe }),
+      });
+      const data = await res.json();
+      return true;
+    } catch (err) {
+      console.error("Erreur lors de la vérification de l'abonnement:", err);
+      return false;
+    }
+  };
+
+
   return (
     
     <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
@@ -369,11 +396,57 @@ export default function Dashboard({ homeId, profileId}) {
                     </div>
                   </div>
 
-                  <h6 style={{ fontStyle: "italic", textDecoration: "underline" }} className="flex py-2">
-                    {"Composition du menu : "}{selectedMenusForDay[activeMenuIndex]?.recipes.length}{" "}
-                    {selectedMenusForDay[activeMenuIndex]?.recipes.length === 1 ? "plat" : "plats"}
-                  </h6>
+<div className="flex items-center gap-2 py-2">
 
+  {/* Décrément */}
+  <button
+    onClick={() => setLocalCount(Math.max(1, localCount - 1))}
+    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+  >
+    -
+  </button>
+
+  {/* Champ non éditable */}
+  <input
+    type="text"
+    value={localCount}
+    readOnly
+    className="w-12 text-center border rounded py-1"
+  />
+
+  {/* Incrément */}
+  <button
+    onClick={() => setLocalCount(localCount + 1)}
+    className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+  >
+    +
+  </button>
+
+
+</div>
+
+  {/* Save */}
+  <button
+    onClick={async () => {
+      const menuId = selectedMenusForDay[activeMenuIndex]?.id;
+      const recipeId = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.id;
+      if (!menuId || !recipeId) return;
+
+      const success = await handleUpdateCountRecipe(menuId, recipeId, localCount);
+      if (success) {
+        // Mise à jour locale après sauvegarde
+        const updatedMenus = [...selectedMenusForDay];
+        updatedMenus[activeMenuIndex].recipes[recipeIndex].count_recipe = localCount;
+        setSelectedMenusForDay(updatedMenus);
+        alert("Nombre de recettes mis à jour !");
+      } else {
+        alert("Erreur lors de la sauvegarde");
+      }
+    }}
+    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
+  >
+    💾
+  </button>
 
 
                   <div className="flex-1 mx-0 lg:mx-8 mt-4 w-full">

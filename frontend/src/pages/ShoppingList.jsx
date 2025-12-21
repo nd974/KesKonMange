@@ -193,6 +193,8 @@ const Unit_hasBuy = [
     loadMenus();
   }, [homeId]);
 
+  console.log("Menus", menus);
+
   const handleSelectMenu = async (menu) => {
     const exists = selectedMenus.find((m) => m.id === menu.id);
     if (exists) {
@@ -347,6 +349,7 @@ const expandIngredientAsync = async (
 
   const recipe = recipeCacheRef.current[ingredient.recipe_id];
   const currentPortions = recipe.portion || 1;
+
   const parentPortions = ingredient.parent_portions ?? null;
 
   // ⭐ RÈGLE CLÉ
@@ -439,13 +442,16 @@ const generateShoppingList = async () => {
         };
 
         const recipePortions = recipe.portion || 1;
+        console.log("recipe:",recipe);
+        console.log("currentPortions",recipe.count_recipe);
+        const recipeMultiplier = recipe.count_recipe || 1;
 
         const expanded = await expandIngredientAsync(
           {
             ...baseIngredient,
             parent_portions: recipePortions
           },
-          1   // 🔥 IMPORTANT : multiplier = 1
+          recipeMultiplier <= recipePortions ? recipeMultiplier : recipeMultiplier / recipePortions
         );
         allIngredients.push(...expanded);
       }

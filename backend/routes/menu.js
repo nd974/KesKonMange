@@ -37,7 +37,7 @@ router.get("/get-byHome", async (req, res) => {
 
         // recettes
         const { rows: recipeRows } = await pool.query(
-          `SELECT r.id, r.name, r.time_prep, r.time_cook, r.portion, r.picture
+          `SELECT r.id, r.name, r.time_prep, r.time_cook, r.portion, r.picture, a.portion count_recipe
            FROM "menus_recipes" a
            JOIN "Recipe" r ON r.id = a.recipe_id
            WHERE a.menu_id = $1`,
@@ -194,6 +194,37 @@ router.post("/create", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur lors de la création du menu" });
   }
 });
+
+// Route pour mettre à jour la portion d'une recette dans un menu
+router.post("/update-count/:menuId/:recipeId", async (req, res) => {
+  const { menuId, recipeId } = req.params;
+  const { count_recipe } = req.body;
+
+  if (!menuId || !recipeId || count_recipe == null) {
+    return res.status(400).json({ error: "Champs manquants" });
+  }
+
+  try {
+    // Met à jour la portion pour ce menu_id et recipe_id
+    const result = await pool.query(
+      `UPDATE "menus_recipes"
+       SET portion = $1
+       WHERE menu_id = $2 AND recipe_id = $3
+       RETURNING *`,
+      [count_recipe, menuId, recipeId]
+    );
+
+    if (result.rowCount === 0) {
+      return res.status(404).json({ error: "Recette non trouvée pour ce menu" });
+    }
+
+    res.json({ success: true, updated: result.rows[0] });
+  } catch (err) {
+    console.error("Erreur update-count:", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 
 
 import admin from "../firebase.js";
