@@ -197,6 +197,7 @@ router.post("/create", async (req, res) => {
 
 // Route pour mettre à jour la portion d'une recette dans un menu
 router.post("/update-count/:menuId/:recipeId", async (req, res) => {
+  console.log("update-count");
   const { menuId, recipeId } = req.params;
   const { count_recipe } = req.body;
 
