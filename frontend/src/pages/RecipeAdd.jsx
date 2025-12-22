@@ -100,7 +100,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
       // Transformation Cloudinary pour redimensionner à 1870×1250
       const transformedUrl = data.secure_url.replace(
         "/upload/",
-        "/upload/a_auto,w_1200,h_800,c_fill,f_webp,q_auto/"
+        "/upload/w_1200,h_800,c_fill,f_webp,q_auto/"
       );
 
       setstatusName("✅ Image uploadée");
