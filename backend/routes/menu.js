@@ -200,6 +200,7 @@ router.post("/update-count/:menuId/:recipeId", async (req, res) => {
   console.log("update-count");
   const { menuId, recipeId } = req.params;
   const { count_recipe } = req.body;
+  console.log("count_recipe",count_recipe);
 
   if (!menuId || !recipeId || count_recipe == null) {
     return res.status(400).json({ error: "Champs manquants" });

@@ -251,7 +251,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
 
 
         {/* === Colonne centrale : Contenu principal === */}
-        <main className={`flex-1 bg-white p-6 relative ${!idProp ? "shadow rounded-lg overflow-hidden" : ""}`}>
+        <main className={`flex-1 bg-white relative ${!idProp ? "p-6 shadow rounded-lg overflow-hidden" : ""}`}>
             {!idProp && 
               <div className="flex justify-center mt-6 mb-6 space-x-4">
                 <button
@@ -278,41 +278,9 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
           />
           {/* Nom et tags */}
           <div className="flex flex-wrap items-center justify-between mb-3">
-            <h1 className="text-3xl font-bold mb-2">{recipe.name}</h1>
+            {!idProp && <h1 className="text-3xl font-bold mb-2">{recipe.name}</h1>}
 
-            <div className="flex flex-wrap gap-2">
-              {/* 3 premiers tags */}
-              {recipe.tags.slice(0, 3).map((tag) => (
-                <span
-                  key={tag.id}
-                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                >
-                  {tag.name}
-                </span>
-              ))}
-
-              {/* Badge +x si plus de 3 tags */}
-              {recipe.tags.length > 3 && (
-                <div className="relative group">
-                  <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs cursor-pointer">
-                    +{recipe.tags.length - 3}
-                  </span>
-
-                  {/* Tooltip multiline */}
-                  <div className="absolute left-1/2 -translate-x-1/2 mt-1 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                    <div className="flex flex-col whitespace-nowrap">
-                      {recipe.tags.slice(3).map((tag) => (
-                        <span key={tag.id}>{tag.name}</span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-
-            {/* Note moyenne + 🍏 pour mobile ou si idProp pas défini */}
-            {votesCount > 0 && (
+            {idProp && votesCount > 0 && (
               <div className="flex items-center gap-2 mt-2 text-yellow-500">
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }, (_, i) => {
@@ -349,8 +317,72 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
               </div>
             )}
 
+            <div className="flex flex-wrap gap-2">
+              {/* 3 premiers tags */}
+              {recipe.tags.slice(0, 3).map((tag) => (
+                <span
+                  key={tag.id}
+                  className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
+                >
+                  {tag.name}
+                </span>
+              ))}
+
+              {/* Badge +x si plus de 3 tags */}
+              {recipe.tags.length > 3 && (
+                <div className="relative group">
+                  <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs cursor-pointer">
+                    +{recipe.tags.length - 3}
+                  </span>
+
+                  {/* Tooltip multiline */}
+                  <div className="absolute left-1/2 -translate-x-1/2 mt-1 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                    <div className="flex flex-col whitespace-nowrap">
+                      {recipe.tags.slice(3).map((tag) => (
+                        <span key={tag.id}>{tag.name}</span>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+            {!idProp && votesCount > 0 && (
+              <div className="flex items-center gap-2 mt-2 text-yellow-500">
+                <div className="flex gap-1">
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const starNum = i + 1;
+
+                    if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
+                    if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
+                    return <EmptyStar key={i} />;
+                  })}
+                </div>
 
 
+                <span className="text-gray-600 text-sm">
+                  ({averageNote} / 5 sur {votesCount} vote{votesCount > 1 ? "s" : ""})
+                </span>
+
+                {(!idProp ? (
+                  // idProp défini → mobile seulement
+                  <span
+                    className="ml-2 cursor-pointer lg:hidden"
+                    onClick={() => setShowNutrition(true)}
+                  >
+                    🍏
+                  </span>
+                ) : (
+                  // idProp non défini → toujours visible
+                  <span
+                    className="ml-2 cursor-pointer"
+                    onClick={() => setShowNutrition(true)}
+                  >
+                    🍏
+                  </span>
+                ))}
+              </div>
+            )}
 
           {/* Infos générales */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 text-sm py-4">

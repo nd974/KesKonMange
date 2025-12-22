@@ -6,6 +6,7 @@ import Menus from "../components/Menus";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import RecipeDetail from "./RecipeDetails";
+import { normalizeModuleId } from "vite/module-runner";
 
 dayjs.locale("fr");
 
@@ -287,20 +288,46 @@ useEffect(() => {
 }, [activeMenuIndex, recipeIndex, selectedMenusForDay]);
 
 
-  const handleUpdateCountRecipe = async (menuId, recipeId, count_recipe) => {
-    try {
-      const res = await fetch(`${API_URL}/menu/update-count/${menuId}/${recipeId}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ count_recipe }),
-      });
-      const data = await res.json();
-      return true;
-    } catch (err) {
-      console.error("Erreur lors de la vérification de l'abonnement:", err);
-      return false;
-    }
-  };
+  // const handleUpdateCountRecipe = async (menuId, recipeId, count_recipe) => {
+  //   try {
+  //     const res = await fetch(`${API_URL}/menu/update-count/${menuId}/${recipeId}`, {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ count_recipe }),
+  //     });
+  //     const data = await res.json();
+  //     return true;
+  //   } catch (err) {
+  //     console.error("Erreur lors de la vérification de l'abonnement:", err);
+  //     return false;
+  //   }
+  // };
+
+  const handleCrementLocalCountRecipe = async(crement) => {
+      const newCount = localCount + crement
+      setLocalCount(Math.max(1, newCount));
+
+      console.log("newCount",newCount);
+
+      const menuId = selectedMenusForDay[activeMenuIndex]?.id;
+      const recipeId = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.id;
+      if (!menuId || !recipeId) return;
+
+      // const success = await handleUpdateCountRecipe(menuId, recipeId, localCount);
+      try {
+        const res = await fetch(`${API_URL}/menu/update-count/${menuId}/${recipeId}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ count_recipe: newCount }),
+        });
+        const updatedMenus = [...selectedMenusForDay];
+        updatedMenus[activeMenuIndex].recipes[recipeIndex].count_recipe = newCount;
+        setSelectedMenusForDay(updatedMenus);
+        // alert("Nombre de recettes mis à jour !");
+      } catch (err) {
+        alert("Erreur lors de la sauvegarde");
+      }
+  }
 
 
   return (
@@ -367,7 +394,9 @@ useEffect(() => {
                       >
                         ❌
                       </button>
-                  <div className="w-full flex items-center pt-8 relative">
+
+
+                  <div className="w-full flex items-center pt-8 relative mb-4">
                     {/* GROUPE CENTRÉ */}
                     <div className="flex items-center gap-2 mx-auto">
 
@@ -381,7 +410,7 @@ useEffect(() => {
                           <span style={{ color: "green" }}>◉</span>
                         ) : (
                           <span style={{ color: "red" }}>⭘</span>
-                        )}💾
+                        )}
                       </button>
 
 
@@ -396,60 +425,71 @@ useEffect(() => {
                     </div>
                   </div>
 
-<div className="flex items-center gap-2 py-2">
+<div className="py-2 relative">
+  {/* Navigation entre les recettes (précédent / suivant) */}
+  <div className="flex items-center justify-center gap-4">
+    {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+      <button
+        onClick={showPrev}
+        disabled={recipeIndex <= 0}
+        className={`px-3 py-1 rounded-md ${
+          recipeIndex > 0
+            ? "hover:shadow cursor-pointer"
+            : "bg-white/60 opacity-50 cursor-not-allowed"
+        }`}
+      >
+        ◀
+      </button>
+    )}
 
-  {/* Décrément */}
-  <button
-    onClick={() => setLocalCount(Math.max(1, localCount - 1))}
-    className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
-  >
-    -
-  </button>
+    {/* Nom de la recette dans des chevrons */}
+    <h1 className="text-3xl font-bold text-center">
+      {selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.name}
+    </h1>
 
-  {/* Champ non éditable */}
-  <input
-    type="text"
-    value={localCount}
-    readOnly
-    className="w-12 text-center border rounded py-1"
-  />
+    {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+      <button
+        onClick={showNext}
+        disabled={recipeIndex >= selectedMenusForDay[activeMenuIndex].recipes.length - 1}
+        className={`px-3 py-1 rounded-md ${
+          recipeIndex < selectedMenusForDay[activeMenuIndex].recipes.length - 1
+            ? "cursor-pointer"
+            : "bg-white/60 opacity-50 cursor-not-allowed"
+        }`}
+      >
+        ▶
+      </button>
+    )}
+  </div>
 
-  {/* Incrément */}
-  <button
-    onClick={() => setLocalCount(localCount + 1)}
-    className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
-  >
-    +
-  </button>
+  {/* Ligne avec les boutons de décrémentation et d'incrémentation */}
+  <div className="flex items-center justify-center gap-4 py-2">
+    {/* Décrément à gauche */}
+    <button
+      onClick={() => handleCrementLocalCountRecipe(-1)}
+      className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-600"
+    >
+      -
+    </button>
 
+    {/* Affichage de la quantité */}
+    <span className="text-xl">{localCount}</span>
 
+    {/* Incrément à droite */}
+    <button
+      onClick={() => handleCrementLocalCountRecipe(1)}
+      className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-600"
+    >
+      +
+    </button>
+  </div>
 </div>
 
-  {/* Save */}
-  <button
-    onClick={async () => {
-      const menuId = selectedMenusForDay[activeMenuIndex]?.id;
-      const recipeId = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.id;
-      if (!menuId || !recipeId) return;
-
-      const success = await handleUpdateCountRecipe(menuId, recipeId, localCount);
-      if (success) {
-        // Mise à jour locale après sauvegarde
-        const updatedMenus = [...selectedMenusForDay];
-        updatedMenus[activeMenuIndex].recipes[recipeIndex].count_recipe = localCount;
-        setSelectedMenusForDay(updatedMenus);
-        alert("Nombre de recettes mis à jour !");
-      } else {
-        alert("Erreur lors de la sauvegarde");
-      }
-    }}
-    className="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600"
-  >
-    💾
-  </button>
 
 
-                  <div className="flex-1 mx-0 lg:mx-8 mt-4 w-full">
+
+
+                  <div className="flex-1 mx-0 lg:mx-8 w-full">
                     <RecipeDetail
                       key={selectedRecipe?.id}
                       homeId={homeId}
@@ -458,40 +498,8 @@ useEffect(() => {
                     />
                   </div>
 
-                  {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                    <button
-                      onClick={showPrev}
-                      disabled={recipeIndex <= 0}
-                      className={`absolute left-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
-                        recipeIndex > 0
-                          ? "hover:shadow cursor-pointer"
-                          : "bg-white/60 opacity-50 cursor-not-allowed"
-                      }`}
-                    >
-                      ◀
-                    </button>
-                  )}
-
-                  {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                    <button
-                      onClick={showNext}
-                      disabled={
-                        recipeIndex >=
-                        selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                      }
-                      className={`absolute right-0 top-1/2 -translate-y-1/2 px-3 py-1 rounded-md hidden lg:block ${
-                        recipeIndex <
-                        selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                          ? "cursor-pointer"
-                          : "bg-white/60 opacity-50 cursor-not-allowed"
-                      }`}
-                    >
-                      ▶
-                    </button>
-                  )}
-
                   {/* mobile */}
-                  {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+                  {/* {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
                     <div className="flex justify-center gap-4 mb-4 lg:hidden">
                       <button
                         onClick={showPrev}
@@ -521,7 +529,7 @@ useEffect(() => {
                         ▶
                       </button>
                     </div>
-                  )}
+                  )} */}
                 </div>
               ) : (
                 <p className="text-gray-500 text-center py-10">
