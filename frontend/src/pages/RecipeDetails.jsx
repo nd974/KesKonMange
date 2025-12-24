@@ -281,7 +281,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
             {!idProp && <h1 className="text-3xl font-bold mb-2">{recipe.name}</h1>}
 
             {idProp && votesCount > 0 && (
-              <div className="flex items-center gap-2 mt-2 text-yellow-500">
+              <div className="flex items-center gap-2 mt-2 text-yellow-500 mb-4">
                 <div className="flex gap-1">
                   {Array.from({ length: 5 }, (_, i) => {
                     const starNum = i + 1;
@@ -404,25 +404,62 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
             </div>
           </div>
 
-          {/* Autres infos */}
-          <div className="flex flex-wrap gap-6 mt-4 text-sm">
-            <div>
-              <span className="font-semibold">Difficulté :</span>{" "}
-              {{
-                1: "Très facile",
-                2: "Facile",
-                3: "Moyen",
-                4: "Difficile",
-                5: "Très difficile",
-              }[recipe.level] || "Non spécifié"}
-            </div>
+<div className="flex flex-col md:flex-row gap-6 mt-4 text-sm">
+  {/* Difficulté */}
+  <div className="flex-1 flex items-center gap-3">
+    <span className="font-semibold whitespace-nowrap">
+      Difficulté :
+    </span>
+    <span>
+      {{
+        1: "Très facile",
+        2: "Facile",
+        3: "Moyen",
+        4: "Difficile",
+        5: "Très difficile",
+      }[recipe.level] || "Non spécifié"}
+    </span>
+  </div>
 
-            <div>
-              <span className="font-semibold">Portions :</span>{" "}
-              {/* {recipe.portion} personne{recipe.portion > 1 ? "s" : ""} */}
-              {recipe.portion}
-            </div>
-          </div>
+  {/* Portions */}
+  <div className="flex-1 flex items-center gap-3">
+    <span className="font-semibold whitespace-nowrap">
+      Portions :
+    </span>
+    <span>{recipe.portion}</span>
+  </div>
+
+  {/* Utilisations */}
+  <div className="flex-1 flex items-center gap-3">
+    <span className="font-semibold whitespace-nowrap">
+      Réalisées :
+    </span>
+
+    <div className="flex items-center gap-2">
+      <button
+        onClick={null}
+        className="bg-red-500 text-white w-6 h-6 rounded hover:bg-red-600 flex items-center justify-center"
+      >
+        −
+      </button>
+
+      <span className="font-medium">
+        {recipe.portion}
+      </span>
+
+      <button
+        onClick={null}
+        className="bg-green-500 text-white w-6 h-6 rounded hover:bg-green-600 flex items-center justify-center"
+      >
+        +
+      </button>
+    </div>
+  </div>
+</div>
+
+
+
+
 
           {/* Ustensiles */}
           <section className="mt-8">

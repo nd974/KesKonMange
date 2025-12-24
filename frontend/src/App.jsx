@@ -9,6 +9,8 @@ import Calendar from "./pages/Calendar";
 import Stock from "./pages/Stock";
 import ShoppingList from "./pages/ShoppingList";
 
+import TestMap from "./pages/TestMap";
+
 import RecipeDetail from "./pages/RecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
 
@@ -75,6 +77,9 @@ function AppRoutes() {
 
           <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
           <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+
+          
+          <Route path="/map" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id}/>} />
 
 
           <Route path="*" element={<Navigate to="/" replace />} />

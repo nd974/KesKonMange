@@ -6,7 +6,6 @@ import Menus from "../components/Menus";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import RecipeDetail from "./RecipeDetails";
-import { normalizeModuleId } from "vite/module-runner";
 
 dayjs.locale("fr");
 
