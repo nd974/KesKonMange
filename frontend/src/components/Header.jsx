@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate  } from "react-router-dom";
 import { CLOUDINARY_RES, CLOUDINARY_LOGO_HEADER } from "../config/constants";
 
@@ -9,15 +9,13 @@ import { setHomeId, getHomeId, getProfileId } from "../../session";
 export default function Header({homeId}) {
     const location = useLocation();
     const navigate = useNavigate();
+    const profileMenuRef = useRef(null);
 
     const [profile, setProfile] = useState(null);
     const [homes, setHomes] = useState([]);
     const [selectedHome, setSelectedHome] = useState(null);
 
-    // Récupération des ids stockés en localStorage
-    // const profileId = localStorage.getItem("profile_id");
-    
-    // const homeId = localStorage.getItem("home_id");
+    const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
     const links = [
     { name: "Dashboard", path: "/" },
@@ -77,8 +75,26 @@ export default function Header({homeId}) {
     window.location.reload(); // recharge la page pour appliquer le changement
   };
 
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        profileMenuRef.current &&
+        !profileMenuRef.current.contains(event.target)
+      ) {
+        setIsProfileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
   return (
-    <header className="flex items-center gap-6">
+    <header className="relative z-[1000] flex items-center gap-6">
       {/* 🔸 Logo + salutation */}
       <div className="flex items-center gap-3">
         <div className="w-11 h-12 rounded-md bg-accentGreen flex items-center justify-center text-white font-bold">
@@ -133,12 +149,10 @@ export default function Header({homeId}) {
 
 
       {/* 🔸 Profil */}
-      <div
+      {/* <div
         className="w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
                   hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
-        onClick={() => {
-          navigate("/profiles");
-        }}
+        onClick={() => {navigate("/profiles");}}
       >
         {profile?.avatar ? (
           <img
@@ -149,7 +163,50 @@ export default function Header({homeId}) {
         ) : (
           <span>{profile?.username?.[0]?.toUpperCase() || "?"}</span>
         )}
+      </div> */}
+
+      <div className="relative" ref={profileMenuRef}>
+        {/* Avatar */}
+        <div
+          className="w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
+                    hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
+          onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+        >
+          {profile?.avatar ? (
+            <img
+              src={`${CLOUDINARY_RES}${profile.avatar}`}
+              alt="Profil"
+              className="object-cover w-full h-full"
+            />
+          ) : (
+            <span>{profile?.username?.[0]?.toUpperCase() || "?"}</span>
+          )}
+        </div>
+
+        {/* Dropdown */}
+        {isProfileMenuOpen && (
+          <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border text-sm z-50">
+            <ul className="py-2">
+              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/map");}}>
+                {/* 📊 Base de données */}
+                📊 Store Test
+              </li>
+              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/");}}>
+                🏠 Gérer la maison
+              </li>
+              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/profiles");}}>
+                🔄 Changer de profil
+              </li>
+              <li className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer" onClick={() => {navigate("/login");}}>
+                🚪 Se déconnecter
+              </li>
+            </ul>
+          </div>
+        )}
       </div>
+
+
+
 
     </header>
   );

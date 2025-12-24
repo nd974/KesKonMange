@@ -105,7 +105,7 @@ const handleUploadCloud = async (publicMameIdCloud) => {
 
       setstatusName("✅ Image uploadée");
 
-      const parts = transformedUrl.split("/upload/a_auto,w_1200,h_800,c_fill,f_webp,q_auto/");
+      const parts = transformedUrl.split("/upload/w_1200,h_800,c_fill,f_webp,q_auto/");
       console.log(parts[1]);
       return parts[1];
     } else {
