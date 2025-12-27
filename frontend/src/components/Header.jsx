@@ -94,7 +94,7 @@ export default function Header({homeId}) {
 
 
   return (
-    <header className="relative z-[1000] flex items-center gap-6">
+    <header className="relative z-[9999] flex items-center gap-6">
       {/* 🔸 Logo + salutation */}
       <div className="flex items-center gap-3">
         <div className="w-11 h-12 rounded-md bg-accentGreen flex items-center justify-center text-white font-bold">
@@ -192,7 +192,7 @@ export default function Header({homeId}) {
                 📊 Store Test
               </li>
               <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/");}}>
-                🏠 Gérer la maison
+                🏠 Gérer le profile
               </li>
               <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/profiles");}}>
                 🔄 Changer de profil

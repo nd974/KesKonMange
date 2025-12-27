@@ -193,8 +193,6 @@ const Unit_hasBuy = [
     loadMenus();
   }, [homeId]);
 
-  console.log("Menus", menus);
-
   const handleSelectMenu = async (menu) => {
     const exists = selectedMenus.find((m) => m.id === menu.id);
     if (exists) {
@@ -529,6 +527,9 @@ useEffect(() => {
   }
 }, [selectedMenus, products]);
 
+const [showShoppingPopin, setShowShoppingPopin] = useState(false);
+const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
+
   // --------------------------------------
   // 🔹 RENDER
   // --------------------------------------
@@ -538,7 +539,7 @@ useEffect(() => {
 
       <div className="mb-8"></div>
 
-      <div className="border rounded-lg p-4 bg-white shadow mb-4">
+      {/* <div className="border rounded-lg p-4 bg-white shadow mb-4">
         <div className="flex gap-4">
           <button
             onClick={() => setShowScannerPopin(true)}
@@ -558,7 +559,7 @@ useEffect(() => {
             ✏️ Saisie manuelle
           </button>
         </div>
-      </div>
+      </div> */}
 
       <div className="mt-8 flex flex-col gap-8 md:flex-row md:gap-8">
 
@@ -617,7 +618,25 @@ useEffect(() => {
               })
             )}
           </div>
+<div className="mt-4">
+  <button
+    disabled={selectedMenus.length === 0}
+    onClick={() => setShowShoppingPopin(true)}
+    className={`w-full p-3 rounded-lg font-semibold transition
+      ${
+        selectedMenus.length === 0
+          ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+          : "bg-blue-400 text-white hover:bg-blue-600"
+      }
+    `}
+  >
+    🛒 Voir la liste de courses
+  </button>
+</div>
+
         </div>
+
+
 
         {/* ------------------ COLONNE LISTE COURSES 2/3 ------------------ */}
         <div className="w-full md:w-2/3 bg-gray-100 p-4 rounded-lg mb-8">
@@ -747,6 +766,92 @@ useEffect(() => {
         onSave={(finalProduct) => handleInsertProduct(finalProduct)}
       />
 
+{showShoppingPopin && (
+  <div
+    className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+    onClick={() => setShowShoppingPopin(false)} // 👈 clic hors popin
+  >
+    <div
+      className="bg-white w-[90%] max-w-xl rounded-lg p-6 relative"
+      onClick={(e) => e.stopPropagation()} // 👈 empêche la fermeture
+    >
+      {/* Close */}
+      <button
+        onClick={() => setShowShoppingPopin(false)}
+        className="absolute top-2 right-2 text-xl"
+      >
+        ✕
+      </button>
+
+      <h2 className="text-xl font-bold mb-4">
+        🛒 Liste de courses
+      </h2>
+
+      {shoppingLoading ? (
+        <p className="text-sm text-gray-500">Calcul en cours…</p>
+      ) : shoppingList.length === 0 ? (
+        <p className="text-sm text-gray-500">Aucun ingrédient à acheter</p>
+      ) : (
+        <ul className="space-y-2 max-h-[300px] overflow-y-auto">
+          {shoppingList.map((item, idx) => {
+            const isSelected = selectedShoppingItems.includes(idx);
+
+            return (
+              <li
+                key={idx}
+                onClick={() => {
+                  setSelectedShoppingItems(prev =>
+                    prev.includes(idx)
+                      ? prev.filter(i => i !== idx)
+                      : [...prev, idx]
+                  );
+                }}
+                className={`p-3 rounded-lg border cursor-pointer transition
+                  ${
+                    isSelected
+                      ? "bg-softBeige text-gray-400 line-through"
+                      : "bg-white hover:bg-gray-50"
+                  }
+                `}
+              >
+                <span className="font-medium">{item.name}</span>
+                {item.amount && (
+                  <span className="ml-2 text-sm opacity-80">
+                    {item.amount} {item.unit || ""}
+                  </span>
+                )}
+              </li>
+            );
+          })}
+        </ul>
+      )}
+
+      <div className="mt-4 flex justify-between items-center">
+        <span className="text-sm text-gray-600">
+          Dans le panier : {selectedShoppingItems.length} / {shoppingList.length}
+        </span>
+
+        <button
+          disabled={selectedShoppingItems.length === 0}
+          className="bg-accentGreen text-white px-2 py-2 rounded-lg disabled:opacity-50"
+          onClick={() => {
+            console.log(
+              "Ingrédients sélectionnés :",
+              selectedShoppingItems.map(i => shoppingList[i])
+            );
+            setShowShoppingPopin(false);
+          }}
+        >
+          ✅ Valider
+        </button>
+      </div>
     </div>
+  </div>
+)}
+
+
+    </div>
+
+    
   );
 }
