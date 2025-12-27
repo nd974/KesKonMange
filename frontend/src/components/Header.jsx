@@ -6,7 +6,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { setHomeId, getHomeId, getProfileId } from "../../session";
 
-export default function Header({homeId}) {
+export default function Header({homeId, inAccount=false}) {
     const location = useLocation();
     const navigate = useNavigate();
     const profileMenuRef = useRef(null);
@@ -94,9 +94,9 @@ export default function Header({homeId}) {
 
 
   return (
-    <header className="relative z-[9999] flex items-center gap-6">
+    <header className={`relative flex items-center w-full ${inAccount && "mb-4"}`}>
       {/* 🔸 Logo + salutation */}
-      <div className="flex items-center gap-3">
+      <div className={`${inAccount ? "w-1/4 justify-center" : ""} flex items-center gap-3`}>
         <div className="w-11 h-12 rounded-md bg-accentGreen flex items-center justify-center text-white font-bold">
           <img
             src={`${CLOUDINARY_RES}${CLOUDINARY_LOGO_HEADER}`}
@@ -104,106 +104,105 @@ export default function Header({homeId}) {
             className="object-cover w-full h-full"
           />
         </div>
-        <div className="hidden md:block">
-          <div className="text-2xl font-bold" style={{ color: "#6b926f" }}>
-            Bonjour {profile ? profile.name : ""} !
+
+        {!inAccount && (
+          <div className="hidden md:block">
+            <div className="text-2xl font-bold" style={{ color: "#6b926f" }}>
+              Bonjour {profile ? profile.name : ""} !
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* 🔸 Navigation */}
-      <nav className="ml-6 hidden lg:flex gap-6 text-sm text-gray-600">
-        {links.map((link) => (
-          <Link
-            key={link.path}
-            to={link.path}
-            className={`px-3 py-1 rounded-md transition ${
-              location.pathname === link.path
-                ? "bg-pink-100 text-gray-900 font-medium"
-                : "hover:bg-gray-100"
-            }`}
-          >
-            {link.name}
-          </Link>
-        ))}
-      </nav>
 
-      {/* 🔸 Sélecteur de Home */}
-      <div className="ml-auto flex items-center gap-3 relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
-          🏠
-        </span>
 
-        <select
-          value={selectedHome?.id || ""}
-          onChange={handleChangeHome}
-          className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
-        >
-          {homes.map((home) => (
-            <option key={home.id} value={home.id}>
-              {home.name}
-            </option>
+      {!inAccount && (
+        <nav className="ml-6 hidden lg:flex gap-6 text-sm text-gray-600">
+          {links.map((link) => (
+            <Link
+              key={link.path}
+              to={link.path}
+              className={`px-3 py-1 rounded-md transition ${
+                location.pathname === link.path
+                  ? "bg-pink-100 text-gray-900 font-medium"
+                  : "hover:bg-gray-100"
+              }`}
+            >
+              {link.name}
+            </Link>
           ))}
-        </select>
-      </div>
+        </nav>
+      )}
+
+
+{!inAccount && (
+  <div className="ml-auto mr-6 flex items-center gap-3 relative">
+    {/* 🔸 Sélecteur de Home */}
+    <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
+      🏠
+    </span>
+
+    <select
+      value={selectedHome?.id || ""}
+      onChange={handleChangeHome}
+      className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
+    >
+      {homes.map((home) => (
+        <option key={home.id} value={home.id}>
+          {home.name}
+        </option>
+      ))}
+    </select>
+  </div>
+)}
+
+
 
 
       {/* 🔸 Profil */}
-      {/* <div
-        className="w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
-                  hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
-        onClick={() => {navigate("/profiles");}}
-      >
-        {profile?.avatar ? (
-          <img
-            src={`${CLOUDINARY_RES}${profile.avatar}`}
-            alt="Profil"
-            className="object-cover w-full h-full"
-          />
-        ) : (
-          <span>{profile?.username?.[0]?.toUpperCase() || "?"}</span>
-        )}
-      </div> */}
+<div className={`${inAccount ? "w-2/3 justify-end" : ""} flex items-center`}>
+  <div className="relative" ref={profileMenuRef}>
+    {/* Avatar */}
+    <div
+      className="w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
+                 hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
+      onClick={() => setIsProfileMenuOpen((prev) => !prev)}
+    >
+      {profile?.avatar ? (
+        <img
+          src={`${CLOUDINARY_RES}${profile.avatar}`}
+          alt="Profil"
+          className="object-cover w-full h-full"
+        />
+      ) : (
+        <span>{profile?.username?.[0]?.toUpperCase() || "?"}</span>
+      )}
+    </div>
 
-      <div className="relative" ref={profileMenuRef}>
-        {/* Avatar */}
-        <div
-          className="w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
-                    hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
-          onClick={() => setIsProfileMenuOpen((prev) => !prev)}
-        >
-          {profile?.avatar ? (
-            <img
-              src={`${CLOUDINARY_RES}${profile.avatar}`}
-              alt="Profil"
-              className="object-cover w-full h-full"
-            />
-          ) : (
-            <span>{profile?.username?.[0]?.toUpperCase() || "?"}</span>
+    {/* Dropdown */}
+    {isProfileMenuOpen && (
+      <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border text-sm z-50">
+        <ul className="py-2">
+          {inAccount && (
+            <li className="px-4 py-2 hover:bg-accentGreen cursor-pointer text-white bg-accentGreen" onClick={() => navigate("/")}>
+              ← Retour KesKonMange
+            </li>
           )}
-        </div>
-
-        {/* Dropdown */}
-        {isProfileMenuOpen && (
-          <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border text-sm z-50">
-            <ul className="py-2">
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/map");}}>
-                {/* 📊 Base de données */}
-                📊 Store Test
-              </li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/");}}>
-                🏠 Gérer le profile
-              </li>
-              <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => {navigate("/profiles");}}>
-                🔄 Changer de profil
-              </li>
-              <li className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer" onClick={() => {navigate("/login");}}>
-                🚪 Se déconnecter
-              </li>
-            </ul>
-          </div>
-        )}
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/account")}>
+            👤 Compte
+          </li>
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/profiles")}>
+            🔄 Changer de profil
+          </li>
+          <li className="px-4 py-2 hover:bg-red-50 text-red-600 cursor-pointer" onClick={() => navigate("/login")}>
+            🚪 Se déconnecter
+          </li>
+        </ul>
       </div>
+    )}
+  </div>
+</div>
+
 
 
 

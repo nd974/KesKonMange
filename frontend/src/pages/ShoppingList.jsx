@@ -768,7 +768,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
 
 {showShoppingPopin && (
   <div
-    className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999]"
+    className="fixed inset-0 bg-black/50 flex items-center justify-center"
     onClick={() => setShowShoppingPopin(false)} // 👈 clic hors popin
   >
     <div

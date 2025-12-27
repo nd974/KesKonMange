@@ -3,7 +3,7 @@ import Draggable from "react-draggable";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStoragesLoaded, inPopinStorageSelect = null}) {
+export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStoragesLoaded, inPopinStorageSelect = null, inManage=false}) {
   const [zones, setZones] = useState([]);
   const [storages, setStorages] = useState([]);
   const [dragOverZone, setDragOverZone] = useState(null);
@@ -373,7 +373,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
       )}
 
       {/* Boutons */}
-      {!inPopinStorageSelect && (
+      {(!inPopinStorageSelect && inManage)&& (
         <div className="grid grid-cols-4 gap-4 mb-4">
           <button
             onClick={() => setShowZoneModal(true)}

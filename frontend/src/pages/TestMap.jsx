@@ -170,7 +170,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
       <MapContainer
         center={centerPosition}
         zoom={19}
-        className="mt-6 w-full h-[400px] sm:h-[500px] md:h-[600px] rounded shadow"
+        className="mt-6 w-full h-[400px] sm:h-[500px] md:h-[600px] rounded shadow z-0"
         whenCreated={setMap}
       >
         <MapController onMapReady={setMap} />

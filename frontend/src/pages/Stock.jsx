@@ -234,6 +234,7 @@ function DisplayIngredient({ ing }) {
 
             onSelectZone={() => setSelectedStorage(null)}
             onStoragesLoaded={setStorages}
+            inManage={true}
           />
         </div>
 
