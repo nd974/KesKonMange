@@ -6,6 +6,8 @@ export const CLOUDINARY_API = `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME
 export const CLOUDINARY_PRESET_LOGO = "Logos";
 export const CLOUDINARY_LOGO_HOME = "v1764321172/KsKnMg_Home_qe5fbb_c2ynaz.png";
 export const CLOUDINARY_LOGO_HEADER = "v1764321173/KsKnMg_ljgxhk_nndgpi.svg";
+export const CLOUDINARY_LOGO_ACCOUNT = "v1767014146/KsKnMg_Account_xpwupp.svg";
+
 
 export const CLOUDINARY_PRESET_AVATAR = "Avatars";
 export const CLOUDINARY_AVATAR5_DEFAULT = [
@@ -30,28 +32,28 @@ export const Unit_Item_List = ["pièce", "tranche"];
 export const Account_links = 
 [
     { 
-        label: "📄 Compte", 
-        path: "/account", 
+        label: "📄 Général", 
+        path: "/settings", 
         items: [
-            { label: "🔔 Notifications", path: "/account/security" },
+            { label: "🔔 Notifications", path: "/settings" },
         ]
     },
     { 
-        label: "💳 Maisons", 
-        path: "/account/homes" 
+        label: "👤 Utilisateur", 
+        path: "/settings/user" 
     },
     { 
         label: "🔒 Sécurité", 
-        path: "/account/security", 
+        path: "/settings/security", 
         items: [
-            { label: "🔒 Mot de passe", path: "/account/security" },
-            { label: "⏳ E-mail", path: "/account/security" },
-            { label: "⏳ Téléphone mobile", path: "/account/security" },
+            { label: "🔒 Mot de passe", path: "/settings/security" },
+            { label: "📧 E-mail", path: "/settings/security" },
+            { label: "📱 Téléphone mobile", path: "/settings/security" },
         ]
     },
     { 
-        label: "👥 Profils", 
-        path: "/account/profiles" 
+        label: "🏠 Maisons", 
+        path: "/settings/homes" 
     },
     { 
         label: "⏳ TMP STORE", 
@@ -59,6 +61,6 @@ export const Account_links =
     },
     { 
         label: "⏳ TMP OPENFACTFOOD", 
-        path: "/account/openfactfood" 
+        path: "/openfactfood" 
     },
 ];

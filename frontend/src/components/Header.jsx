@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useNavigate  } from "react-router-dom";
-import { CLOUDINARY_RES, CLOUDINARY_LOGO_HEADER } from "../config/constants";
+import { CLOUDINARY_RES, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -115,9 +115,9 @@ export default function Header({homeId, inAccount=false}) {
     <header className={`relative flex items-center w-full ${inAccount && "mb-4"}`}>
       {/* 🔸 Logo + salutation */}
       <div className={`${inAccount ? "w-1/4 justify-center" : ""} flex items-center gap-3`}>
-        <div className="w-11 h-12 rounded-md bg-accentGreen flex items-center justify-center text-white font-bold">
+        <div className={`${inAccount ? "w-40 h-16" : "w-11 h-12"} flex items-center justify-center text-white font-bold`}>
           <img
-            src={`${CLOUDINARY_RES}${CLOUDINARY_LOGO_HEADER}`}
+            src={`${CLOUDINARY_RES}${inAccount ? CLOUDINARY_LOGO_ACCOUNT : CLOUDINARY_LOGO_HEADER}`}
             alt="Logo KesKonMange"
             className="object-cover w-full h-full"
           />
@@ -221,7 +221,9 @@ export default function Header({homeId, inAccount=false}) {
             </li>
           )}
 
-
+          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/settings")}>
+            ⚙️ Paramètres
+          </li>
           <li
             className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
             onClick={() => {
@@ -235,10 +237,6 @@ export default function Header({homeId, inAccount=false}) {
                 {unreadNotifications.length}
               </span>
             )}
-          </li>
-
-          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/account")}>
-            👤 Compte
           </li>
           <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/profiles")}>
             🔄 Changer de profil

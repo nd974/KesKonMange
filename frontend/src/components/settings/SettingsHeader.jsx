@@ -1,8 +1,8 @@
 import { Link, useLocation, useNavigate  } from "react-router-dom";
 
-import Header from "./Header";
+import Header from "../Header";
 
-import { Account_links } from "../config/constants";
+import { Account_links } from "../../config/constants";
 
 export default function HeaderAccount({ homeId }) {
   const navigate = useNavigate();

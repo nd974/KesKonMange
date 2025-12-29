@@ -1,5 +1,5 @@
 import { useNavigate, useLocation } from "react-router-dom";
-import { Account_links } from "../config/constants";
+import { Account_links } from "../../config/constants";
 
 export default function SidebarAccount() {
   const navigate = useNavigate();

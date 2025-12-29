@@ -11,8 +11,8 @@ import ShoppingList from "./pages/ShoppingList";
 
 import TestMap from "./pages/TestMap";
 
-import Account from "./pages/account/Account";
-import Security from "./pages/account/Security";
+import Account from "./pages/settings/Settings";
+import Security from "./pages/settings/Security";
 
 import RecipeDetail from "./pages/RecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
@@ -28,7 +28,7 @@ function AppRoutes() {
   const hideMobileNav =
     location.pathname === "/login" ||
     location.pathname === "/profiles" ||
-    location.pathname.startsWith("/account");
+    location.pathname.startsWith("/settings");
     
   const [home_id, setHomeId] = useState(null);
   const [profile_id, setProfileId] = useState(null);
@@ -89,8 +89,8 @@ function AppRoutes() {
           <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id}/>} />
 
 
-          <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
-          <Route path="/account/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id}/>} />
+          <Route path="/settings" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
+          <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id}/>} />
           {/* <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
           <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} /> */}
 

@@ -1,11 +1,11 @@
-import HeaderAccount from "../../components/AccountHeader";
-import SidebarAccount from "../../components/AccountSidebar";
+import HeaderAccount from "../../components/settings/SettingsHeader";
+import SidebarAccount from "../../components/settings/SettingsSidebar";
 import { Account_links } from "../../config/constants";
 
-export default function Security({ homeId, profileId }) {
+export default function Settings({ homeId, profileId }) {
 
   const link = Account_links.find(
-    item => item.label === '📄 Compte'
+    item => item.label === '📄 Général'
   );
 
   return (
@@ -21,19 +21,31 @@ export default function Security({ homeId, profileId }) {
         {/* Contenu principal */}
         <main className="flex-1">
           {/* Titre */}
-          <h1 className="text-3xl font-bold mb-1">Compte</h1>
-          <p className="text-gray-600 mb-6">Détail au compte</p>
+          <h1 className="text-3xl font-bold mb-1">Général</h1>
+          <br></br>
 
-          {/* Carte abonnement
+          <p className="text-gray-600 mb-3">Détails de la maison sélectionnée</p>
+          {/* maisons */}
           <div className="bg-white rounded-lg border mb-8">
             <div className="px-6 py-4 border-b">
-              <span className="inline-block bg-purple-600 text-white text-xs font-semibold px-3 py-1 rounded-full">
-                Abonnement débuté en mai 2021
-              </span>
+              <div className="ml-auto mr-6 flex items-center gap-3 relative">
+                {/* 🔸 Sélecteur de Home */}
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
+                  🏠
+                </span>
+
+                <select
+                  value={null}
+                  onChange={null}
+                  className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
+                >
+                  <option>André Malraux</option>
+                </select>
+              </div>
             </div>
 
             <div className="px-6 py-5 space-y-2">
-              <h2 className="font-semibold text-lg">Offre Standard</h2>
+              <h2 className="font-semibold text-lg">47 rue André Malraux, 45100, Orléans, FRANCE</h2>
               <p className="text-sm text-gray-600">
                 Prochain paiement : <strong>17 janvier 2026</strong>
               </p>
@@ -44,11 +56,12 @@ export default function Security({ homeId, profileId }) {
             </div>
 
             <div className="px-6 py-4 border-t flex justify-between items-center cursor-pointer hover:bg-gray-50">
-              <span className="font-medium">Gérer l'abonnement</span>
+              <span className="font-medium">Gérer la maison</span>
               <span className="text-xl">›</span>
             </div>
-          </div> */}
+          </div>
 
+          <p className="text-gray-600 mb-3">Liens rapides</p>
           <div className="bg-white rounded-lg border divide-y">
             {link.items.map((item, index) => (
               <div
