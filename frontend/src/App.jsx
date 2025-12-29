@@ -10,7 +10,9 @@ import Stock from "./pages/Stock";
 import ShoppingList from "./pages/ShoppingList";
 
 import TestMap from "./pages/TestMap";
+
 import Account from "./pages/account/Account";
+import Security from "./pages/account/Security";
 
 import RecipeDetail from "./pages/RecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
@@ -23,7 +25,11 @@ function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
 
-  const hideMobileNav = ["/login", "/profiles", "/account"].includes(location.pathname);
+  const hideMobileNav =
+    location.pathname === "/login" ||
+    location.pathname === "/profiles" ||
+    location.pathname.startsWith("/account");
+    
   const [home_id, setHomeId] = useState(null);
   const [profile_id, setProfileId] = useState(null);
 
@@ -81,7 +87,12 @@ function AppRoutes() {
 
           
           <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id}/>} />
+
+
           <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
+          <Route path="/account/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id}/>} />
+          {/* <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
+          <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} /> */}
 
 
           <Route path="*" element={<Navigate to="/" replace />} />

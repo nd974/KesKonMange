@@ -92,6 +92,24 @@ export default function Header({homeId, inAccount=false}) {
     };
   }, []);
 
+  const [isNotifOpen, setIsNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState([
+    { id: 1, text: "Nouvelle connexion", read: false },
+    { id: 2, text: "Alex s’est inscrit au menu Lasagnes", read: false },
+    { id: 3, text: "Menu de la semaine mis à jour", read: true },
+    { id: 4, text: "Menu de la semaine mis à jour", read: false },
+    { id: 5, text: "Menu de la semaine mis à jour", read: false },
+    { id: 6, text: "Menu de la semaine mis à jour", read: false },
+    { id: 7, text: "Menu de la semaine mis à jour", read: false },
+    { id: 8, text: "Menu de la semaine mis à jour", read: false },
+    { id: 9, text: "Menu de la semaine mis à jour", read: false },
+    { id: 10, text: "Menu de la semaine mis à jour", read: false },
+    { id: 11, text: "Menu de la semaine mis à jour", read: false },
+    { id: 12, text: "Menu de la semaine mis à jour", read: false },
+    { id: 13, text: "Menu de la semaine mis à jour", read: false },
+  ]);
+  const unreadNotifications = notifications.filter(n => !n.read);
+
 
   return (
     <header className={`relative flex items-center w-full ${inAccount && "mb-4"}`}>
@@ -164,8 +182,8 @@ export default function Header({homeId, inAccount=false}) {
   <div className="relative" ref={profileMenuRef}>
     {/* Avatar */}
     <div
-      className="w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
-                 hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
+      className="relative w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
+                hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
       onClick={() => setIsProfileMenuOpen((prev) => !prev)}
     >
       {profile?.avatar ? (
@@ -177,17 +195,48 @@ export default function Header({homeId, inAccount=false}) {
       ) : (
         <span>{profile?.username?.[0]?.toUpperCase() || "?"}</span>
       )}
+
+      {/* 🔔 Badge notification */}
+      {unreadNotifications.length > 0 && (
+        <span className="absolute -bottom-0.5 -right-0.5 bg-red-500 text-white text-[10px] 
+                        w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
+          {unreadNotifications.length}
+        </span>
+      )}
     </div>
+
 
     {/* Dropdown */}
     {isProfileMenuOpen && (
-      <div className="absolute right-0 top-14 w-48 bg-white rounded-xl shadow-lg border text-sm z-50">
-        <ul className="py-2">
+      <div className="absolute right-0 top-14 w-64 bg-white rounded-xl shadow-lg border text-sm z-50">
+        <ul className="py-2 max-h-60 overflow-auto">
+
+          {/* Menu existant */}
           {inAccount && (
-            <li className="px-4 py-2 hover:bg-accentGreen cursor-pointer text-white bg-accentGreen" onClick={() => navigate("/")}>
+            <li
+              className="px-4 py-2 hover:bg-accentGreen cursor-pointer text-white bg-accentGreen"
+              onClick={() => navigate("/")}
+            >
               ← Retour KesKonMange
             </li>
           )}
+
+
+          <li
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+            onClick={() => {
+              setIsNotifOpen(true);
+              setIsProfileMenuOpen(false);
+            }}
+          >
+            🔔 Notifications
+            {unreadNotifications.length > 0 && (
+              <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
+                {unreadNotifications.length}
+              </span>
+            )}
+          </li>
+
           <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/account")}>
             👤 Compte
           </li>
@@ -200,6 +249,59 @@ export default function Header({homeId, inAccount=false}) {
         </ul>
       </div>
     )}
+
+    {isNotifOpen && (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+      <div className="bg-white w-full max-w-md rounded-xl shadow-lg">
+
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b">
+          <h2 className="font-semibold text-lg">🔔 Notifications</h2>
+          <button
+            onClick={() => setIsNotifOpen(false)}
+            className="text-gray-400 hover:text-gray-600"
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Contenu */}
+        <div className="max-h-80 overflow-auto">
+          {unreadNotifications.length > 0 ? (
+            unreadNotifications.map((notif) => (
+              <div
+                key={notif.id}
+                className="px-4 py-3 border-b hover:bg-gray-50"
+              >
+                {notif.text}
+              </div>
+            ))
+          ) : (
+            <div className="px-4 py-6 text-center text-gray-400">
+              Aucune notification non lue 🎉
+            </div>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="flex justify-end px-4 py-3 border-t">
+          <button
+            className="text-sm text-accentGreen hover:underline"
+            onClick={() => {
+              setNotifications((prev) =>
+                prev.map((n) => ({ ...n, read: true }))
+              );
+              setIsNotifOpen(false);
+            }}
+          >
+            Tout marquer comme lu
+          </button>
+        </div>
+      </div>
+    </div>
+  )}
+
+
   </div>
 </div>
 

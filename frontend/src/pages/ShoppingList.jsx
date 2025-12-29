@@ -308,11 +308,6 @@ const menuStatus = useMemo(() => {
   return status;
 }, [products, selectedMenus]);
 
-const isSharedIngredient = (ingredient) => {
-  // Vérifier si l'ingrédient est partagé entre plusieurs recettes
-  return ingredient.recipe_id === "shared"; // Remplace cette logique par la vérification appropriée pour ton cas
-};
-
 const expandIngredientAsync = async (
   ingredient,
   multiplier = 1,
