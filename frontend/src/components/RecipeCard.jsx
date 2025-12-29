@@ -23,16 +23,18 @@ export default function RecipeCard({ recipe , homeId}) {
 
   if (!recipe) return null;
 
-  const allTags = window.__ALL_TAGS__ || [];
+  // const allTags = window.__ALL_TAGS__ || [];
   const tags = Array.isArray(recipe.tags) ? recipe.tags : [];
 
   // 🔹 Trier les tags par profondeur (plus proches de la racine d’abord)
-  const sortedTags = tags.sort((a, b) => {
-    const depthA = getTagDepth(a.id, allTags);
-    const depthB = getTagDepth(b.id, allTags);
-    return depthA - depthB;
-  });
-
+  // const sortedTags = tags.sort((a, b) => {
+  //   const depthA = getTagDepth(a.id, allTags);
+  //   const depthB = getTagDepth(b.id, allTags);
+  //   return depthB - depthA;
+  // });
+  console.log("tags",tags);
+  const sortedTags = [...tags].reverse();
+  console.log("sortedTags", sortedTags);
   const visibleTags = sortedTags.slice(0, 4);
   const hiddenTags = sortedTags.slice(4, sortedTags.length);
   const remaining = sortedTags.length - visibleTags.length;

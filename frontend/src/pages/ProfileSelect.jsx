@@ -22,17 +22,15 @@ export default function ProfileSelect({homeId}) {
   useEffect(() => {
     // ------------------------------ TODO ----------------------------------------
     // 1️⃣ Supprimer le token actuel côté serveur
-    // const currentProfileId = localStorage.getItem("profile_id");
-    // const currentProfileId = getProfileId();
-    // if (currentProfileId) {
-    //   fetch(`${API_URL}/profile/remove-token`, {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify({ profileId: currentProfileId }),
-    //   });
-    //   localStorage.removeItem("profile_id");
-    //   setProfileId(0)
-    // }
+    const currentProfileId = getProfileId();
+    if (currentProfileId) {
+      // fetch(`${API_URL}/profile/remove-token`, {
+      //   method: "POST",
+      //   headers: { "Content-Type": "application/json" },
+      //   body: JSON.stringify({ profileId: currentProfileId }),
+      // });
+      setProfileId(0)
+    }
     // -----------------------------------*----------------------------------------
 
     // 2️⃣ Charger les profils
@@ -43,7 +41,6 @@ export default function ProfileSelect({homeId}) {
   }, [homeId]);
 
   const handleSelectProfile = async (profileId) => {
-    // localStorage.setItem("profile_id", profileId);
     setProfileId(profileId);
     
 // ------------------------------ TODO ----------------------------------------

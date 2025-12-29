@@ -830,62 +830,44 @@ router.get("/getSimilar/:id", async (req, res) => {
   const recipeId = req.params.id;
 
   try {
-    // 1️⃣ Récupérer les tags de la recette
+    // 🔹 0️⃣ Récupérer tous les descendants des parents autorisés
+    const allowedParents = ['Cuisine du monde', 'Famille Plats', 'Fêtes', 'Régime'];
+    const allowedDescendantsRes = await pool.query(
+      `
+      WITH RECURSIVE descendants AS (
+        SELECT id
+        FROM "Tag"
+        WHERE parent_id IN (
+          SELECT id FROM "Tag" WHERE name = ANY($1)
+        )
+
+        UNION ALL
+
+        SELECT t.id
+        FROM "Tag" t
+        JOIN descendants d ON t.parent_id = d.id
+      )
+      SELECT id FROM descendants;
+      `,
+      [allowedParents]
+    );
+
+    const allowedTagIds = allowedDescendantsRes.rows.map(t => t.id);
+    if (allowedTagIds.length === 0) return res.json([]);
+
+    // 🔹 1️⃣ Récupérer les tags de la recette
     const baseTagsRes = await pool.query(
       `SELECT tag_id FROM recipes_tags WHERE recipe_id = $1`,
       [recipeId]
     );
-
     const baseTags = baseTagsRes.rows.map(t => t.tag_id);
     if (baseTags.length === 0) return res.json([]);
 
-    // 2️⃣ Récupérer les parents (récursion vers le haut)
-    const parentRes = await pool.query(
-      `
-      WITH RECURSIVE parents AS (
-        SELECT id, parent_id
-        FROM "Tag"
-        WHERE id = ANY($1)
+    // 🔹 2️⃣ Filtrer les tags de la recette pour ne garder que les descendants autorisés
+    const relevantTags = baseTags.filter(tagId => allowedTagIds.includes(tagId));
+    if (relevantTags.length === 0) return res.json([]);
 
-        UNION ALL
-
-        SELECT t.id, t.parent_id
-        FROM "Tag" t
-        JOIN parents p ON t.id = p.parent_id
-        WHERE t.parent_id IS NOT NULL
-      )
-      SELECT id FROM parents;
-      `,
-      [baseTags]
-    );
-
-    const parentTags = parentRes.rows.map(t => t.id);
-
-    // 3️⃣ Récupérer les enfants (récursion vers le bas)
-    const childRes = await pool.query(
-      `
-      WITH RECURSIVE children AS (
-        SELECT id, parent_id
-        FROM "Tag"
-        WHERE id = ANY($1)
-
-        UNION ALL
-
-        SELECT t.id, t.parent_id
-        FROM "Tag" t
-        JOIN children c ON t.parent_id = c.id
-      )
-      SELECT id FROM children;
-      `,
-      [baseTags]
-    );
-
-    const childTags = childRes.rows.map(t => t.id);
-
-    // 4️⃣ Fusionner les tags sans doublon
-    const allTagIds = [...new Set([...baseTags, ...parentTags, ...childTags])];
-
-    // 5️⃣ Récupérer les recettes similaires
+    // 🔹 3️⃣ Récupérer les recettes similaires
     const similarRecipes = await pool.query(
       `
       SELECT DISTINCT r.*
@@ -894,7 +876,7 @@ router.get("/getSimilar/:id", async (req, res) => {
       WHERE rt.tag_id = ANY($1)
       AND r.id != $2
       `,
-      [allTagIds, recipeId]
+      [relevantTags, recipeId]
     );
 
     res.json(similarRecipes.rows);
@@ -904,6 +886,9 @@ router.get("/getSimilar/:id", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+
+
 
 router.post("/getStats", async (req, res) => {
   try {

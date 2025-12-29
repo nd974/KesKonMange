@@ -685,7 +685,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
         {!idProp && 
         //* === Colonne droite : Recettes similaires === *//
         <aside className="hidden lg:block w-1/4 bg-white p-4 rounded-lg shadow">
-          <h3 className="text-xl font-semibold mb-4">🍝 Recettes similaires</h3>
+          <h3 className="text-xl font-semibold mb-4">🍝 Autres recettes</h3>
 
           {similar.length === 0 ? (
             <p className="text-gray-500 text-sm">Aucune recette similaire trouvée.</p>
