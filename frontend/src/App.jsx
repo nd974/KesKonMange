@@ -13,6 +13,7 @@ import TestMap from "./pages/TestMap";
 
 import Account from "./pages/settings/Settings";
 import Security from "./pages/settings/Security";
+import User from "./pages/settings/User";
 
 import RecipeDetail from "./pages/RecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
@@ -90,6 +91,7 @@ function AppRoutes() {
 
 
           <Route path="/settings" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
+          <Route path="/settings/user" element={<User key={home_id} homeId={home_id} profileId={profile_id}/>} />
           <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id}/>} />
           {/* <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
           <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} /> */}

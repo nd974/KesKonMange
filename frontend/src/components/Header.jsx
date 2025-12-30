@@ -6,6 +6,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { setHomeId, getHomeId, getProfileId } from "../../session";
 
+import Notifications from "./Notifications";
+
 export default function Header({homeId, inAccount=false}) {
     const location = useLocation();
     const navigate = useNavigate();
@@ -94,9 +96,9 @@ export default function Header({homeId, inAccount=false}) {
 
   const [isNotifOpen, setIsNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState([
-    { id: 1, text: "Nouvelle connexion", read: false },
-    { id: 2, text: "Alex s’est inscrit au menu Lasagnes", read: false },
-    { id: 3, text: "Menu de la semaine mis à jour", read: true },
+    { id: 1, text: "Nouveau menu\n[31/12/2025 - Brunch]", read: false },
+    { id: 2, text: "Inscription (Nicolas)\n[31/12/2025 - Brunch]", read: false },
+    { id: 3, text: "Menu de la semaine mis à jour", read: false },
     { id: 4, text: "Menu de la semaine mis à jour", read: false },
     { id: 5, text: "Menu de la semaine mis à jour", read: false },
     { id: 6, text: "Menu de la semaine mis à jour", read: false },
@@ -109,6 +111,7 @@ export default function Header({homeId, inAccount=false}) {
     { id: 13, text: "Menu de la semaine mis à jour", read: false },
   ]);
   const unreadNotifications = notifications.filter(n => !n.read);
+  const readNotifications = notifications.filter(n => n.read);
 
 
   return (
@@ -120,6 +123,7 @@ export default function Header({homeId, inAccount=false}) {
             src={`${CLOUDINARY_RES}${inAccount ? CLOUDINARY_LOGO_ACCOUNT : CLOUDINARY_LOGO_HEADER}`}
             alt="Logo KesKonMange"
             className="object-cover w-full h-full"
+            onClick={() => navigate("/")}
           />
         </div>
 
@@ -248,56 +252,13 @@ export default function Header({homeId, inAccount=false}) {
       </div>
     )}
 
-    {isNotifOpen && (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-      <div className="bg-white w-full max-w-md rounded-xl shadow-lg">
-
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b">
-          <h2 className="font-semibold text-lg">🔔 Notifications</h2>
-          <button
-            onClick={() => setIsNotifOpen(false)}
-            className="text-gray-400 hover:text-gray-600"
-          >
-            ✕
-          </button>
-        </div>
-
-        {/* Contenu */}
-        <div className="max-h-80 overflow-auto">
-          {unreadNotifications.length > 0 ? (
-            unreadNotifications.map((notif) => (
-              <div
-                key={notif.id}
-                className="px-4 py-3 border-b hover:bg-gray-50"
-              >
-                {notif.text}
-              </div>
-            ))
-          ) : (
-            <div className="px-4 py-6 text-center text-gray-400">
-              Aucune notification non lue 🎉
-            </div>
-          )}
-        </div>
-
-        {/* Footer */}
-        <div className="flex justify-end px-4 py-3 border-t">
-          <button
-            className="text-sm text-accentGreen hover:underline"
-            onClick={() => {
-              setNotifications((prev) =>
-                prev.map((n) => ({ ...n, read: true }))
-              );
-              setIsNotifOpen(false);
-            }}
-          >
-            Tout marquer comme lu
-          </button>
-        </div>
-      </div>
-    </div>
-  )}
+      {isNotifOpen && (
+        <Notifications
+          notifications={notifications}
+          setNotifications={setNotifications}
+          onClose={() => setIsNotifOpen(false)}
+        />
+      )}
 
 
   </div>

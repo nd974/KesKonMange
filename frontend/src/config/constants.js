@@ -40,13 +40,15 @@ export const Account_links =
     },
     { 
         label: "👤 Utilisateur", 
-        path: "/settings/user" 
+        path: "/settings/user",
+        items: []
     },
     { 
         label: "🔒 Sécurité", 
         path: "/settings/security", 
         items: [
             { label: "🔒 Mot de passe", path: "/settings/security" },
+            { label: "🔢 Code PIN", path: "/settings/security" },
             { label: "📧 E-mail", path: "/settings/security" },
             { label: "📱 Téléphone mobile", path: "/settings/security" },
         ]

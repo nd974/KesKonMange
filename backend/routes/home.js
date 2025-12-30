@@ -78,7 +78,7 @@ router.get("/get/:profileId", async (req, res) => {
     `;
 
     const { rows } = await pool.query(query, [profileId]);
-
+    
     if (!rows.length) {
       return res.status(404).json({ error: "Profile not found" });
     }
