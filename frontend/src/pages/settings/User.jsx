@@ -61,7 +61,7 @@ export default function User({ homeId, profileId }) {
 // console.log(profile.home_id);
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16">
+    <div className="px-4 md:px-8 lg:px-16">
       {/* Header */}
       <HeaderAccount homeId={homeId} profileId={profileId}/>
 
@@ -93,7 +93,7 @@ export default function User({ homeId, profileId }) {
                     )}
                     <button
                       onClick={() => setIsAvatarModalOpen(true)}
-                      className="absolute inset-0 bg-black/40 flex items-center justify-center text-white text-xl"
+                      className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-xl"
                     >
                       ✎
                     </button>

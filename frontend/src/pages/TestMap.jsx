@@ -163,8 +163,8 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId} />
+    <div>
+      {/* <Header homeId={homeId} /> */}
 
       {/* Carte responsive */}
       <MapContainer

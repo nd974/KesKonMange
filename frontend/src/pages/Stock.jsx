@@ -207,9 +207,9 @@ function DisplayIngredient({ ing }) {
 // const units = [...new Set(ingredients.map(i => i.unit_name))];
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
+    <div className="">
 
-      <Header homeId={homeId} />
+      {/* <Header homeId={homeId} /> */}
 
       <div className="flex flex-col lg:flex-row gap-6 py-8">
 

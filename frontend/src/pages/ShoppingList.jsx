@@ -542,8 +542,8 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
   // 🔹 RENDER
   // --------------------------------------
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId} />
+    <div className="">
+      {/* <Header homeId={homeId} /> */}
 
       <div className="mb-8"></div>
 

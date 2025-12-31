@@ -219,13 +219,22 @@ export default function Header({homeId, inAccount=false}) {
           {inAccount && (
             <li
               className="px-4 py-2 hover:bg-accentGreen cursor-pointer text-white bg-accentGreen"
-              onClick={() => navigate("/")}
+              onClick={() => {
+                navigate("/");
+                setIsProfileMenuOpen(false);
+              }}
             >
               ← Retour KesKonMange
             </li>
           )}
 
-          <li className="px-4 py-2 hover:bg-gray-100 cursor-pointer" onClick={() => navigate("/settings")}>
+          <li 
+            className="px-4 py-2 hover:bg-gray-100 cursor-pointer" 
+            onClick={() => {
+              navigate("/settings");
+              setIsProfileMenuOpen(false);
+            }}
+          >
             ⚙️ Paramètres
           </li>
           <li

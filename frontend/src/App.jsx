@@ -15,12 +15,18 @@ import Account from "./pages/settings/Settings";
 import Security from "./pages/settings/Security";
 import User from "./pages/settings/User";
 
+import TermsOfUse from "./pages/settings/TermsOfUse";
+
 import RecipeDetail from "./pages/RecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
 
 import MobileNav from "./components/MobileNav";
 
 import {refreshHomeId, refreshProfileId } from "../session";
+
+
+import Header from "./components/Header";
+import Footer from "./components/Footer";
 
 function AppRoutes() {
   const location = useLocation();
@@ -30,6 +36,10 @@ function AppRoutes() {
     location.pathname === "/login" ||
     location.pathname === "/profiles" ||
     location.pathname.startsWith("/settings");
+
+  const pathSign =
+    location.pathname === "/login" ||
+    location.pathname === "/profiles";
     
   const [home_id, setHomeId] = useState(null);
   const [profile_id, setProfileId] = useState(null);
@@ -69,41 +79,60 @@ function AppRoutes() {
   }
 
 
-  return (
-    <>
-      <div lang="fr" translate="no" className={hideMobileNav ? "" : "pb-12 md:pb-0"}>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/profiles" element={<ProfileSelect key={home_id} homeId={home_id} />} />
-          <Route path="/" element={<Dashboard key={home_id} homeId={home_id} profileId={profile_id} />} />
-          <Route path="/recipes" element={<Recipes key={home_id} homeId={home_id} />} />
-          <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} />} />
-          <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
-          <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id}/>} />
+return (
+  <>
+    <div
+      lang="fr"
+      translate="no"
+      className={`min-h-screen flex flex-col ${hideMobileNav ? "" : "pb-12 md:pb-0"}`}
+    >
+      {/* HEADER + CONTENU */}
+      <div className="flex-1">
+        <div className={!pathSign ? "px-4 md:px-8 lg:px-16 py-8" : ""}>
+          {!pathSign && (<div className="print:hidden">
+              <Header
+                homeId={home_id}
+                inAccount={location.pathname.startsWith("/settings")}
+              />
+            </div>
+          )}
 
-          <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/profiles" element={<ProfileSelect key={home_id} homeId={home_id} />} />
+            <Route path="/" element={<Dashboard key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/recipes" element={<Recipes key={home_id} homeId={home_id} />} />
+            <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} />} />
+            <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
+            <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id} />} />
 
-          <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
-          <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+            <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+            <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
 
-          
-          <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id}/>} />
+            <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
 
+            <Route path="/settings" element={<Account key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/settings/user" element={<User key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id} />} />
 
-          <Route path="/settings" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
-          <Route path="/settings/user" element={<User key={home_id} homeId={home_id} profileId={profile_id}/>} />
-          <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id}/>} />
-          {/* <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} />
-          <Route path="/account" element={<Account key={home_id} homeId={home_id} profileId={profile_id}/>} /> */}
+            <Route path="/settings/termsofuse" element={<TermsOfUse />} />
+            
 
-
-          <Route path="*" element={<Navigate to="/" replace />} />
-        </Routes>
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </div>
       </div>
 
-      {!hideMobileNav && <MobileNav />}
-    </>
-  );
+      {/* FOOTER */}
+      {!pathSign && hideMobileNav && <div className="print:hidden"><Footer/></div>}
+    </div>
+
+    {/* MOBILE NAV */}
+    {!hideMobileNav && <MobileNav />}
+  </>
+);
+
 }
 
 export default function App() {

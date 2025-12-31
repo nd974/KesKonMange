@@ -334,12 +334,9 @@ useEffect(() => {
 
   return (
     
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      {loading ? (  // TODO CHARGEMENT
-        <p className="text-center text-gray-500 py-10">Chargement…</p>
-      ) : (
-        <section className="order-2 lg:order-1">
-          <Header homeId={homeId} />
+
+    <section className="order-2 lg:order-1">
+          {/* <Header homeId={homeId} /> */}
 
         {/* SECTION MENUS A (toujours visible) */}
         <main className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
@@ -600,7 +597,5 @@ useEffect(() => {
         </div>
       )}
         </section>
-      )}
-    </div>
-  );
+      )
 }

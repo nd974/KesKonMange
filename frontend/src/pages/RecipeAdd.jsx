@@ -637,8 +637,8 @@ const StarRating = ({ value, onChange }) => {
 };
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8 relative bg-gray-50">
-      <Header homeId={homeId} />
+    <div className="">
+      {/* <Header homeId={homeId} /> */}
 
       <form
         onSubmit={handleSubmit}
@@ -653,7 +653,7 @@ const StarRating = ({ value, onChange }) => {
             <img 
               src={`${CLOUDINARY_RES}${recipePicture}`}
               alt="recipeName"
-              className="w-full h-80 object-cover rounded-md mb-6"
+              className="w-full h-100 object-cover rounded-md mb-6"
             />
 
             {/* Bouton poubelle */}

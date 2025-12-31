@@ -22,7 +22,7 @@ export default function Security({ homeId, profileId }) {
   };
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16">
+    <div className="px-4 md:px-8 lg:px-16">
       <HeaderAccount homeId={homeId} profileId={profileId} />
 
       <div className="max-w-7xl mx-auto px-4 md:px-8 flex gap-10">

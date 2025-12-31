@@ -91,8 +91,8 @@ export default function Calendar({homeId}) {
   // };
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId}/> {/* onChangeHome={handleChangeHome} currentHomeId={homeId} /> */}
+    <div className="">
+      {/* <Header homeId={homeId}/> onChangeHome={handleChangeHome} currentHomeId={homeId} /> */}
 
       <div className="flex items-center justify-between py-5">
         <button onClick={() => setCurrentMonth(currentMonth.subtract(1, "month"))}>←</button>

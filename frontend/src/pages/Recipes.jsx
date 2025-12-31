@@ -94,8 +94,8 @@ export default function Recipes({homeId}) {
   }, [recipes, search, selectedTagIds, tagsFlat]);
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16 py-8">
-      <Header homeId={homeId}/>
+    <div className="">
+      {/* <Header homeId={homeId}/> */}
 
       <div className="content py-8">
         <div className="recipes-header">

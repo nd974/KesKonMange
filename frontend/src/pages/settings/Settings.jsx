@@ -9,7 +9,7 @@ export default function Settings({ homeId, profileId }) {
   );
 
   return (
-    <div className="min-h-screen px-4 md:px-8 lg:px-16">
+    <div className="px-4 md:px-8 lg:px-16">
       {/* Header */}
       <HeaderAccount homeId={homeId} profileId={profileId}/>
 

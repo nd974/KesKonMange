@@ -228,8 +228,8 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
   if (!recipe) return <div className="p-8 text-center">Recette introuvable.</div>;
 
   return (
-  <div className={`min-h-screen px-4 md:px-8 lg:px-16 relative ${!idProp ? "py-8" : ""}`}>
-      {!idProp && <Header homeId={homeId} /> }
+  <div className={`px-4 md:px-8 lg:px-16 relative ${!idProp ? "py-8" : ""}`}>
+      {/* {!idProp && <Header homeId={homeId} /> } */}
 
       <div  className={`lg:flex lg:gap-6 ${!idProp ? "py-8" : ""}`}>
         

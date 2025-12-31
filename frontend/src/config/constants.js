@@ -58,12 +58,22 @@ export const Account_links =
         path: "/settings", 
         items: [
             { label: "🔔 Notifications", path: "/settings" },
+            { label: "🌍 Langue & région", path: "/settings/language" },
+            { label: "⏰ Fuseau horaire", path: "/settings/timezone" },
+            { label: "📅 Semaine alimentaire", path: "/settings/week" },
+            { label: "🎯 Objectifs alimentaires", path: "/settings/goals" },
+            { label: "♻️ Anti-gaspillage", path: "/settings/antigaspi" },
         ]
     },
     { 
         label: "👤 Utilisateur", 
         path: "/settings/user",
-        items: []
+        items: [
+            { label: "🥗 Préférences alimentaires", path: "/settings/user/preferences" },
+            { label: "🚫 Allergies & exclusions", path: "/settings/user/allergies" },
+            { label: "💸 Budget personnel", path: "/settings/user/budget" },
+            { label: "📊 Statistiques personnelles", path: "/settings/user/stats" },
+        ]
     },
     { 
         label: "🔒 Sécurité", 
@@ -73,18 +83,11 @@ export const Account_links =
             { label: "🔢 Code PIN", path: "/settings/security" },
             { label: "📧 E-mail", path: "/settings/security" },
             { label: "📱 Téléphone mobile", path: "/settings/security" },
+            { label: "🛡️ Appareils connectés", path: "/settings/security" },
         ]
     },
     { 
         label: "🏠 Maisons", 
         path: "/settings/homes" 
-    },
-    { 
-        label: "⏳ TMP STORE", 
-        path: "/shops" 
-    },
-    { 
-        label: "⏳ TMP OPENFACTFOOD", 
-        path: "/openfactfood" 
     },
 ];
