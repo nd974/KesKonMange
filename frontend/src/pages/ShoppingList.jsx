@@ -434,23 +434,36 @@ const generateShoppingList = async () => {
           unit_item_id: ing.unit_item_id
         };
 
-        const recipePortions = recipe.portion || 1;
-        console.log("recipe:",recipe);
-        console.log("currentPortions",recipe.count_recipe);
-        const recipeMultiplier = recipe.count_recipe || 1;
+        // const recipePortions = recipe.portion || 1;
+        // console.log("recipe:",recipe);
+        // console.log("currentPortions",recipe.count_recipe);
+        // const recipeMultiplier = recipe.count_recipe || 1;
+
+        // const expanded = await expandIngredientAsync(
+        //   {
+        //     ...baseIngredient,
+        //     parent_portions: recipePortions
+        //   },
+        //   recipeMultiplier <= recipePortions ? recipeMultiplier : recipeMultiplier / recipePortions
+        // );
+        const recipePortions = recipe.portion || 1; // 12
+        const requestedPortions = recipe.count_recipe || 1; // 11
+
+        const portionRatio = requestedPortions / recipePortions;
 
         const expanded = await expandIngredientAsync(
           {
             ...baseIngredient,
             parent_portions: recipePortions
           },
-          recipeMultiplier <= recipePortions ? recipeMultiplier : recipeMultiplier / recipePortions
+          portionRatio
         );
         allIngredients.push(...expanded);
       }
     }
   }
 
+  console.log("allIngredients", allIngredients);
   // Fusionner les ingrédients pour éviter les doublons et ajuster les quantités
   const mergedIngredients = mergeIngredients(allIngredients);
 
