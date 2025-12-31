@@ -118,7 +118,7 @@ export default function User({ homeId, profileId }) {
                 </p>
 
                 <div className="relative">
-                    <span className="absolute left-3 top-1/2 -translate-y-1/2">🎮</span>
+                    <span className="absolute left-3 top-1/2 -translate-y-1/2">🆔</span>
                     <input
                     type="text"
                     defaultValue={profile?.username || ""}

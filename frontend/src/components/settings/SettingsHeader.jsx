@@ -8,13 +8,15 @@ export default function HeaderAccount({ homeId }) {
   const navigate = useNavigate();
   const location = useLocation();
 
+
   return (
     <div className="bg-white sticky top-0 z-[9999] py-8 px-4 md:px-8 lg:px-16">
       <Header homeId={homeId} inAccount={true} />
 
       {/* Navigation mobile */}
       <div className="md:hidden border-b bg-white mt-6">
-        <div className="flex gap-6 overflow-x-auto no-scrollbar">
+        <div className="flex gap-6 overflow-x-scroll" style={{scrollbarWidth: "none", msOverflowStyle: "none",}}>
+
           {Account_links.map((tab) => {
             const isActive = location.pathname === tab.path;
 

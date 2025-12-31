@@ -37,38 +37,6 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
     "v1764321301/mike.png",
     "v1764321302/dustin.png",
   ],
-
-    "Stranger Things2": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
-  ],
-    "Stranger Things3": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
-  ],
-    "Stranger Things4": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
-  ],
-    "Stranger Things5": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
-  ],
-    "Stranger Things6": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
-  ],
-    "Stranger Things7": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
-  ],
-
 };
 
 

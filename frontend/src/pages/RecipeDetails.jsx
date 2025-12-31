@@ -319,7 +319,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
 
             <div className="flex flex-wrap gap-2">
               {/* 3 premiers tags */}
-              {recipe.tags.slice(0, 3).map((tag) => (
+              {[...recipe.tags].reverse().slice(0, 3).map((tag) => (
                 <span
                   key={tag.id}
                   className="bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
@@ -338,7 +338,7 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
                   {/* Tooltip multiline */}
                   <div className="absolute left-1/2 -translate-x-1/2 mt-1 bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                     <div className="flex flex-col whitespace-nowrap">
-                      {recipe.tags.slice(3).map((tag) => (
+                      {[...recipe.tags].reverse().slice(3).map((tag) => (
                         <span key={tag.id}>{tag.name}</span>
                       ))}
                     </div>
