@@ -193,16 +193,19 @@ export default function Dashboard({ homeId, profileId}) {
 
   useEffect(() => {
     const active = selectedMenusForDay[activeMenuIndex];
-    console.log("active", active);
-    if (active) {
+    if (!active) {
+      setSelectedRecipe(null);
+      return;
+    }
+
+    // ⚠️ On garde l’index actuel s’il est valide
+    if (active.recipes?.[recipeIndex]) {
+      setSelectedRecipe(active.recipes[recipeIndex]);
+    } else {
       setRecipeIndex(0);
       setSelectedRecipe(active.recipes?.[0] || null);
-    } else {
-      setSelectedRecipe(null);
     }
-  }, [activeMenuIndex, selectedMenusForDay]);
-
-  console.log(subscriptionState);
+  }, [activeMenuIndex, selectedMenusForDay, recipeIndex]);
 
 
   const [subscribing, setSubscribing] = useState(false);
