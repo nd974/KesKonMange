@@ -32,7 +32,7 @@ export default function Header({homeId, inAccount=false}) {
     const fetchData = async () => {
       const profileId = await getProfileId();
       if (profileId) {
-          fetch(`${API_URL}/home/get/${profileId}`)
+          fetch(`${API_URL}/profile/get/${profileId}`)
               .then((res) => res.json())
               .then((data) => setProfile(data))
               .catch((err) => console.error("Erreur profil:", err));

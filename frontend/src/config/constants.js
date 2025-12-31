@@ -18,6 +18,60 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
     `v1764321145/avatar5_vmpvxy_sm0kci.png`,
 ];
 
+export const CLOUDINARY_AVATARS_SETTINGS = {
+  "Personnel": [
+    "v1764321200/avatar_old1.png",
+    "v1764321201/avatar_old2.png",
+  ],
+
+  "Classiques": [
+    "v1764321144/avatar1_enqee6_w8lagz.png",
+    "v1764321145/avatar2_h6ubef_mwv7fb.png",
+    "v1764321145/avatar3_ibhdeb_cy1r1v.png",
+    "v1764321145/avatar4_czjb1t_rxnryd.png",
+    "v1764321145/avatar5_vmpvxy_sm0kci.png",
+  ],
+
+  "Stranger Things": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+
+    "Stranger Things2": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+    "Stranger Things3": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+    "Stranger Things4": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+    "Stranger Things5": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+    "Stranger Things6": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+    "Stranger Things7": [
+    "v1764321300/eleven.png",
+    "v1764321301/mike.png",
+    "v1764321302/dustin.png",
+  ],
+
+};
+
+
 export const CLOUDINARY_PRESET_RECIPE = "Recettes";
 export const CLOUDINARY_RECETTE_NOTFOUND = "v1764321553/ImageNotFound_ktjs1j.webp";
 

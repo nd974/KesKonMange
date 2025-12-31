@@ -3,6 +3,30 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
+// ------------------- GET Home -------------------
+router.get("/get/:homeId", async (req, res) => {
+  try {
+    const { homeId } = req.params;
+    if (!homeId) return res.status(400).json({ error: "missing profileId" });
+
+    const query = `
+      SELECT id, email, password, name
+      FROM "Home"
+      WHERE id = $1
+    `;
+
+    const { rows } = await pool.query(query, [homeId]);
+    
+    if (!rows.length) {
+      return res.status(404).json({ error: "Home not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // ------------------- CREATE HOME -------------------
 router.post("/create", async (req, res) => {
   try {
@@ -65,25 +89,22 @@ router.get("/homes-get/:profileId", async (req, res) => {
   }
 });
 
-// Récupérer un profil par son ID
-router.get("/get/:profileId", async (req, res) => {
+// ------------------- GET PROFILES FOR A HOME -------------------
+router.get("/get-profiles", async (req, res) => {
   try {
-    const { profileId } = req.params;
-    if (!profileId) return res.status(400).json({ error: "missing profileId" });
+    const homeId = req.query.homeId;
+    if (!homeId) return res.status(400).json({ error: "missing homeId" });
 
-    const query = `
-      SELECT id, username, name, avatar, role_id
-      FROM "Profile"
-      WHERE id = $1
-    `;
+    const result = await pool.query(
+      `SELECT p.id, p.name, p.avatar, p.role_id
+       FROM "Profile" p
+       JOIN homes_profiles ahp ON ahp.profile_id = p.id
+       WHERE ahp.home_id = $1
+       ORDER BY p.role_id ASC, p.name ASC`, // Tri par role_id puis name
+      [homeId]
+    );
 
-    const { rows } = await pool.query(query, [profileId]);
-    
-    if (!rows.length) {
-      return res.status(404).json({ error: "Profile not found" });
-    }
-
-    res.json(rows[0]);
+    res.json(result.rows);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }

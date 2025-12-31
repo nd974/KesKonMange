@@ -35,7 +35,7 @@ export default function ProfileSelect({homeId}) {
 
     // 2️⃣ Charger les profils
     if (!homeId) return;
-    fetch(`${API_URL}/profile/get?homeId=${homeId}`)
+    fetch(`${API_URL}/home/get-profiles?homeId=${homeId}`)
       .then((res) => res.json())
       .then((data) => setProfiles(data || []));
   }, [homeId]);

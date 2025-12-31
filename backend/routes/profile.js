@@ -3,22 +3,25 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
-// ------------------- GET PROFILES FOR A HOME -------------------
-router.get("/get", async (req, res) => {
+// ------------------- GET PROFILE -------------------
+router.get("/get/:profileId", async (req, res) => {
   try {
-    const homeId = req.query.homeId;
-    if (!homeId) return res.status(400).json({ error: "missing homeId" });
+    const { profileId } = req.params;
+    if (!profileId) return res.status(400).json({ error: "missing profileId" });
 
-    const result = await pool.query(
-      `SELECT p.id, p.name, p.avatar, p.role_id
-       FROM "Profile" p
-       JOIN homes_profiles ahp ON ahp.profile_id = p.id
-       WHERE ahp.home_id = $1
-       ORDER BY p.role_id ASC, p.name ASC`, // Tri par role_id puis name
-      [homeId]
-    );
+    const query = `
+      SELECT id, username, name, avatar, role_id, home_id
+      FROM "Profile"
+      WHERE id = $1
+    `;
 
-    res.json(result.rows);
+    const { rows } = await pool.query(query, [profileId]);
+    
+    if (!rows.length) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    res.json(rows[0]);
   } catch (e) {
     res.status(500).json({ error: e.message });
   }
@@ -33,10 +36,10 @@ router.post("/create", async (req, res) => {
 
     // créer le profil et récupérer l'id
     const profileResult = await pool.query(
-      `INSERT INTO "Profile" (username, password, name, avatar, role_id)
-       VALUES ($1, $2, $3, $4, $5)
+      `INSERT INTO "Profile" (username, password, name, avatar, role_id, home_id)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING id`,
-      [username, password, name, avatar || null, role_id || 1]
+      [username, password, name, avatar || null, role_id || 1, home_id]
     );
 
     const newProfileId = profileResult.rows[0].id;
