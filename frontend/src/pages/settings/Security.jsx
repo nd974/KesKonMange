@@ -1,6 +1,6 @@
 import HeaderAccount from "../../components/settings/SettingsHeader";
 import SidebarAccount from "../../components/settings/SettingsSidebar";
-import SecurityItem from "../../components/settings/SettingsSecurityItem";
+import SettingsActionItem from "../../components/settings/SettingsActionItem";
 import { Account_links } from "../../config/constants";
 
 export default function Security({ homeId, profileId }) {
@@ -29,50 +29,63 @@ export default function Security({ homeId, profileId }) {
         <SidebarAccount homeId={homeId} />
 
         <main className="flex-1">
-          <h1 className="text-3xl font-bold mb-4">Sécurité</h1>
-          <p className="text-gray-600 mb-6">Accès au compte utilisateur</p>
+          <h1 className="text-3xl font-bold mb-3">Sécurité</h1>
+          <p className="text-gray-600 mb-3">Accès au compte utilisateur</p>
 
-          <div className="bg-white rounded-lg border divide-y">
+          <div className="bg-white rounded-lg border mb-8 divide-y">
+            <SettingsActionItem
+              icon="🔒"
+              title="Mot de passe"
+              descriptions={[
+                "",
+              ]}
+              href={null}
+              onClick={null}
+            />
 
-            {securityLink.items.map((item, index) => {
+            <SettingsActionItem
+              icon="🔢"
+              title="Code PIN"
+              descriptions={[
+                "",
+              ]}
+              href={null}
+              onClick={null}
+            />
 
-              // 📧 EMAIL
-              if (item.label.includes("E-mail")) {
-                return (
-                  <SecurityItem
-                    key={index}
-                    label={item.label}
-                    value={userSecurityData.email.value}
-                    verified={userSecurityData.email.verified}
-                  />
-                );
-              }
+            <SettingsActionItem
+              icon="📧"
+              title=" E-mail"
+              descriptions={[
+                "nicolas974dolphin@gmail.com",
+                "⛔ Vérification requise",
+              ]}
+              href={null}
+              onClick={null}
+            />
 
-              // 📱 TÉLÉPHONE
-              if (item.label.includes("Téléphone")) {
-                return (
-                  <SecurityItem
-                    key={index}
-                    label={item.label}
-                    value={userSecurityData.phone.value}
-                    verified={userSecurityData.phone.verified}
-                  />
-                );
-              }
+            <SettingsActionItem
+              icon="📱"
+              title="Téléphone mobile"
+              descriptions={[
+                "07 70 14 58 77",
+                "✅ Vérification validée"
+              ]}
+              href={null}
+              onClick={null}
+            />
 
-              // 🔒 AUTRES (mot de passe, futur items, etc.)
-              return (
-                <div
-                  key={index}
-                  className="px-6 py-4 flex justify-between items-center hover:bg-gray-50 cursor-pointer"
-                >
-                  <span className="font-medium">{item.label}</span>
-                  <span className="text-xl">›</span>
-                </div>
-              );
-            })}
-
+            <SettingsActionItem
+              icon="🛡️"
+              title="Appareils connectés"
+              descriptions={[
+                "",
+              ]}
+              href={null}
+              onClick={null}
+            />
           </div>
+
         </main>
       </div>
     </div>

@@ -15,7 +15,7 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
     `v1764321145/avatar2_h6ubef_mwv7fb.png`,
     `v1764321145/avatar3_ibhdeb_cy1r1v.png`,
     `v1764321145/avatar4_czjb1t_rxnryd.png`,
-    `v1764321145/avatar5_vmpvxy_sm0kci.png`,
+    `v1767285337/invite_x3jthx.webp`,
 ];
 
 export const CLOUDINARY_AVATARS_SETTINGS = {
@@ -29,7 +29,6 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
     "v1764321145/avatar2_h6ubef_mwv7fb.png",
     "v1764321145/avatar3_ibhdeb_cy1r1v.png",
     "v1764321145/avatar4_czjb1t_rxnryd.png",
-    "v1764321145/avatar5_vmpvxy_sm0kci.png",
   ],
 
   "Stranger Things": [

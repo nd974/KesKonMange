@@ -2,7 +2,11 @@ import HeaderAccount from "../../components/settings/SettingsHeader";
 import SidebarAccount from "../../components/settings/SettingsSidebar";
 import { Account_links } from "../../config/constants";
 
+import { useNavigate, useLocation } from "react-router-dom";
+
 export default function Settings({ homeId, profileId }) {
+
+  const navigate = useNavigate();
 
   const link = Account_links.find(
     item => item.label === '📄 Général'
@@ -21,8 +25,7 @@ export default function Settings({ homeId, profileId }) {
         {/* Contenu principal */}
         <main className="flex-1">
           {/* Titre */}
-          <h1 className="text-3xl font-bold mb-1">Général</h1>
-          <br></br>
+          <h1 className="text-3xl font-bold mb-3">Général</h1>
 
           <p className="text-gray-600 mb-3">Détails de la maison sélectionnée</p>
           {/* maisons */}
@@ -33,14 +36,7 @@ export default function Settings({ homeId, profileId }) {
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600">
                   🏠
                 </span>
-
-                <select
-                  value={null}
-                  onChange={null}
-                  className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
-                >
-                  <option>André Malraux</option>
-                </select>
+                <p className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block">André Malraux</p>
               </div>
             </div>
 
@@ -55,7 +51,7 @@ export default function Settings({ homeId, profileId }) {
               </div>
             </div>
 
-            <div className="px-6 py-4 border-t flex justify-between items-center cursor-pointer hover:bg-gray-50">
+            <div className="px-6 py-4 border-t flex justify-between items-center cursor-pointer hover:bg-gray-50" onClick={() => navigate("/settings/homes")}>
               <span className="font-medium">Gérer la maison</span>
               <span className="text-xl">›</span>
             </div>

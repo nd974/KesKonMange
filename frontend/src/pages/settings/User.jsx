@@ -73,7 +73,7 @@ export default function User({ homeId, profileId }) {
         {/* Contenu principal */}
         <main className="flex-1">
             {/* Titre */}
-            <h1 className="text-3xl font-bold mb-6">Utilisateur</h1>
+            <h1 className="text-3xl font-bold mb-3">Utilisateur</h1>
 
             <p className="text-gray-600 mb-3">Modifiez votre profil </p>
             {/* Profile */}

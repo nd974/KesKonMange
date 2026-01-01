@@ -14,8 +14,9 @@ import TestMap from "./pages/TestMap";
 import Account from "./pages/settings/Settings";
 import Security from "./pages/settings/Security";
 import User from "./pages/settings/User";
+import Homes from "./pages/settings/Homes";
 
-import TermsOfUse from "./pages/settings/TermsOfUse";
+import TermsOfUse from "./pages/settings/footer/TermsOfUse";
 
 import RecipeDetail from "./pages/RecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
@@ -110,14 +111,18 @@ return (
             <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
             <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
 
-            <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
+
 
             <Route path="/settings" element={<Account key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/settings/user" element={<User key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/settings/homes" element={<Homes key={home_id} homeId={home_id} profileId={profile_id} />} />
 
             <Route path="/settings/termsofuse" element={<TermsOfUse />} />
             
+
+
+            <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
