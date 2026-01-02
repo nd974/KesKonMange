@@ -39,7 +39,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
     console.log("isSelected [child]", child);
     console.log("isSelected [selectedStorageLocalId]", selectedStorageLocalId);
     console.log("isSelected [inPopinStorageSelect]", inPopinStorageSelect);
-    console.log("isSelected [child.id]", child.instance_id);
+    console.log("isSelected [child.id]", child.id);
     if (inPopinStorageSelect) {
       return Number(child.id) === Number(inPopinStorageSelect);
     }
@@ -357,7 +357,26 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
   }
 
   const [isEditing, setIsEditing] = useState(false);
-  const [homeNameEdit, setHomeNameEdit] = useState(homeName); // valeur par défaut
+  const [homeNameEdit, setHomeNameEdit] = useState(null); // valeur par défaut
+
+  const [home, setHome] = useState(null); // valeur par défaut
+
+  useEffect(() => {
+    const fetchHome = async () => {
+      if (!homeId) return;
+        await fetch(`${API_URL}/home/get/${homeId}`)
+          .then((res) => res.json())
+          .then((data) => {
+            setHome(data || null);
+            console.log("data",data);
+            setHomeNameEdit(data?.name); // probably should use `data`, not `home`
+      });
+    };
+
+    fetchHome();
+  }, []);
+
+
 
   const handleUpdateHomeName = async () => {
     if (!homeId) return; // Vérifie que tu as l'ID de la maison
@@ -389,6 +408,8 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
     }
   };
 
+  console.log("HERE = ", storages);
+
 
   // -------------------------------------
   // AFFICHAGE
@@ -404,7 +425,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       hover:shadow-xl
       transition-shadow
     ">
-{!inPopinStorageSelect && inManage && (
+{/* {!inPopinStorageSelect && ( */}
   <h1 className="text-2xl font-bold mb-4 p-2 flex flex-wrap items-center justify-center gap-2">
     <input
       value={homeNameEdit}
@@ -412,8 +433,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       className={`text-center border p-1 w-48 sm:w-64 md:w-80 lg:w-96 ${!isEditing ? "cursor-not-allowed" : "cursor-text"}`}
       disabled={!isEditing}
     />
-
-    {!isEditing ? (
+    {inManage && !isEditing ? (
       <button
         className="px-2 py-1 rounded bg-transparent text-xl"
         onClick={() => setIsEditing(true)}
@@ -421,7 +441,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       >
         ✏️
       </button>
-    ) : (
+    ) : inManage && (
       <button
         className="px-2 py-1 rounded bg-transparent text-xl"
         onClick={handleUpdateHomeName}
@@ -431,7 +451,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       </button>
     )}
   </h1>
-)}
+{/* )} */}
 
 
 
@@ -686,7 +706,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
           setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: false }))
         }
         onDrag={() =>
-          setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: true }))
+          inManage && setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: true }))
         }
         onStop={(e, data) => {
           const dragged = draggedStorageIds[child.localId];
@@ -702,7 +722,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
 
           setDragOverZone(null);
 
-          if (!dragged) handleSelect();
+          if (!dragged && !inManage) handleSelect();
         }}
       >
         <g
