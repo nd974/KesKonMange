@@ -3,6 +3,7 @@ import SidebarAccount from "../../components/settings/SettingsSidebar";
 import { Account_links } from "../../config/constants";
 
 import React, { useEffect, useRef, useState } from "react";
+import { useLocation } from "react-router-dom";
 import { setHomeId, getHomeId, getProfileId } from "../../../session";
 import { CLOUDINARY_RES, CLOUDINARY_AVATARS_SETTINGS, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../../config/constants";
 
@@ -11,54 +12,44 @@ import ModalPickAvatar from "../../components/ModalPickAvatar";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function User({ homeId, profileId }) {
-    const [profile, setProfile] = useState(null);
-    const [home, setHome] = useState(null);
+  const [profile, setProfile] = useState(null);
+  const [home, setHome] = useState(null);
 
-    const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
-    const [selectedAvatar, setSelectedAvatar] = useState(null);
+  const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
+  const [selectedAvatar, setSelectedAvatar] = useState(null);
 
-  const link = Account_links.find(
-    item => item.label === '👤 Utilisateur'
-  );
+  const location = useLocation();
+  const targetProfileId = location.state?.targetProfileId || profileId;
 
-    useEffect(() => {
-      const fetchDataProfile = async () => {
-        // const homeId = await getProfileId();
-        // const profileId = await getProfileId();
-        if (profileId) {
-            await fetch(`${API_URL}/profile/get/${profileId}`)
-                .then((res) => res.json())
-                .then((data) => setProfile(data))
-                .catch((err) => console.error("Erreur profil:", err));
-        }
+  useEffect(() => {
+    const fetchDataProfile = async () => {
+      if (targetProfileId) {
+          await fetch(`${API_URL}/profile/get/${targetProfileId}`)
+              .then((res) => res.json())
+              .then((data) => setProfile(data))
+              .catch((err) => console.error("Erreur profil:", err));
+      }
+    };
 
-        if (profile) {
-          console.log(profile.home_id);
-            await fetch(`${API_URL}/home/get/${profile.home_id}`)
-                .then((res) => res.json())
-                .then((data) => setHome(data))
-                .catch((err) => console.error("Erreur profil:", err));
-        }
-      };
-  
-      fetchDataProfile();
-    }, [profileId]);
+    fetchDataProfile();
+  }, [targetProfileId]);
 
-    useEffect(() => {
-      const fetchDataHome = async () => {
-        if (profile) {
-          console.log(profile.home_id);
-            await fetch(`${API_URL}/home/get/${profile.home_id}`)
-                .then((res) => res.json())
-                .then((data) => setHome(data))
-                .catch((err) => console.error("Erreur profil:", err));
-        }
-      };
-  
-      fetchDataHome();
-    }, [profile]);
+  console.log(profile);
 
-// console.log(profile.home_id);
+  useEffect(() => {
+    const fetchDataHome = async () => {
+      if (profile) {
+        console.log(profile.home_id);
+          await fetch(`${API_URL}/home/get/${profile.home_id}`)
+              .then((res) => res.json())
+              .then((data) => setHome(data))
+              .catch((err) => console.error("Erreur profil:", err));
+      }
+    };
+
+    fetchDataHome();
+  }, [profile]);
+
 
   return (
     <div className="px-4 md:px-8 lg:px-16">

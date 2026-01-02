@@ -35,8 +35,8 @@ export default function RecipeCard({ recipe , homeId}) {
   console.log("tags",tags);
   const sortedTags = [...tags].reverse();
   console.log("sortedTags", sortedTags);
-  const visibleTags = sortedTags.slice(0, 4);
-  const hiddenTags = sortedTags.slice(4, sortedTags.length);
+  const visibleTags = sortedTags.slice(0, 2);
+  const hiddenTags = sortedTags.slice(2, sortedTags.length);
   const remaining = sortedTags.length - visibleTags.length;
 
   const [averageNote, setAverageNote] = useState(0);

@@ -5,58 +5,37 @@ import SettingsActionItem from "../../components/settings/SettingsActionItem";
 import { useState, useEffect } from "react";
 import HomeZone from "../../components/HomeZone";
 
+import { useNavigate, useLocation } from "react-router-dom";
+
+import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../../config/constants";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+
 
 export default function Homes({ homeId, profileId }) {
 
+    const navigate = useNavigate();
+
     const [showPlanMaison, setShowPlanMaison] = useState(false);
 
-const profiles = [
-  {
-    id: 1,
-    name: "User1",
-    image:
-      "https://res.cloudinary.com/dz4ejk7r7/image/upload/v1764321145/avatar4_czjb1t_rxnryd.png",
-    isMain: true,
-  },
-  {
-    id: 2,
-    name: "User2",
-    image:
-      "https://res.cloudinary.com/dz4ejk7r7/image/upload/v1764321145/avatar2_h6ubef_mwv7fb.png",
-    isMain: false,
-  },
-  {
-    id: 3,
-    name: "User3",
-    image:
-      "https://res.cloudinary.com/dz4ejk7r7/image/upload/v1764321145/avatar3_ibhdeb_cy1r1v.png",
-    isMain: false,
-  },
-  {
-    id: 4,
-    name: "User4",
-    image:
-      "https://res.cloudinary.com/dz4ejk7r7/image/upload/v1764321145/avatar4_czjb1t_rxnryd.png",
-    isMain: false,
-  },
-  {
-    id: 5,
-    name: "User5",
-    image:
-      "https://res.cloudinary.com/dz4ejk7r7/image/upload/v1764321144/avatar1_enqee6_w8lagz.png",
-    isMain: false,
-  },
-  {
-    id: 6,
-    name: "Invité",
-    image:
-      "https://res.cloudinary.com/dz4ejk7r7/image/upload/v1767285337/invite_x3jthx.webp",
-    isMain: false,
-  },
-];
-
     const [homes, setHomes] = useState(false);
+
+    const [profile, setProfile] = useState(null);
+    useEffect(() => {
+      const fetchDataProfile = async () => {
+        if (profileId) {
+            await fetch(`${API_URL}/profile/get/${profileId}`)
+                .then((res) => res.json())
+                .then((data) => setProfile(data))
+                .catch((err) => console.error("Erreur profil:", err));
+        }
+      };
+  
+      fetchDataProfile();
+    }, [profileId]);
+
+    console.log("profile",profile);
 
     useEffect(() => {
     const fetchHomes = async () => {
@@ -89,6 +68,33 @@ const profiles = [
 
     console.log("selectedHome = ", selectedHome);
 
+    const [profiles, setProfiles] = useState([]);
+
+    useEffect(() => {
+      // 2️⃣ Charger les profils
+      if (!selectedHome) return;
+      fetch(`${API_URL}/home/get-profiles?homeId=${selectedHome.id}`)
+        .then((res) => res.json())
+        .then((data) => setProfiles(data || []));
+    }, [selectedHome]);
+
+    const [isPrimaryHome, setIsPrimaryHome] = useState(false);
+    useEffect(() => {
+      setIsPrimaryHome(profile?.home_id === selectedHome?.id);
+    }, [profile?.home_id, selectedHome?.id]);
+
+    const handleTogglePrimary = () => {
+      if (selectedHome?.id === profile?.home_id) {
+        alert("Veuillez choisir une autre maison pour changer l'association.");
+        return;
+      }
+      else{
+        // setIsPrimaryHome(!isPrimaryHome);
+        alert("TODO");
+        return;
+        
+      }
+    };
   return (
     <div className="px-4 md:px-8 lg:px-16">
       {/* Header */}
@@ -105,53 +111,90 @@ const profiles = [
             <h1 className="text-3xl font-bold mb-3">Maisons</h1>
             {/* Sélecteur de maison */}
             {homes && homes.length > 0 && (
-                <div className="mb-6">
+                <div className="mb-3">
                     {/* MOBILE */}
-                    <div className="block md:hidden text-center">
+                    <div className="block md:hidden flex justify-center items-center relative">
+                      {/* 🔸 Sélecteur de Home avec icône */}
+                      <div className="relative">
+                        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-600 pointer-events-none">
+                          🏠
+                        </span>
+
                         <select
-                        className="bg-softBeige pl-5 pr-3 py-1 rounded-xl text-sm"
-                        value={selectedHome ? selectedHome.id : ""} // on stocke l'objet complet
-                        onChange={(e) => {
+                          value={selectedHome ? selectedHome.id : ""}
+                          onChange={(e) => {
                             const selected = homes.find(h => h.id === Number(e.target.value));
                             if (selected) setSelectedHome(selected);
-                        }}
+                          }}
+                          className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
                         >
-                        {homes.map((home) => (
+                          {homes.map((home) => (
                             <option key={home.id} value={home.id}>
-                            {home.name}
+                              {home.name}
                             </option>
-                        ))}
+                          ))}
                         </select>
+                      </div>
                     </div>
-
+                    
                     {/* DESKTOP */}
                     <div className="hidden md:flex justify-center gap-3 flex-wrap">
                         {homes.map((home) => {
                         const isActive = selectedHome ? selectedHome.id === home.id : false ;
+                        const isPrimary = profile?.home_id === home.id; // ⭐ clé ici
                         return (
-                            <button
-                            key={home.id}
-                            onClick={() => setSelectedHome(home)}
-                            className={`
-                                px-4 py-2 rounded-full text-sm font-medium border
-                                transition
-                                ${
-                                isActive
-                                    ? "bg-blue-600 text-white border-blue-600"
-                                    : "bg-white text-gray-700 hover:bg-gray-100"
-                                }
-                            `}
-                            >
-                            {home.name}
-                            </button>
+      <button
+        key={home.id}
+        onClick={() => setSelectedHome(home)}
+        className={`
+          px-4 py-2 rounded-full text-sm font-medium border transition
+          ${
+            isPrimary
+              ? isActive
+                ? "bg-green-700 text-white border-green-700"
+                : "bg-green-200 text-green-800 border-green-300 hover:bg-green-300"
+              : isActive
+                ? "bg-blue-700 text-white border-blue-700"
+                : "bg-blue-200 text-blue-800 border-blue-300 hover:bg-blue-300"
+          }
+        `}
+      >
+        {home.name}
+      </button>
+
                         );
                         })}
                     </div>
                 </div>
             )}
 
+            <div className="bg-white rounded-lg border mb-3 px-6 py-4 flex items-center justify-between">
+              <div>
+                <p className="font-medium text-gray-800">
+                  Maison associé
+                </p>
+              </div>
 
-            <div className="bg-white rounded-lg border mb-8 divide-y">
+              {/* Toggle */}
+<button
+  onClick={handleTogglePrimary}
+  className={`
+    relative inline-flex h-6 w-11 items-center rounded-full transition
+    ${selectedHome?.id === profile?.home_id ? "bg-accentGreen cursor-not-allowed" : isPrimaryHome ? "bg-accentGreen" : "bg-gray-300"}
+  `}
+>
+  <span
+    className={`
+      inline-block h-4 w-4 transform rounded-full bg-white transition
+      ${isPrimaryHome ? "translate-x-6" : "translate-x-1"}
+    `}
+  />
+</button>
+
+            </div>
+
+
+            <div className="bg-white rounded-lg border mb-6 divide-y">
                 <SettingsActionItem
                 icon="🗺️"
                 title="Plan Maison"
@@ -193,11 +236,16 @@ const profiles = [
     {profiles.map((profile) => (
       <div
         key={profile.id}
+        onClick={() =>
+          navigate("/settings/user", {
+            state: { targetProfileId: profile.id }
+          })
+        }
         className="px-6 py-4 flex justify-between items-center cursor-pointer hover:bg-gray-50"
       >
         <div className="flex items-center gap-4">
           <img
-            src={profile.image}
+            src={`${CLOUDINARY_RES}${profile.avatar}`}
             alt={profile.name}
             className="w-10 h-10 rounded"
           />
@@ -205,7 +253,7 @@ const profiles = [
         </div>
 
         <div className="flex items-center gap-3">
-          {profile.isMain && (
+          {profile.id === profileId && (
             <span className="text-xs bg-blue-100 text-blue-600 px-2 py-1 rounded">
               Votre profil
             </span>
@@ -217,7 +265,7 @@ const profiles = [
   </div>
 
     {/* Zone fixe : bouton */}
-    <div className="px-6 py-5 border-t">
+    <div className="px-6 py-4 border-t">
         <div className="flex flex-col md:flex-row gap-2">
             <button className="flex-1 bg-gray-200 text-gray-700 py-2 rounded font-medium hover:bg-gray-300">
             Ajouter un profil

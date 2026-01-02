@@ -6,7 +6,7 @@ import RecipeCard from "../components/RecipeCard.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Recipes({homeId}) {
+export default function Recipes({ homeId }) {
   const navigate = useNavigate();
 
   const [recipes, setRecipes] = useState([]);
@@ -15,6 +15,10 @@ export default function Recipes({homeId}) {
   const [selectedTagIds, setSelectedTagIds] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showMobileTags, setShowMobileTags] = useState(false);
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const RECIPES_PER_PAGE = 12;
 
   // ⚡ Charger les recettes et tags
   useEffect(() => {
@@ -38,6 +42,11 @@ export default function Recipes({homeId}) {
     fetchData();
     return () => { mounted = false; };
   }, []);
+
+  // Réinitialiser la page quand recherche ou filtre change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedTagIds]);
 
   const parentMap = useMemo(() => {
     const map = new Map();
@@ -93,6 +102,20 @@ export default function Recipes({homeId}) {
     });
   }, [recipes, search, selectedTagIds, tagsFlat]);
 
+  // Trier les recettes aléatoirement
+  const sortedRecipes = useMemo(() => {
+    return [...filteredRecipes].sort(() => Math.random() - 0.5);
+  }, [filteredRecipes]);
+
+  // Pagination
+  const paginatedRecipes = useMemo(() => {
+    const start = (currentPage - 1) * RECIPES_PER_PAGE;
+    const end = start + RECIPES_PER_PAGE;
+    return sortedRecipes.slice(start, end);
+  }, [sortedRecipes, currentPage]);
+
+  const totalPages = Math.ceil(filteredRecipes.length / RECIPES_PER_PAGE);
+
   return (
     <div className="">
       {/* <Header homeId={homeId}/> */}
@@ -130,15 +153,8 @@ export default function Recipes({homeId}) {
               onClick={() => navigate("/recipe/add")}
               title="Ajouter recette"
             >
-              {/* Icônes pour mobile */}
-              <span className="flex items-center gap-1 md:hidden">
-                ➕🍴
-              </span>
-
-              {/* Texte pour desktop */}
-              <span className="hidden md:inline">
-                Ajouter Recette
-              </span>
+              <span className="flex items-center gap-1 md:hidden">➕🍴</span>
+              <span className="hidden md:inline">Ajouter Recette</span>
             </button>
           </div>
 
@@ -152,8 +168,6 @@ export default function Recipes({homeId}) {
                     className="flex items-center gap-1 bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm"
                   >
                     {tag?.name || "Tag"}
-
-                    {/* Croix rouge */}
                     <button
                       type="button"
                       onClick={() =>
@@ -188,26 +202,47 @@ export default function Recipes({homeId}) {
             ) : filteredRecipes.length === 0 ? (
               <div className="muted">Aucune recette trouvée.</div>
             ) : (
-              <div className="
-                grid 
-                grid-cols-1 
-                sm:grid-cols-2 
-                md:grid-cols-3 
-                lg:grid-cols-4 
-                xl:grid-cols-5 
-                gap-4
-              ">
-              {[...filteredRecipes]
-                .sort(() => Math.random() - 0.5)
-                .slice(0, 15)
-                .map(recipe => (
-                  <RecipeCard
-                    key={recipe.id}
-                    recipe={recipe}
-                    homeId={homeId}
-                  />
-                ))}
-              </div>
+              <>
+                <div className="
+                  grid 
+                  grid-cols-1 
+                  sm:grid-cols-2 
+                  md:grid-cols-3 
+                  lg:grid-cols-4 
+                  xl:grid-cols-6 
+                  gap-4
+                ">
+                  {paginatedRecipes.map((recipe) => (
+                    <RecipeCard key={recipe.id} recipe={recipe} homeId={homeId} />
+                  ))}
+                </div>
+
+                {totalPages > 1 && (
+                  <div className="flex justify-center gap-2 mt-4">
+                    <button
+                      className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+                    >
+                      ← Précédent
+                    </button>
+
+                    <span className="px-3 py-1">
+                      Page {currentPage} / {totalPages}
+                    </span>
+
+                    <button
+                      className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50"
+                      disabled={currentPage === totalPages}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(p + 1, totalPages))
+                      }
+                    >
+                      Suivant →
+                    </button>
+                  </div>
+                )}
+              </>
             )}
           </section>
         </div>

@@ -29,7 +29,7 @@ export default function Settings({ homeId, profileId }) {
 
           <p className="text-gray-600 mb-3">Détails de la maison sélectionnée</p>
           {/* maisons */}
-          <div className="bg-white rounded-lg border mb-8">
+          <div className="bg-white rounded-lg border mb-6">
             <div className="px-6 py-4 border-b">
               <div className="ml-auto mr-6 flex items-center gap-3 relative">
                 {/* 🔸 Sélecteur de Home */}
