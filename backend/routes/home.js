@@ -3,6 +3,40 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
+// ------------------- GET ALL HOMES -------------------
+// ------------------- GET ALL HOMES (WITH LINK INFO) -------------------
+router.get("/get-all/:profileId", async (req, res) => {
+  try {
+    const { profileId } = req.params;
+    if (!profileId) {
+      return res.status(400).json({ error: "missing profileId" });
+    }
+
+    const query = `
+      SELECT 
+        h.id,
+        h.name,
+        h.email,
+        CASE 
+          WHEN hp.profile_id IS NOT NULL THEN true
+          ELSE false
+        END AS is_linked
+      FROM "Home" h
+      LEFT JOIN homes_profiles hp
+        ON hp.home_id = h.id
+        AND hp.profile_id = $1
+      ORDER BY h.name ASC
+    `;
+
+    const { rows } = await pool.query(query, [profileId]);
+
+    res.json(rows);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
 // ------------------- GET Home -------------------
 router.get("/get/:homeId", async (req, res) => {
   try {
@@ -96,7 +130,7 @@ router.get("/get-profiles", async (req, res) => {
     if (!homeId) return res.status(400).json({ error: "missing homeId" });
 
     const result = await pool.query(
-      `SELECT p.id, p.name, p.avatar, p.role_id
+      `SELECT p.id, p.name, p.avatar, p.role_id, p.home_id
        FROM "Profile" p
        JOIN homes_profiles ahp ON ahp.profile_id = p.id
        WHERE ahp.home_id = $1

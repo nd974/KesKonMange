@@ -3,7 +3,11 @@ import Draggable from "react-draggable";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStoragesLoaded, inPopinStorageSelect = null, inManage=false}) {
+import { useNavigate, useLocation } from "react-router-dom";
+
+export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZone, onStoragesLoaded, inPopinStorageSelect = null, inManage=false}) {
+  const navigate = useNavigate();
+
   const [zones, setZones] = useState([]);
   const [storages, setStorages] = useState([]);
   const [dragOverZone, setDragOverZone] = useState(null);
@@ -352,6 +356,9 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
     }
   }
 
+  const [isEditing, setIsEditing] = useState(false);
+   const [homeNameEdit, setHomeNameEdit] = useState(homeName); // valeur par défaut
+
   // -------------------------------------
   // AFFICHAGE
   // -------------------------------------
@@ -366,11 +373,37 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
       hover:shadow-xl
       transition-shadow
     ">
-      {!inPopinStorageSelect && (
-        <h1 className="text-2xl font-bold mb-4 text-center">
-          Plan Maison
-        </h1>
-      )}
+{!inPopinStorageSelect && inManage && (
+  <h1 className="text-2xl font-bold mb-4 p-2 flex items-center justify-center gap-2">
+    <input
+      value={homeNameEdit}
+      onChange={(e) => setHomeNameEdit(e.target.value)}
+      className={`text-center border p-1 ${!isEditing ? "cursor-not-allowed" : "cursor-text"}`}
+      disabled={!isEditing}
+    />
+
+    {/* Boutons Edit / Enregistrer avec emoji et fond transparent */}
+    {!isEditing ? (
+      <button
+        className="px-2 py-1 rounded bg-transparent text-xl"
+        onClick={() => setIsEditing(true)}
+        title="Éditer"
+      >
+        ✏️
+      </button>
+    ) : (
+      <button
+        className="px-2 py-1 rounded bg-transparent text-xl"
+        onClick={() => setIsEditing(false)}
+        title="Enregistrer"
+      >
+        💾
+      </button>
+    )}
+  </h1>
+)}
+
+
 
       {/* Boutons */}
       {(!inPopinStorageSelect && inManage)&& (
@@ -522,8 +555,20 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
         </div>
       )}
 
-      {/* SVG */}
-      <svg viewBox="0 0 600 600" className="w-full h-[500px] border">
+    {zonePositions.length === 0 && !inManage ? (
+      <div className="text-center mt-4">
+        <p className="mb-2 text-lg">
+          Aucun plan de la maison trouvé !
+        </p>
+        <button
+          className="bg-blue-500 text-white px-4 py-2 rounded"
+          onClick={() => navigate("/settings/homes")} // ta fonction pour naviguer vers les paramètres
+        >
+          ⚙️ Paramètres [Maisons]
+        </button>
+      </div>
+    ) : (
+      <svg viewBox="0 0 600 600" className={"w-full h-[500px]" && (!inPopinStorageSelect && !inManage)  ? "" : "border"}>
         
         {/* 🔥 ZONES (cliquables) */}
         {zonePositions.map((zone) => (
@@ -667,6 +712,7 @@ export default function HomeZone({ homeId, onSelectStorage, onSelectZone, onStor
 
 
       </svg>
+)}
     </div>
   );
 }

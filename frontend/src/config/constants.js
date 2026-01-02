@@ -61,7 +61,6 @@ export const Account_links =
             { label: "⏰ Fuseau horaire", path: "/settings/timezone" },
             { label: "📅 Semaine alimentaire", path: "/settings/week" },
             { label: "🎯 Objectifs alimentaires", path: "/settings/goals" },
-            { label: "♻️ Anti-gaspillage", path: "/settings/antigaspi" },
         ]
     },
     { 

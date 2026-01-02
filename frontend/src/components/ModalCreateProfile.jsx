@@ -110,9 +110,9 @@ export default function ModalCreateProfile({ onClose, onCreated }) {
             value={roleId}
             onChange={(e) => setRoleId(Number(e.target.value))}
           >
-            <option value={1}>Admin</option>
+            {/* <option value={1}>Admin</option> */}
             <option value={2}>Member</option>
-            <option value={3}>Guest</option>
+            {/* <option value={3}>Guest</option> */}
           </select>
         </div>
 

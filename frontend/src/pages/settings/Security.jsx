@@ -30,9 +30,20 @@ export default function Security({ homeId, profileId }) {
 
         <main className="flex-1">
           <h1 className="text-3xl font-bold mb-3">Sécurité</h1>
-          <p className="text-gray-600 mb-3">Accès au compte utilisateur</p>
 
+          <p className="text-gray-600 mb-3">Accès au compte associé</p>
           <div className="bg-white rounded-lg border mb-8 divide-y">
+            <SettingsActionItem
+              icon="📧"
+              title=" E-mail"
+              descriptions={[
+                "nicolas974dolphin@gmail.com",
+                "⛔ Vérification requise",
+              ]}
+              href={null}
+              onClick={null}
+            />
+
             <SettingsActionItem
               icon="🔒"
               title="Mot de passe"
@@ -42,23 +53,15 @@ export default function Security({ homeId, profileId }) {
               href={null}
               onClick={null}
             />
-
+          </div>
+          
+          <p className="text-gray-600 mb-3">Accès au l'utilisateur</p>
+          <div className="bg-white rounded-lg border mb-8 divide-y">
             <SettingsActionItem
               icon="🔢"
               title="Code PIN"
               descriptions={[
                 "",
-              ]}
-              href={null}
-              onClick={null}
-            />
-
-            <SettingsActionItem
-              icon="📧"
-              title=" E-mail"
-              descriptions={[
-                "nicolas974dolphin@gmail.com",
-                "⛔ Vérification requise",
               ]}
               href={null}
               onClick={null}
