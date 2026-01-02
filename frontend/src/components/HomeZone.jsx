@@ -357,7 +357,38 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
   }
 
   const [isEditing, setIsEditing] = useState(false);
-   const [homeNameEdit, setHomeNameEdit] = useState(homeName); // valeur par défaut
+  const [homeNameEdit, setHomeNameEdit] = useState(homeName); // valeur par défaut
+
+  const handleUpdateHomeName = async () => {
+    if (!homeId) return; // Vérifie que tu as l'ID de la maison
+
+    try {
+      const response = await fetch(`${API_URL}/home/updateName/${homeId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: homeNameEdit }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        // Gérer les erreurs
+        console.error("Erreur lors de la mise à jour :", data.error);
+        return;
+      }
+
+      // Mettre à jour l'état avec le nom sauvegardé
+      setHomeNameEdit(data.name);
+      setIsEditing(false); // Désactive l'édition après sauvegarde
+      console.log("Nom mis à jour avec succès :", data);
+      window.location.reload();
+    } catch (error) {
+      console.error("Erreur réseau :", error);
+    }
+  };
+
 
   // -------------------------------------
   // AFFICHAGE
@@ -374,15 +405,14 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       transition-shadow
     ">
 {!inPopinStorageSelect && inManage && (
-  <h1 className="text-2xl font-bold mb-4 p-2 flex items-center justify-center gap-2">
+  <h1 className="text-2xl font-bold mb-4 p-2 flex flex-wrap items-center justify-center gap-2">
     <input
       value={homeNameEdit}
       onChange={(e) => setHomeNameEdit(e.target.value)}
-      className={`text-center border p-1 ${!isEditing ? "cursor-not-allowed" : "cursor-text"}`}
+      className={`text-center border p-1 w-48 sm:w-64 md:w-80 lg:w-96 ${!isEditing ? "cursor-not-allowed" : "cursor-text"}`}
       disabled={!isEditing}
     />
 
-    {/* Boutons Edit / Enregistrer avec emoji et fond transparent */}
     {!isEditing ? (
       <button
         className="px-2 py-1 rounded bg-transparent text-xl"
@@ -394,7 +424,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
     ) : (
       <button
         className="px-2 py-1 rounded bg-transparent text-xl"
-        onClick={() => setIsEditing(false)}
+        onClick={handleUpdateHomeName}
         title="Enregistrer"
       >
         💾
@@ -402,6 +432,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
     )}
   </h1>
 )}
+
 
 
 

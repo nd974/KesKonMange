@@ -145,4 +145,33 @@ router.get("/get-profiles", async (req, res) => {
 });
 
 
+router.put("/updateName/:homeId", async (req, res) => {
+  try {
+    const { homeId } = req.params;
+    const { name } = req.body;
+
+    if (!homeId) return res.status(400).json({ error: "missing homeId" });
+    if (!name) return res.status(400).json({ error: "missing name" });
+
+    const query = `
+      UPDATE "Home"
+      SET name = $1
+      WHERE id = $2
+      RETURNING id, email, password, name
+    `;
+
+    const { rows } = await pool.query(query, [name, homeId]);
+
+    if (!rows.length) {
+      return res.status(404).json({ error: "Home not found" });
+    }
+
+    res.json(rows[0]);
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
+
+
 export default router;
