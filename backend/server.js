@@ -16,6 +16,8 @@ import storageRoutes from "./routes/storage.js";
 import productRoutes from "./routes/product.js";
 import nutritionRoutes from "./routes/nutrition.js";
 
+import mailerRoutes from "./routes/mailer.js";
+
 const app = express();
 
 app.use(cors({
@@ -41,6 +43,8 @@ app.use("/ingredient", ingredientRoutes);
 app.use("/storage", storageRoutes);
 app.use("/product", productRoutes);
 app.use("/nutrition", nutritionRoutes);
+
+app.use("/mailer", mailerRoutes);
 
 const PORT = process.env.PORT || 3000;
 
