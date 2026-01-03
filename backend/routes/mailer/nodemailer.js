@@ -3,8 +3,9 @@ import sgMail from "@sendgrid/mail";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const NODE_API_URL = process.env.NODE_API_URL || "http://localhost:3000";
-
+const NODE_API_URL = process.env.NODE_ENV === "PROD"
+  ? process.env.NODE_API_URL
+  : "http://localhost:3000";
 
 /**
  * Envoyer un mail de vérification d'adresse email

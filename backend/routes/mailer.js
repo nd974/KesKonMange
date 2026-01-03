@@ -3,13 +3,12 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
-// const VITE_API_URL =  || "http://localhost:5173";
-
-const FRONT_URL = process.env.NODE_ENV === "localhost"
-  ? "http://localhost:5173"
-  : process.env.VITE_API_URL;
+const FRONT_URL = process.env.NODE_ENV === "PROD"
+  ? process.env.VITE_API_URL
+  : "http://localhost:5173";
 
 router.get("/verify-email", async (req, res) => {
+
   try {
     const { token, profileId } = req.query;
 
