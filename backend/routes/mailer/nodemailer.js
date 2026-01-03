@@ -11,9 +11,9 @@ const NODE_API_URL = process.env.NODE_API_URL || "http://localhost:3000";
  * @param {string} email - adresse email de l'utilisateur
  * @param {string} token - token de vérification
  */
-export async function sendVerificationEmail(email, token) {
+export async function sendVerificationEmail(email, token, profileId) {
   try {
-    const link = `${NODE_API_URL}/mailer/verify-email?token=${token}`;
+    const link = `${NODE_API_URL}/mailer/verify-email?token=${token}?profileId=${profileId}`;
 
     const msg = {
       to: email,

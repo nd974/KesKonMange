@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function ModalEditEmail({ isOpen, onClose, home, emailCheck, onUpdated }) {
+export default function ModalEditEmail({ isOpen, onClose, home, profileId, emailCheck, onUpdated }) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -30,7 +30,7 @@ export default function ModalEditEmail({ isOpen, onClose, home, emailCheck, onUp
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email }),
+          body: JSON.stringify({ profileId, email }),
         }
       );
 

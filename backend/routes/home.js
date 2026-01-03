@@ -180,7 +180,7 @@ router.put("/updateEmail/:homeId", async (req, res) => {
 
   try {
     const { homeId } = req.params;
-    const { email } = req.body;
+    const { profileId, email } = req.body;
 
     if (!email) return res.status(400).json({ error: "missing email" });
 
@@ -222,7 +222,7 @@ router.put("/updateEmail/:homeId", async (req, res) => {
     await client.query("COMMIT");
 
     // 🔹 ENVOI DU MAIL via SendGrid
-    await sendVerificationEmail(email, token);
+    await sendVerificationEmail(email, token, profileId);
 
     res.json({
       message: "Email mis à jour. Mail de vérification envoyé.",

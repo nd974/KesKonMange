@@ -7,7 +7,7 @@ const VITE_API_URL = process.env.VITE_API_URL || "http://localhost:5173";
 
 router.get("/verify-email", async (req, res) => {
   try {
-    const { token } = req.query;
+    const { token, profileId } = req.query;
 
     if (!token) {
       return res.status(400).send("Token manquant");
@@ -34,7 +34,7 @@ router.get("/verify-email", async (req, res) => {
           email_verification_expires = NULL
       WHERE id = $1
       `,
-      [rows[0].id]
+      [profileId]
     );
 
     // 🔁 redirection front
