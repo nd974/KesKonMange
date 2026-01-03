@@ -11,7 +11,12 @@ import React, { useState, useEffect, useRef} from "react";
 
 export default function Security({ homeId, profileId }) {
 
-
+  const params = new URLSearchParams(window.location.search);
+  useEffect(() => {
+    if (params.get("verified") === "1") {
+      alert("✅ Adresse e-mail vérifiée avec succès");
+    }
+  }, []);
 
 const maskEmail = (email) => {
   if (!email || !email.includes("@")) return "";

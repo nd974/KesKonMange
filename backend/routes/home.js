@@ -172,6 +172,9 @@ router.put("/updateName/:homeId", async (req, res) => {
   }
 });
 
+import crypto from "crypto";
+import { sendVerificationEmail } from "./mailer/nodemailer.js";
+
 router.put("/updateEmail/:homeId", async (req, res) => {
   const client = await pool.connect();
 
@@ -179,41 +182,26 @@ router.put("/updateEmail/:homeId", async (req, res) => {
     const { homeId } = req.params;
     const { email } = req.body;
 
-    if (!homeId) {
-      return res.status(400).json({ error: "missing homeId" });
-    }
-
     if (!email) {
       return res.status(400).json({ error: "missing email" });
     }
 
-    // 📧 Vérification format email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "invalid email format" });
     }
 
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 1000 * 60 * 60); // 1h
+
     await client.query("BEGIN");
 
-    // 🔒 Vérifier si email déjà utilisé
-    const emailCheck = await client.query(
-      `SELECT id FROM "Home" WHERE email = $1 AND id != $2`,
-      [email, homeId]
-    );
-
-    if (emailCheck.rows.length > 0) {
-      await client.query("ROLLBACK");
-      return res.status(409).json({ error: "email already in use" });
-    }
-
-    // 🏠 Update email dans Home
+    // update email
     const homeUpdate = await client.query(
-      `
-      UPDATE "Home"
-      SET email = $1
-      WHERE id = $2
-      RETURNING id, email, name
-      `,
+      `UPDATE "Home"
+       SET email = $1
+       WHERE id = $2
+       RETURNING id, email`,
       [email, homeId]
     );
 
@@ -222,22 +210,24 @@ router.put("/updateEmail/:homeId", async (req, res) => {
       return res.status(404).json({ error: "Home not found" });
     }
 
-    // 👤 Reset email_check dans Profile
+    // reset + token
     await client.query(
-      `
-      UPDATE "Profile"
-      SET email_check = true
-      WHERE home_id = $1
-      `,
-      [homeId]
+      `UPDATE "Profile"
+       SET email_check = false,
+           email_verification_token = $1,
+           email_verification_expires = $2
+       WHERE home_id = $3`,
+      [token, expires, homeId]
     );
 
     await client.query("COMMIT");
 
+    // 📧 ENVOI DU MAIL
+    await sendVerificationEmail(email, token);
+
     res.json(homeUpdate.rows[0]);
   } catch (e) {
     await client.query("ROLLBACK");
-    console.error(e);
     res.status(500).json({ error: e.message });
   } finally {
     client.release();
