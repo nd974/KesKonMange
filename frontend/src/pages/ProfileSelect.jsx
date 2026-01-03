@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import ModalCreateProfile from "../components/ModalCreateProfile";
-import ModalTransferProfile from "../components/ModalTransferProfile";
+import ModalCreateProfile from "../components/modals/ModalCreateProfile";
+import ModalTransferProfile from "../components/modals/ModalTransferProfile";
 import { Repeat } from "lucide-react";
 import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../config/constants";
 

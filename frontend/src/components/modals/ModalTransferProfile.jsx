@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-import { getHomeId } from "../../session";
+import { getHomeId } from "../../../session";
 
 export default function ModalTransferProfile({ onClose, onTransferred }) {
   const [username, setUsername] = useState("");

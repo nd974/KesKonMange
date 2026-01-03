@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import dayjs from "dayjs";
 import Header from "../components/Header";
-import ModalPickRecipe from "../components/ModalPickRecipes";
+import ModalPickRecipe from "../components/modals/ModalPickRecipes";
 import isoWeek from "dayjs/plugin/isoWeek";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import HomeZone from "./HomeZone";
-import {Unit_Item_List} from "../config/constants.js";
+import HomeZone from "../HomeZone.jsx";
+import {Unit_Item_List} from "../../config/constants.js";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 

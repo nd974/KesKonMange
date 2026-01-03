@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Header from "../components/Header";
 import HomeZone from "../components/HomeZone";
-import ModalProducts from "../components/ModalProducts";
+import ModalProducts from "../components/modals/ModalProducts";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 

@@ -1,5 +1,5 @@
-import AvatarRow from "./AvatarRow";
-import { CLOUDINARY_AVATARS_SETTINGS } from "../config/constants";
+import AvatarRow from "../AvatarRow";
+import { CLOUDINARY_AVATARS_SETTINGS } from "../../config/constants";
 
 export default function ModalPickAvatar({
   isOpen,

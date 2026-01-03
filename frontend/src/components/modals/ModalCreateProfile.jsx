@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { CLOUDINARY_AVATAR5_DEFAULT, CLOUDINARY_RES } from "../config/constants";
+import { CLOUDINARY_AVATAR5_DEFAULT, CLOUDINARY_RES } from "../../config/constants";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-import { getHomeId } from "../../session";
+import { getHomeId } from "../../../session";
 
 export default function ModalCreateProfile({ onClose, onCreated }) {
   const [username, setUsername] = useState("");

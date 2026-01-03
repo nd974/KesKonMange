@@ -172,6 +172,80 @@ router.put("/updateName/:homeId", async (req, res) => {
   }
 });
 
+router.put("/updateEmail/:homeId", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { homeId } = req.params;
+    const { email } = req.body;
+
+    if (!homeId) {
+      return res.status(400).json({ error: "missing homeId" });
+    }
+
+    if (!email) {
+      return res.status(400).json({ error: "missing email" });
+    }
+
+    // 📧 Vérification format email
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ error: "invalid email format" });
+    }
+
+    await client.query("BEGIN");
+
+    // 🔒 Vérifier si email déjà utilisé
+    const emailCheck = await client.query(
+      `SELECT id FROM "Home" WHERE email = $1 AND id != $2`,
+      [email, homeId]
+    );
+
+    if (emailCheck.rows.length > 0) {
+      await client.query("ROLLBACK");
+      return res.status(409).json({ error: "email already in use" });
+    }
+
+    // 🏠 Update email dans Home
+    const homeUpdate = await client.query(
+      `
+      UPDATE "Home"
+      SET email = $1
+      WHERE id = $2
+      RETURNING id, email, name
+      `,
+      [email, homeId]
+    );
+
+    if (!homeUpdate.rows.length) {
+      await client.query("ROLLBACK");
+      return res.status(404).json({ error: "Home not found" });
+    }
+
+    // 👤 Reset email_check dans Profile
+    await client.query(
+      `
+      UPDATE "Profile"
+      SET email_check = true
+      WHERE home_id = $1
+      `,
+      [homeId]
+    );
+
+    await client.query("COMMIT");
+
+    res.json(homeUpdate.rows[0]);
+  } catch (e) {
+    await client.query("ROLLBACK");
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
+  }
+});
+
+
+
 
 
 export default router;

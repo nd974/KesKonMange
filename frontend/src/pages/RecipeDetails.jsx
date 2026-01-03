@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import { FullStar, HalfStar, EmptyStar } from "../components/Stars";
-import ModalNutrition from "../components/ModalNutrition";
+import ModalNutrition from "../components/modals/ModalNutrition";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";

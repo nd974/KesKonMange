@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import dayjs from "dayjs";
 import Header from "../components/Header";
 import BarCodeScanner from "../components/BarCodeScanner";
-import ModalProducts from "../components/ModalProducts";
+import ModalProducts from "../components/modals/ModalProducts";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 

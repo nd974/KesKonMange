@@ -7,7 +7,7 @@ import { useLocation } from "react-router-dom";
 import { setHomeId, getHomeId, getProfileId } from "../../../session";
 import { CLOUDINARY_RES, CLOUDINARY_AVATARS_SETTINGS, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../../config/constants";
 
-import ModalPickAvatar from "../../components/ModalPickAvatar";
+import ModalPickAvatar from "../../components/modals/ModalPickAvatar";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -66,7 +66,7 @@ export default function User({ homeId, profileId }) {
             {/* Titre */}
             <h1 className="text-3xl font-bold mb-3">Utilisateur</h1>
 
-            <p className="text-gray-600 mb-3">Modifiez votre profil </p>
+            <p className="text-gray-600 mb-3">Modifiez le profil </p>
             {/* Profile */}
             <div className="bg-white rounded-lg border mb-8 border p-3">
               
@@ -104,7 +104,7 @@ export default function User({ homeId, profileId }) {
               <div className="mb-8">
                 <label className="block text-sm font-medium mb-1">Pseudo</label>
                 <p className="text-sm text-gray-600 mb-2">
-                    Votre pseudo est un identifiant unique qui sera affiché en dehors de votre maison.
+                    Le pseudo est un identifiant unique qui sera affiché en dehors de la maison.
                     <span className="underline cursor-pointer ml-1">En savoir plus</span>
                 </p>
 
