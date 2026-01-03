@@ -8,13 +8,17 @@ import ModalEditEmail from "../../components/modals/settings/ModalEditEmail.jsx"
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import React, { useState, useEffect, useRef} from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function Security({ homeId, profileId }) {
+
+  const navigate = useNavigate();
 
   const params = new URLSearchParams(window.location.search);
   useEffect(() => {
     if (params.get("verified") === "1") {
       alert("✅ Adresse e-mail vérifiée avec succès");
+      navigate("/settings/security");
     }
   }, []);
 

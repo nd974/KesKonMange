@@ -182,10 +182,9 @@ router.put("/updateEmail/:homeId", async (req, res) => {
     const { homeId } = req.params;
     const { email } = req.body;
 
-    if (!email) {
-      return res.status(400).json({ error: "missing email" });
-    }
+    if (!email) return res.status(400).json({ error: "missing email" });
 
+    // validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "invalid email format" });
@@ -196,7 +195,7 @@ router.put("/updateEmail/:homeId", async (req, res) => {
 
     await client.query("BEGIN");
 
-    // update email
+    // 🔹 Mettre à jour l'email dans Home
     const homeUpdate = await client.query(
       `UPDATE "Home"
        SET email = $1
@@ -210,7 +209,7 @@ router.put("/updateEmail/:homeId", async (req, res) => {
       return res.status(404).json({ error: "Home not found" });
     }
 
-    // reset + token
+    // 🔹 Reset email_check + token dans Profile
     await client.query(
       `UPDATE "Profile"
        SET email_check = false,
@@ -222,12 +221,16 @@ router.put("/updateEmail/:homeId", async (req, res) => {
 
     await client.query("COMMIT");
 
-    // 📧 ENVOI DU MAIL
+    // 🔹 ENVOI DU MAIL via SendGrid
     await sendVerificationEmail(email, token);
 
-    res.json(homeUpdate.rows[0]);
+    res.json({
+      message: "Email mis à jour. Mail de vérification envoyé.",
+      home: homeUpdate.rows[0],
+    });
   } catch (e) {
     await client.query("ROLLBACK");
+    console.error(e);
     res.status(500).json({ error: e.message });
   } finally {
     client.release();

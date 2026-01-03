@@ -3,6 +3,8 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
+const VITE_API_URL = process.env.VITE_API_URL || "http://localhost:5173";
+
 router.get("/verify-email", async (req, res) => {
   try {
     const { token } = req.query;
@@ -36,7 +38,9 @@ router.get("/verify-email", async (req, res) => {
     );
 
     // 🔁 redirection front
-    res.redirect(`${process.env.FRONT_URL}/settings/security?verified=1`);
+    // res.redirect(`${process.env.FRONT_URL}/settings/security?verified=1`);
+    res.redirect(`${VITE_API_URL}/settings/security?verified=1`);
+    
   } catch (e) {
     res.status(500).send("Erreur serveur");
   }
