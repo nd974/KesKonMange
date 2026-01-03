@@ -19,7 +19,7 @@ export async function sendVerificationEmail(email, token, profileId) {
       to: email,
       from: {
         name: "KesKonMange",
-        email: process.env.SENDGRID_MAIL, // doit être vérifié dans SendGrid
+        email: process.env.SENDGRID_MAIL, // doit être vérifié dans SendGrid => contact@keskonmange.com
       },
       subject: "Confirmez votre adresse e-mail",
       html: `

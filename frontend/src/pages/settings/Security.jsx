@@ -147,6 +147,7 @@ const maskPhone = (phone) => {
               isOpen={showEmailModal}
               onClose={() => setShowEmailModal(false)}
               home={home}
+              profileId={profileId}
               emailCheck={profile?.email_check}
               onUpdated={(updatedHome) => {
                 setHome(updatedHome);
