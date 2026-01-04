@@ -44,7 +44,7 @@ router.get("/get/:homeId", async (req, res) => {
     if (!homeId) return res.status(400).json({ error: "missing profileId" });
 
     const query = `
-      SELECT id, email, password, name
+      SELECT id, email, password, name, email_check
       FROM "Home"
       WHERE id = $1
     `;
@@ -180,7 +180,7 @@ router.put("/updateEmail/:homeId", async (req, res) => {
 
   try {
     const { homeId } = req.params;
-    const { profileId, email } = req.body;
+    const { email } = req.body;
 
     if (!email) return res.status(400).json({ error: "missing email" });
 
@@ -211,18 +211,18 @@ router.put("/updateEmail/:homeId", async (req, res) => {
 
     // 🔹 Reset email_check + token dans Profile
     await client.query(
-      `UPDATE "Profile"
+      `UPDATE "Home"
        SET email_check = false,
            email_verification_token = $1,
            email_verification_expires = $2
-       WHERE home_id = $3`,
+       WHERE id = $3`,
       [token, expires, homeId]
     );
 
     await client.query("COMMIT");
 
     // 🔹 ENVOI DU MAIL via SendGrid
-    await sendVerificationEmail(email, token, profileId);
+    await sendVerificationEmail(email, token);
 
     res.json({
       message: "Email mis à jour. Mail de vérification envoyé.",

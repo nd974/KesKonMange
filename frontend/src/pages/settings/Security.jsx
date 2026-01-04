@@ -14,13 +14,30 @@ export default function Security({ homeId, profileId }) {
 
   const navigate = useNavigate();
 
+  const alertShown = useRef(false);
   const params = new URLSearchParams(window.location.search);
   useEffect(() => {
-    if (params.get("verified") === "1") {
+    if (params.get("verified") === "200" && !alertShown.current) {
+      alertShown.current = true;
       alert("✅ Adresse e-mail vérifiée avec succès");
-      navigate("/settings/security");
+      navigate("/settings/security", { replace: true });
     }
-  }, []);
+    else if (params.get("verified") === "410" && !alertShown.current) {
+      alertShown.current = true;
+      alert("⛔ Lien de vérification invalide ou expiré");
+      navigate("/settings/security", { replace: true });
+    }
+    else if (params.get("verified") === "400" && !alertShown.current) {
+      alertShown.current = true;
+      alert("⛔ Token invalide invalide");
+      navigate("/settings/security", { replace: true });
+    }
+    else if (params.get("verified") === "500" && !alertShown.current) {
+      alertShown.current = true;
+      alert("⛔ Erreur serveur lors de la vérification");
+      navigate("/settings/security", { replace: true });
+    }
+  }, [navigate]);
 
 const maskEmail = (email) => {
   if (!email || !email.includes("@")) return "";
@@ -136,7 +153,7 @@ const maskPhone = (phone) => {
               descriptions={[
                 home?.email ? home.email : "Chargement...",
                 // profile?.email_check ? home.email : "Chargement...",
-                profile?.email_check
+                home?.email_check
                   ? "✅ Adresse vérifiée"
                   : "⛔ Vérification requise",
               ]}
@@ -148,13 +165,13 @@ const maskPhone = (phone) => {
               onClose={() => setShowEmailModal(false)}
               home={home}
               profileId={profileId}
-              emailCheck={profile?.email_check}
+              emailCheck={home?.email_check}
               onUpdated={(updatedHome) => {
                 setHome(updatedHome);
-                setProfile(prev => ({
-                  ...prev,
-                  email_check: false, // reset après changement
-                }));
+                // setProfile(prev => ({
+                //   ...prev,
+                //   email_check: false, // reset après changement
+                // }));
               }}
             />
 

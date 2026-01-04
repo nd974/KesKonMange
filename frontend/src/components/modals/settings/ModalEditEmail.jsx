@@ -2,7 +2,14 @@ import { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function ModalEditEmail({ isOpen, onClose, home, profileId, emailCheck, onUpdated }) {
+export default function ModalEditEmail({
+  isOpen,
+  onClose,
+  home,
+  profileId,
+  emailCheck,
+  onUpdated
+}) {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -17,27 +24,21 @@ export default function ModalEditEmail({ isOpen, onClose, home, profileId, email
 
   const handleSubmit = async () => {
     setError(null);
-
-    if (!email) {
-      setError("Veuillez saisir une adresse e-mail.");
-      return;
-    }
-
     setLoading(true);
+
     try {
       const res = await fetch(
         `${API_URL}/home/updateEmail/${home.id}`,
         {
           method: "PUT",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ profileId, email }),
+          body: JSON.stringify({ email }),
         }
       );
 
       const data = await res.json();
 
       if (!res.ok) {
-        // 🔥 message backend affiché
         setError(data.error || "Erreur inconnue");
         return;
       }
@@ -59,46 +60,62 @@ export default function ModalEditEmail({ isOpen, onClose, home, profileId, email
 
   return (
     <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg w-full max-w-md">
-        <h2 className="text-xl font-bold mb-2">Modifier l’e-mail</h2>
+      <div className="bg-white rounded-xl w-full max-w-md p-6">
 
-        {emailCheck && (
-        <p className="text-sm text-green-600 mb-3">
-          ✅ Cet e-mail est déjà vérifié.
-        </p>)}
+        {/* Icône fake Netflix (CSS only) */}
+        <div className="flex justify-center mb-4">
+          <div className="w-14 h-14 rounded-full bg-pink-100 flex items-center justify-center">
+            <span className="text-pink-600 text-xl font-bold">✓</span>
+          </div>
+        </div>
 
-        <p className="text-sm text-gray-500 mb-3">
-          Un email de vérification sera envoyé après modification. <br />
+        {/* Titre */}
+        <h2 className="text-xl font-bold text-center mb-2">
+          Vérifiez votre e-mail
+        </h2>
+
+        {/* Texte */}
+        <p className="text-sm text-gray-600 text-center mb-5">
+          Nous allons envoyer un lien de vérification à{" "}
+          <span className="font-medium">{email}</span>.
+          <br />
+          Vérifier votre adresse e-mail permet de renforcer la sécurité
+          de votre compte et de recevoir d’importantes communications.
         </p>
 
-        <input
-          type="email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          className="w-full border rounded px-3 py-2 mb-2"
-        />
+        {emailCheck && (
+          <p className="text-sm text-green-600 text-center mb-3">
+            ✅ Cet e-mail est déjà vérifié.
+          </p>
+        )}
 
-        {/* 🔴 ALERTE */}
         {error && (
-          <div className="mb-3 p-3 text-sm text-red-700 bg-red-100 rounded">
+          <div className="mb-4 p-3 text-sm text-red-700 bg-red-100 rounded">
             {error}
           </div>
         )}
 
-
-        <div className="flex justify-end gap-3">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-gray-600"
-          >
-            Annuler
-          </button>
+        {/* Boutons */}
+        <div className="flex flex-col gap-3">
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="bg-blue-600 text-white px-4 py-2 rounded disabled:opacity-50"
+            className="w-full bg-black text-white py-3 rounded font-medium disabled:opacity-50"
           >
-            {loading ? "Enregistrement..." : "Enregistrer"}
+            {loading ? "Envoi en cours..." : "Envoyer un lien"}
+          </button>
+
+          <button
+            className="w-full bg-gray-200 text-black py-3 rounded font-medium"
+          >
+            Modifier l’adresse e-mail
+          </button>
+
+          <button
+            onClick={onClose}
+            className="text-gray-600 text-sm"
+          >
+            Annuler
           </button>
         </div>
       </div>
