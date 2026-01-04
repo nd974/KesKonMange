@@ -68,7 +68,7 @@ export default function ModalEditEmail({ isOpen, onClose, home, profileId, email
         </p>)}
 
         <p className="text-sm text-gray-500 mb-3">
-          Un email de vérification sera envoyé après modification (Voir SPAM).
+          Un email de vérification sera envoyé après modification. <br />
         </p>
 
         <input
