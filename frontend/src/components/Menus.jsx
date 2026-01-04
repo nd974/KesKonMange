@@ -3,32 +3,38 @@ import dayjs from "dayjs";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMenu, homeId }) {
+export default function Menus({
+  selectedDay,
+  setSelectedDay,
+  onPick,
+  onSelectMenu,
+  homeId,
+}) {
   const [menus, setMenus] = useState([]);
-  const [currentRecipeIndex, setCurrentRecipeIndex] = useState(0);
 
   useEffect(() => {
     if (!homeId) return;
 
     const loadMenus = async () => {
       try {
-        // 🔹 Appel à ton backend Node (même route que Calendar)
-        const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
-        if (!res.ok) throw new Error("Erreur lors du chargement des menus");
+        const res = await fetch(
+          `${API_URL}/menu/get-byHome?homeId=${homeId}`
+        );
+        if (!res.ok) throw new Error("Erreur chargement menus");
         const data = await res.json();
 
-        // 🔹 On structure les menus comme dans le composant original
-        const formattedMenus = data.map((m) => ({
-          id: m.id,
-          date: dayjs(m.date).format("YYYY-MM-DD"),
-          tagName: m.tag ? m.tag.name : null,
-          recipes: m.recipes || [],
-        }));
+        const formatted = data
+          .map((m) => ({
+            id: m.id,
+            date: dayjs(m.date).format("YYYY-MM-DD"),
+            tagName: m.tag ? m.tag.name : null,
+            recipes: m.recipes || [],
+          }))
+          .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
 
-        formattedMenus.sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
-        setMenus(formattedMenus);
+        setMenus(formatted);
       } catch (e) {
-        console.error("Erreur loadMenus:", e);
+        console.error(e);
         setMenus([]);
       }
     };
@@ -36,17 +42,6 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
     loadMenus();
   }, [homeId]);
 
-  const handleSelectDay = (menu) => {
-    setSelectedDay(dayjs(menu.date));
-    setCurrentRecipeIndex(0);
-    if (onSelectMenu) {
-      onSelectMenu(menu);
-    } else {
-      onPick(menu.recipes[0]);
-    }
-  };
-
-  // 🔹 Regrouper les menus par date
   const grouped = menus.reduce((acc, m) => {
     acc[m.date] = acc[m.date] || [];
     acc[m.date].push(m);
@@ -58,86 +53,86 @@ export default function Menus({ selectedDay, setSelectedDay, onPick, onSelectMen
     .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
 
   return (
-      <div>
-        <h3 className="text-2xl font-bold text-gray-800 mb-3">
-          Menus enregistrés
-        </h3>
+    <div>
+      <h3 className="text-2xl font-bold text-gray-800">Menus enregistrés</h3>
 
-        {/* --- WRAPPER avec scroll --- */}
-        <div className="space-y-3 max-h-[300px] overflow-y-auto pr-1">
-          {groups.length === 0 && (
-            <p className="text-sm text-gray-500">
-              Aucun menu enregistré. Rendez-vous sur le calendrier.
-            </p>
-          )}
+      <div className="flex gap-4 overflow-x-auto scroll-smooth mt-3">
+        {groups.map((g) => {
+          const isSelected = selectedDay?.format("YYYY-MM-DD") === g.date;
 
-          {groups.map((g) => {
-            const firstMenu = g.menus[0];
-            const previewRecipe = firstMenu.recipes?.[0];
-            const tagNames = g.menus.map((mm) => mm.tagName).filter(Boolean);
+          const tags = g.menus
+            .map((m) => m.tagName)
+            .filter(Boolean);
 
-            const tagCounts = g.menus.map(m => ({
-              tag: m.tagName,
-              count: m.recipes?.length || 0,
-            }));
-
-            console.log("Tag names for date", g.date, ":", tagNames);
-            console.log("groups", g.date, ":", groups);
-
-            return (
+          return (
+            <div
+              key={g.date}
+              onClick={() => {
+                setSelectedDay(dayjs(g.date));
+                onSelectMenu?.({ date: g.date, menus: g.menus });
+              }}
+              className={`min-w-[150px] cursor-pointer transition-transform duration-200 py-5${
+                isSelected ? "translate-y-[-5px]" : ""
+              }`}
+            >
+              {/* VRAIE CARTE */}
               <div
-                key={g.date}
-                className={`p-4 rounded-lg shadow-soft flex justify-between items-center cursor-pointer ${
-                  selectedDay?.format("YYYY-MM-DD") === g.date
-                    ? "bg-accentGreen text-white"
-                    : "bg-white/80"
-                }`}
-                onClick={() => {
-                  setSelectedDay(dayjs(g.date));
-                  if (onSelectMenu)
-                    onSelectMenu({ date: g.date, menus: g.menus, tagName: g.tagName });
-                }}
+                className={`rounded-tl-2xl rounded-bl-2xl rounded-br-2xl`}
               >
-                <div>
-                  <div className="font-semibold text-gray-800">
-                    {dayjs(g.date).format("ddd D MMM")}
-                  </div>
-
-
-                </div>
-
+                {/* BANDEAU HAUT (Top Bandeau) */}
                 <div
-                  className={`text-right ${
-                    selectedDay?.format("YYYY-MM-DD") === g.date
-                      ? "bg-accentGreen text-white"
-                      : "bg-white/80"
-                  }`}
+                  className={`flex rounded-tl-2xl rounded-tr-2xl text-center`}
                 >
-                  <div className="text-sm opacity-80 text-center">
-                    {tagCounts.map((t, i) => (
-                      <span key={i}>
-                        {t.count} 🍽️
-                        {i < tagCounts.length - 1 && " / "}
-                      </span>
-                    ))}
+                  <div 
+                  className={`w-2/4 px-2 py-2 text-sm font-semibold rounded-tl-2xl rounded-tr-2xl ${
+                    isSelected ? "bg-accentGreen" : "bg-softBeige"
+                  }`}
+                  >
+                    {dayjs(g.date).format("ddd D")}
                   </div>
-
-                  <div className="text-xs opacity-70 text-center">
-                    {tagCounts.map((t, i) => (
-                      <span key={i}>
-                        {t.tag}
-                        {i < tagCounts.length - 1 && " / "}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* {g.menus.reduce((sum, m) => sum + (m.recipes?.length || 0), 0)} 🍽️ */}
+                  {/* Section sans fond ici */}
+                  <div className="w-2/4 bg-white" />
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
 
+                {/* CONTENU (Content) */}
+<div 
+  className={`h-[150px] shadow-soft p-3 rounded-tr-2xl rounded-bl-2xl rounded-br-2xl ${
+    isSelected ? "bg-accentGreen" : "bg-softBeige"
+  }`}
+>
+  <div className="text-lg font-bold mb-4">Menu</div> {/* Marge réduite ici */}
+
+  <div className="flex items-center gap-2 mb-2 relative">
+    {/* Affichage des tags visibles */}
+    {tags.length > 0 && (
+      tags.slice(0, 1).map((tag, index) => (
+        <span
+          key={index}
+          className="bg-[#fbf3c7] text-black px-2 py-1 rounded-full text-sm"
+        >
+          {tag}
+        </span>
+      ))
+    )}
+
+    {/* Affichage du "+X" si des tags restent */}
+    {tags.length > 1 && (
+      <div>
+        <span className="bg-[#fbf3c7] text-black px-2 py-1 rounded-full text-sm cursor-pointer">
+          +{tags.length - 1}
+        </span>
+      </div>
+    )}
+  </div>
+</div>
+
+
+
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    </div>
   );
 }
