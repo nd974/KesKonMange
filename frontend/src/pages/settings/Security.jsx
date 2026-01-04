@@ -39,68 +39,61 @@ export default function Security({ homeId, profileId }) {
     }
   }, [navigate]);
 
-const maskEmail = (email) => {
-  if (!email || !email.includes("@")) return "";
+  const maskEmail = (email) => {
+    if (!email || !email.includes("@")) return "";
 
-  const [local, domain] = email.split("@");
-  const chars = local.split("");
-  const result = chars.map(() => "*");
+    const [local, domain] = email.split("@");
+    const chars = local.split("");
+    const result = chars.map(() => "*");
 
-  // garder 3 premiers caractères
-  for (let i = 0; i < 3 && i < chars.length; i++) {
-    result[i] = chars[i];
-  }
+    // garder 3 premiers caractères
+    for (let i = 0; i < 3 && i < chars.length; i++) {
+      result[i] = chars[i];
+    }
 
-  // garder 2 chiffres consécutifs s'ils existent
-  const digitIndex = local.search(/\d{2}/);
-  if (digitIndex !== -1) {
-    result[digitIndex] = local[digitIndex];
-    result[digitIndex + 1] = local[digitIndex + 1];
-  }
+    // garder 2 chiffres consécutifs s'ils existent
+    const digitIndex = local.search(/\d{2}/);
+    if (digitIndex !== -1) {
+      result[digitIndex] = local[digitIndex];
+      result[digitIndex + 1] = local[digitIndex + 1];
+    }
 
-  return `${result.join("")}@${domain}`;
-};
-
-const maskPhone = (phone) => {
-  if (!phone) return "Chargement ...";
-
-  // Séparer l'indicatif et le reste du numéro sur le premier espace
-  const [countryCode, nationalNumberRaw] = phone.split(' ');
-
-  if (!countryCode || !nationalNumberRaw || nationalNumberRaw.length < 4) return phone;
-
-  const number = nationalNumberRaw.replace(/\D/g, ''); // enlever les éventuels séparateurs
-  const firstDigit = number[0];
-  const lastTwo = number.slice(-2);
-  const middleDigits = number.slice(1, -2);
-
-  // Créer des blocs "••" pour chaque paire du milieu
-  const blocks = [];
-  for (let i = 0; i < middleDigits.length; i += 2) {
-    blocks.push('••');
-  }
-
-  return `${countryCode} ${firstDigit} ${blocks.join(' ')} ${lastTwo}`;
-};
-
-
-
-
-
-
-
-
-
+    return `${result.join("")}@${domain}`;
+  };
 
   const maskPassword = (password) => {
     if (!password) return "Chargement ...";
     return "•".repeat(password.length); // longueur fixe pour la sécurité
   };
 
+
   const maskPin = (pin) => {
-    if (!pin) return "Chargement ...";
+    if (!pin) return "";
     return "•".repeat(pin.length); // PIN toujours masqué
   };
+
+  const maskPhone = (phone) => {
+    if (!phone) return "";
+
+    // Séparer l'indicatif et le reste du numéro sur le premier espace
+    const [countryCode, nationalNumberRaw] = phone.split(' ');
+
+    if (!countryCode || !nationalNumberRaw || nationalNumberRaw.length < 4) return phone;
+
+    const number = nationalNumberRaw.replace(/\D/g, ''); // enlever les éventuels séparateurs
+    const firstDigit = number[0];
+    const lastTwo = number.slice(-2);
+    const middleDigits = number.slice(1, -2);
+
+    // Créer des blocs "••" pour chaque paire du milieu
+    const blocks = [];
+    for (let i = 0; i < middleDigits.length; i += 2) {
+      blocks.push('••');
+    }
+
+    return `${countryCode} ${firstDigit} ${blocks.join(' ')} ${lastTwo}`;
+  };
+
 
   const [profile, setProfile] = useState(null);
   useEffect(() => {
@@ -192,7 +185,7 @@ const maskPhone = (phone) => {
               icon="🔢"
               title="Code PIN"
               descriptions={[
-                maskPin(profile?.pin ?? ""),
+                maskPin(profile?.pin),
               ]}
               href={null}
               onClick={null}
@@ -202,10 +195,12 @@ const maskPhone = (phone) => {
               icon="📱"
               title="Téléphone mobile"
               descriptions={[
-                maskPhone(profile?.phone ?? ""),
-                profile?.phone_check
-                  ? "✅ Numéro vérifié"
-                  : "⛔ Vérification requise",
+                maskPhone(profile?.phone),
+                profile?.phone ? 
+                  profile?.phone_check
+                    ? "✅ Numéro vérifié"
+                    : "⛔ Vérification requise" 
+                  : ""
               ]}
               href={null}
               onClick={null}

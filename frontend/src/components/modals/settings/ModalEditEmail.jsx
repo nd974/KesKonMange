@@ -117,9 +117,13 @@ export default function ModalEditEmail({
           placeholder="Adresse e-mail"
         />
 
-        <p className="text-sm text-gray-600 text-center mb-4">
-          Gérez votre adresse e-mail et la vérification associée.
-        </p>
+        {canSendVerification && (
+          <p className="text-sm text-gray-600 text-center mb-4">
+            Nous allons envoyer un lien de vérification à {email}. 
+            Vérifier votre adresse e-mail permet de renforcer la sécurité de 
+            votre compte et de vous aider à recevoir vos differents accès à KesKonMange.
+          </p>
+        )}
 
         {emailCheck && !emailHasChanged && (
           <p className="text-sm text-green-600 text-center mb-3">
@@ -161,7 +165,7 @@ export default function ModalEditEmail({
             onClick={onClose}
             className="text-gray-600 text-sm"
           >
-            Annuler
+            {canEditEmail ? "Annuler" : "Quitter"}
           </button>
         </div>
       </div>

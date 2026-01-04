@@ -10,7 +10,7 @@ router.get("/get/:profileId", async (req, res) => {
     if (!profileId) return res.status(400).json({ error: "missing profileId" });
 
     const query = `
-      SELECT id, username, name, avatar, role_id, home_id, email_check, phone, phone_check, pin
+      SELECT id, username, name, avatar, role_id, home_id, phone, phone_check, pin
       FROM "Profile"
       WHERE id = $1
     `;
