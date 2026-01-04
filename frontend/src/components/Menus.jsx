@@ -112,27 +112,36 @@ export default function Menus({
                 >
                   <div className="text-lg font-bold mb-4">Menu</div> {/* Marge réduite ici */}
 
-                  <div className="flex items-center gap-2 mb-2 relative">
-                    {/* Affichage des tags visibles */}
-                    {tags.length > 0 &&
-                      tags.slice(0, 1).map((tag, index) => (
-                        <span
-                          key={index}
-                          className="bg-[#fbf3c7] text-black px-2 py-1 rounded-full text-sm"
-                        >
-                          {tag}
-                        </span>
-                      ))}
+                  <div className="absolute bottom-[35px] left-3 flex items-center gap-2">
+  {/* Affichage des tags visibles */}
+  {tags.length > 0 &&
+    tags.slice(0, 1).map((tag, index) => (
+      <span
+        key={index}
+        className={`px-2 py-1 rounded-full text-sm ${
+          isSelected
+            ? "bg-[#dfffcf] text-black"
+            : "bg-[#b9b9b9] text-[#b9b9b9]"
+        }`}
+      >
+        {tag}
+      </span>
+    ))}
 
-                    {/* Affichage du "+X" si des tags restent */}
-                    {tags.length > 1 && (
-                      <div>
-                        <span className="bg-[#fbf3c7] text-black px-2 py-1 rounded-full text-sm cursor-pointer">
-                          +{tags.length - 1}
-                        </span>
-                      </div>
-                    )}
-                  </div>
+  {/* Affichage du "+X" si des tags restent */}
+  {tags.length > 1 && (
+    <span
+      className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
+        isSelected
+          ? "bg-[#dfffcf] text-black"
+          : "bg-[#b9b9b9] text-[#b9b9b9]"
+      }`}
+    >
+      +{tags.length - 1}
+    </span>
+  )}
+</div>
+
                 </div>
               </div>
             </div>

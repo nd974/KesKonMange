@@ -139,14 +139,14 @@ export default function Header({homeId, inAccount=false}) {
 
 
       {!inAccount && (
-        <nav className="ml-6 hidden lg:flex gap-6 text-sm text-gray-600">
+        <nav className="ml-6 hidden lg:flex gap-6 text-sm text-gray-600 ">
           {links.map((link) => (
             <Link
               key={link.path}
               to={link.path}
-              className={`px-3 py-1 rounded-md transition ${
+              className={`px-3 py-1 transition rounded-tl-2xl rounded-tr-md rounded-bl-md rounded-br-md ${
                 location.pathname === link.path
-                  ? "bg-pink-100 text-gray-900 font-medium"
+                  ? "bg-[#fb8985] text-white font-medium"
                   : "hover:bg-gray-100"
               }`}
             >
