@@ -3,6 +3,8 @@ import dayjs from "dayjs";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { CLOUDINARY_RES, CLOUDINARY_ICONS } from "../config/constants";
+
 export default function Menus({
   selectedDay,
   setSelectedDay,
@@ -11,6 +13,8 @@ export default function Menus({
   homeId,
 }) {
   const [menus, setMenus] = useState([]);
+
+  const GAP_CARD = 20; // Espace entre les cartes en pixels
 
   useEffect(() => {
     if (!homeId) return;
@@ -54,8 +58,15 @@ export default function Menus({
 
   return (
     <div>
-      <h3 className="text-2xl font-bold text-gray-800">Menus enregistrés</h3>
-
+      <h3 className="text-2xl font-bold text-gray-800 flex items-center">
+        <img
+          src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
+          alt="Menu Icon"
+          className="w-6 h-6 inline-block mr-2"
+        />
+        Menus enregistrés
+      </h3>
+      
       <div className="flex gap-0 overflow-x-auto scroll-smooth mt-3 relative px-5">
         {groups.map((g, index) => {
           const isSelected = selectedDay?.format("YYYY-MM-DD") === g.date;
@@ -72,9 +83,10 @@ export default function Menus({
               }}
               className={`min-w-[150px] cursor-pointer transition-transform duration-300 py-5 relative z-${index}`}
               style={{
-                left: index === 0 ? "0px" : `${-25 * index}px`, // Pas de décalage pour la première carte
-                zIndex: isSelected ? 10 : index, // Plus élevé pour la carte sélectionnée
-                transform: isSelected ? "scale(1.1) translateY(-10px)" : "scale(1) translateY(0px)", // Ajout de l'effet d'élévation et de zoom
+                // Combine les deux transforms
+                marginLeft: index === 0 ? 0 : isSelected ? -GAP_CARD : -GAP_CARD,
+                transform: isSelected ? "scale(1.1) translateY(-10px)" : "scale(1)", // Gestion de l'effet de superposition et de l'élévation
+                zIndex: isSelected ? GAP_CARD : groups.length - index, // Assurer un z-index plus élevé pour les cartes à gauche
               }}
             >
               {/* VRAIE CARTE */}
