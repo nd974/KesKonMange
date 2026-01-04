@@ -172,9 +172,6 @@ router.put("/updateName/:homeId", async (req, res) => {
   }
 });
 
-import crypto from "crypto";
-import { sendVerificationEmail } from "./mailer/nodemailer.js";
-
 router.put("/updateEmail/:homeId", async (req, res) => {
   const client = await pool.connect();
 
@@ -182,54 +179,85 @@ router.put("/updateEmail/:homeId", async (req, res) => {
     const { homeId } = req.params;
     const { email } = req.body;
 
-    if (!email) return res.status(400).json({ error: "missing email" });
+    if (!email) {
+      return res.status(400).json({ error: "missing email" });
+    }
 
-    // validation email
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return res.status(400).json({ error: "invalid email format" });
     }
 
-    const token = crypto.randomBytes(32).toString("hex");
-    const expires = new Date(Date.now() + 1000 * 60 * 60); // 1h
-
-    await client.query("BEGIN");
-
-    // 🔹 Mettre à jour l'email dans Home
-    const homeUpdate = await client.query(
-      `UPDATE "Home"
-       SET email = $1
-       WHERE id = $2
-       RETURNING id, email`,
+    const result = await client.query(
+      `
+      UPDATE "Home"
+      SET email = $1,
+          email_check = false
+      WHERE id = $2
+      RETURNING id, email, email_check
+      `,
       [email, homeId]
     );
 
-    if (!homeUpdate.rows.length) {
-      await client.query("ROLLBACK");
+    if (!result.rows.length) {
       return res.status(404).json({ error: "Home not found" });
     }
 
-    // 🔹 Reset email_check + token dans Profile
+    res.json({
+      message: "Email mis à jour",
+      home: result.rows[0],
+    });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  } finally {
+    client.release();
+  }
+});
+
+import crypto from "crypto";
+import { sendVerificationEmail } from "./mailer/nodemailer.js";
+
+router.post("/sendVerificationEmail/:homeId", async (req, res) => {
+  const client = await pool.connect();
+
+  try {
+    const { homeId } = req.params;
+
+    const { rows } = await client.query(
+      `
+      SELECT email, email_check
+      FROM "Home"
+      WHERE id = $1
+      `,
+      [homeId]
+    );
+
+    if (!rows.length) {
+      return res.status(404).json({ error: "Home not found" });
+    }
+
+    if (rows[0].email_check) {
+      return res.status(400).json({ error: "email already verified" });
+    }
+
+    const token = crypto.randomBytes(32).toString("hex");
+    const expires = new Date(Date.now() + 1000 * 60 * 60); // 1h
+
     await client.query(
-      `UPDATE "Home"
-       SET email_check = false,
-           email_verification_token = $1,
-           email_verification_expires = $2
-       WHERE id = $3`,
+      `
+      UPDATE "Home"
+      SET email_verification_token = $1,
+          email_verification_expires = $2
+      WHERE id = $3
+      `,
       [token, expires, homeId]
     );
 
-    await client.query("COMMIT");
+    await sendVerificationEmail(rows[0].email, token);
 
-    // 🔹 ENVOI DU MAIL via SendGrid
-    await sendVerificationEmail(email, token);
-
-    res.json({
-      message: "Email mis à jour. Mail de vérification envoyé.",
-      home: homeUpdate.rows[0],
-    });
+    res.json({ message: "Mail de vérification envoyé" });
   } catch (e) {
-    await client.query("ROLLBACK");
     console.error(e);
     res.status(500).json({ error: e.message });
   } finally {
