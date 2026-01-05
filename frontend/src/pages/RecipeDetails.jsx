@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import Header from "../components/Header.jsx";
 import { FullStar, HalfStar, EmptyStar } from "../components/Stars";
 import ModalNutrition from "../components/modals/ModalNutrition";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants";
@@ -11,13 +10,6 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
   const navigate = useNavigate();
   const { id: idFromUrl } = useParams();
   const id = idProp ?? idFromUrl;
-
-  // const [profileId, setProfileId] = useState(null);
-
-  // useEffect(() => {
-  //   // const stored = localStorage.getItem("profile_id");
-  //   if (profileId) setProfileId(profileId);
-  // }, [profileId]);
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -226,6 +218,8 @@ export default function RecipeDetail({ homeId,profileId, id: idProp }) {
 
   if (loading) return <div className="p-8 text-center">Chargement...</div>;
   if (!recipe) return <div className="p-8 text-center">Recette introuvable.</div>;
+
+  console.log("Recette:", recipe);
 
   return (
   <div className={`px-4 md:px-8 lg:px-16 relative ${!idProp ? "py-8" : ""}`}>

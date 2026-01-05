@@ -130,15 +130,20 @@ export default function Menus({
 
   {/* Affichage du "+X" si des tags restent */}
   {tags.length > 1 && (
-    <span
-      className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
-        isSelected
-          ? "bg-[#dfffcf] text-black"
-          : "bg-[#b9b9b9] text-[#b9b9b9]"
-      }`}
-    >
-      +{tags.length - 1}
-    </span>
+    <div className="relative group">
+      <span
+        className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
+          isSelected
+            ? "bg-[#dfffcf] text-black"
+            : "bg-[#b9b9b9] text-[#b9b9b9]"
+        }`}
+      >
+        +{tags.length - 1}
+      </span>
+      <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+        {tags.slice(1, tags.length).map((tag) => tag).join(" / ")}
+      </div>
+    </div>
   )}
 </div>
 

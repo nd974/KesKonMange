@@ -149,12 +149,11 @@ export default function Recipes({ homeId }) {
             )}
 
             <button
-              className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 flex items-center gap-2"
+              className="px-4 py-2 rounded hover:bg-softPink flex items-center gap-2 hidden md:inline bg-accentGreen text-white font-bold"
               onClick={() => navigate("/recipe/add")}
               title="Ajouter recette"
             >
-              <span className="flex items-center gap-1 md:hidden">➕🍴</span>
-              <span className="hidden md:inline">Ajouter Recette</span>
+              Ajouter Recette
             </button>
           </div>
 

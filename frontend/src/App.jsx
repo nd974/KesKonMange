@@ -29,6 +29,9 @@ import {refreshHomeId, refreshProfileId } from "../session";
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 
+
+import NewRecipeDetail from "./pages/TMP/NewRecipeDetail";
+
 function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -122,6 +125,7 @@ return (
             
 
 
+            <Route path="/new_recipe_details" element={<NewRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

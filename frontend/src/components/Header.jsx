@@ -126,28 +126,28 @@ export default function Header({homeId, inAccount=false}) {
             onClick={() => navigate("/")}
           />
         </div>
-
+{/* 
         {!inAccount && (
           <div className="hidden md:block">
-            <div className="text-2xl font-bold" style={{ color: "#6b926f" }}>
-              Bonjour {profile ? profile.name : ""} !
+            <div className="text-2xl font-bold text-accentGreen">
+               {profile ? `Bonjour ${profile.name} !` : ""}
             </div>
           </div>
-        )}
+        )} */}
       </div>
 
 
 
       {!inAccount && (
-        <nav className="ml-6 hidden lg:flex gap-6 text-sm text-gray-600 ">
+        <nav className="ml-12 hidden lg:flex gap-12 text-sm text-gray-600 ">
           {links.map((link) => (
             <Link
               key={link.path}
               to={link.path}
               className={`px-3 py-1 transition rounded-tl-2xl rounded-tr-md rounded-bl-md rounded-br-md ${
                 location.pathname === link.path
-                  ? "bg-[#fb8985] text-white font-medium"
-                  : "hover:bg-gray-100"
+                  ? "bg-softPink text-white font-medium"
+                  : "text-accentGreen font-bold"
               }`}
             >
               {link.name}
@@ -167,7 +167,7 @@ export default function Header({homeId, inAccount=false}) {
     <select
       value={selectedHome?.id || ""}
       onChange={handleChangeHome}
-      className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block"
+      className="bg-softBeige pl-9 pr-3 py-1 rounded-xl text-sm sm:block font-bold"
     >
       {homes.map((home) => (
         <option key={home.id} value={home.id}>

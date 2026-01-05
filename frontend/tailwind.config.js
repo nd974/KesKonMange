@@ -9,7 +9,8 @@ export default {
         softBeige: "#f3e6d9",
         cardBeige: "#e9dccb",
         accentGreen: "#6b926f",
-        lightGreen: "#cfe3d1"
+        lightGreen: "#cfe3d1",
+        softPink: "#fb8985"
       },
       fontFamily: {
         display: ["'Poppins', system-ui, sans-serif"]
