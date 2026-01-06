@@ -27,11 +27,17 @@ export default function CommentsSection() {
       name: "Julien",
       date: "04/01/2026",
       description: "Merci pour la recette ! J'ai réussi du premier coup."
-    }
+    },
+      {
+      avatar: "https://randomuser.me/api/portraits/men/76.jpg",
+      name: "Julien",
+      date: "04/01/2026",
+      description: "Merci pour la recette ! J'ai réussi du premier coup."
+    },
   ];
 
   return (
-    <div className="rounded-3xl bg-blue-100 p-4 flex flex-col overflow-hidden h-full">
+    <div className="rounded-3xl p-4 flex flex-col overflow-hidden h-full shadow-lg bg-gray-100">
         {/* Titre + bouton */}
         <div className="flex justify-between items-center mb-4">
             <h2 className="font-bold text-lg">Commentaires</h2>
@@ -60,7 +66,7 @@ export default function CommentsSection() {
                 </div>
 
                 {/* Description du commentaire */}
-                <p className="text-sm text-black whitespace-pre-line">{comment.description}</p>
+                <p className="text-sm text-black whitespace-pre-line mr-1">{comment.description}</p>
                 </div>
             </div>
             ))}
