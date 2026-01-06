@@ -25,7 +25,7 @@ export default function RecipeSidebar() {
     "Four",
     "Planche Bois",
     "Couteau", 
-    "Mixeur Kennwood",
+    "Ms",
     "Couteau"
   ];
   const img = "https://www.semana.com/resizer/v2/FG7F25FC45FMNE2UJVNQSZIHPE.JPG?smart=true&auth=143a54831945320e6bbc0891973a7deb60011e8ddf1d0b67fce9f3d0f3187b71&width=1280&height=720";
@@ -39,7 +39,7 @@ return (
   <div className="rounded-3xl bg-pink-100 p-4 flex flex-col overflow-hidden lg:flex-[55%]">
     <h2 className="font-bold text-lg mb-2">Ingrédients</h2>
 
-    <div className="overflow-y-auto h-full">
+    <div className="overflow-y-auto h-full thin-scrollbar">
       <ul className="space-y-4">
         {ingredients.map((ingredient, index) => (
           <li key={index} className="flex gap-4 items-center">
@@ -65,7 +65,7 @@ return (
 <div className="rounded-3xl bg-amber-100 p-4 flex flex-col overflow-hidden lg:flex-[45%]">
   <h2 className="font-bold text-lg mb-2">Ustensiles</h2>
 
-  <div className="overflow-y-auto h-full">
+  <div className="overflow-y-auto h-full thin-scrollbar">
     {/* Utilisation de flexbox pour centrer les éléments sur chaque ligne */}
     <div className="grid grid-cols-2 gap-4 justify-items-center">
       {ustensiles.map((ustensil, index) => (
@@ -76,7 +76,7 @@ return (
           <img 
             src={img}
             alt={ustensil} 
-            className="w-10 h-10 object-cover mb-2" 
+            className="w-10 h-10 object-cover" 
           />
           <span>{ustensil}</span>
         </div>

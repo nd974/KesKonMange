@@ -20,5 +20,28 @@ export default {
       }
     }
   },
-  plugins: []
+  plugins: [
+    function ({ addBase, theme }) {
+      addBase({
+        /* Firefox */
+        "*": {
+          "scrollbar-width": "thin",
+          "scrollbar-color": `${theme("colors.accentGreen")} rgba(0, 0, 0, 0.1)`,
+        },
+
+        /* Chrome / Edge / Safari */
+        "*::-webkit-scrollbar": {
+          width: "6px",
+          height: "6px",
+        },
+        "*::-webkit-scrollbar-thumb": {
+          backgroundColor: theme("colors.accentGreen"),
+          borderRadius: "6px",
+        },
+        "*::-webkit-scrollbar-track": {
+          backgroundColor: "rgba(0,0,0,0.1)",
+        },
+      });
+    },
+  ]
 }

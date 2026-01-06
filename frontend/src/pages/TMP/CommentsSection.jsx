@@ -21,6 +21,12 @@ export default function CommentsSection() {
       name: "Julien",
       date: "04/01/2026",
       description: "Merci pour la recette ! J'ai réussi du premier coup."
+    },
+        {
+      avatar: "https://randomuser.me/api/portraits/men/76.jpg",
+      name: "Julien",
+      date: "04/01/2026",
+      description: "Merci pour la recette ! J'ai réussi du premier coup."
     }
   ];
 
@@ -35,7 +41,7 @@ export default function CommentsSection() {
         </div>
 
         {/* Liste des commentaires */}
-        <div className="overflow-y-auto max-h-[30vh] space-y-4">
+        <div className="overflow-y-auto max-h-[30vh] space-y-4 thin-scrollbar">
             {comments.map((comment, index) => (
             <div key={index} className="flex gap-4">
                 {/* Avatar */}
@@ -50,7 +56,7 @@ export default function CommentsSection() {
                 {/* Nom à gauche, date à droite */}
                 <div className="flex justify-between items-center w-full">
                     <span className="font-bold text-sm">{comment.name}</span>
-                    <span className="text-xs text-gray-500">{comment.date}</span>
+                    <span className="text-xs text-gray-500 mr-2">{comment.date}</span>
                 </div>
 
                 {/* Description du commentaire */}
