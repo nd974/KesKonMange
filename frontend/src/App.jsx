@@ -1,4 +1,7 @@
 import { useEffect, useState } from "react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
 import Login from "./pages/Login";
@@ -50,6 +53,30 @@ function AppRoutes() {
 
   const [isLoading, setIsLoading] = useState(true);
 
+  const [error, setError] = useState(null);
+  const [dbStatus, setDbStatus] = useState("checking");
+
+  // ✅ TEST DB
+  useEffect(() => {
+    async function testDB() {
+      try {
+        console.log("DB CHECK START");
+        const res = await fetch(`${API_URL}/home/testDB`);
+
+        if (!res.ok) throw new Error("API error");
+
+        await res.json();
+        console.log("DB OK");
+        setDbStatus("ok");
+      } catch (e) {
+        console.error("DB ERROR", e);
+        setDbStatus("error");
+      }
+    }
+
+    testDB();
+  }, []);
+
   useEffect(() => {
     async function loadHome() {
       // 🔹 Lis la valeur actuelle de home_id depuis IndexedDB
@@ -70,6 +97,17 @@ function AppRoutes() {
     loadHome();
   }, [location.pathname, navigate]);
 
+  // ⏳ Attente test DB
+  console.log("DB STATUS:", dbStatus);
+  if (dbStatus === "error") {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>MAINTENANCE</p>
+      </div>
+    );
+  }
+
+
   
   
   
@@ -81,6 +119,7 @@ function AppRoutes() {
       </div>
     );
   }
+
 
 
 return (

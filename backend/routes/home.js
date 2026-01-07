@@ -3,6 +3,31 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
+// ------------------- TEST DATABASE -------------------
+router.get("/testDB", async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        1 AS ok,
+        NOW() AS server_time
+    `);
+
+    res.json({
+      success: true,
+      db: "connected",
+      data: result.rows[0],
+    });
+  } catch (e) {
+    console.error("DB TEST ERROR:", e);
+    res.status(500).json({
+      success: false,
+      db: "error",
+      error: e.message,
+    });
+  }
+});
+
+
 // ------------------- GET ALL HOMES -------------------
 // ------------------- GET ALL HOMES (WITH LINK INFO) -------------------
 router.get("/get-all/:profileId", async (req, res) => {
