@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Menus from "../components/Menus";
+import NewRecipeDetail from "./TMP/NewRecipeDetail";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import RecipeDetail from "./RecipeDetails";
@@ -343,7 +344,7 @@ useEffect(() => {
 
           {/* LEFT – détail */}
           <section className="order-2 lg:order-1">
-            <div className="flex items-center gap-3 mb-4">
+            <div className="flex items-center gap-3">
             {selectedDay && (
               <>
                 <div className="bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
@@ -396,7 +397,7 @@ useEffect(() => {
 
 
                   <div className="w-full flex items-center pt-8 relative mb-4">
-                    {/* GROUPE CENTRÉ */}
+
                     <div className="flex items-center gap-2 mx-auto">
 
 
@@ -442,7 +443,12 @@ useEffect(() => {
     )}
 
     {/* Nom de la recette dans des chevrons */}
-    <h1 className="text-3xl font-bold text-center">
+    <h1 className="text-center text-2xl sm:text-4xl font-bold text-softPink"
+          style={{
+        WebkitTextStroke: "10px #f3e6d9", // ou 15px desktop
+        paintOrder: "stroke fill",
+        overflow: "visible", // important !
+      }}>
       {selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.name}
     </h1>
 
@@ -488,14 +494,17 @@ useEffect(() => {
 
 
 
-                  <div className="flex-1 mx-0 lg:mx-8 w-full">
-                    <RecipeDetail
-                      key={selectedRecipe?.id}
-                      homeId={homeId}
-                      profileId={profileId}
-                      id={selectedRecipe?.id}
-                    />
-                  </div>
+<div className="flex justify-center w-full">
+  <div className="w-full max-w-[800px]">
+    <NewRecipeDetail
+      key={selectedRecipe?.id}
+      homeId={homeId}
+      profileId={profileId}
+      id={selectedRecipe?.id}
+      compact={true}
+    />
+  </div>
+</div>
 
                   {/* mobile */}
                   {/* {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
@@ -535,12 +544,12 @@ useEffect(() => {
                   Choisir un jour avec menu(s) enregistré(s).
                 </p>
               )}
-
+{/* 
               {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
                 <div className="text-sm text-gray-600 text-center mt-4">
                   {recipeIndex + 1} / {selectedMenusForDay[activeMenuIndex].recipes.length}
                 </div>
-              )}
+              )} */}
             </div>
           </section>
 

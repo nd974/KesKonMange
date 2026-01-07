@@ -164,7 +164,7 @@ return (
             
 
 
-            <Route path="/new_recipe_details" element={<NewRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/new_recipe_details/:id" element={<NewRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />

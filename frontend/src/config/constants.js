@@ -45,6 +45,7 @@ export const CLOUDINARY_RECETTE_NOTFOUND = "v1764321553/ImageNotFound_ktjs1j.web
 
 export const CLOUDINARY_ICONS = {
     "Icon_Menu": "v1767538472/icon_menu_sgphlk.webp",
+    "Icon_Prep" : "v1767797817/Prep_fzvxwv.webp"
 };
 
 

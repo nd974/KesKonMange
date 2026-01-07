@@ -536,7 +536,7 @@ const handleSubmit = async (e) => {
   }
 
   alert(recipe_id ? "Recette modifiée" : "✅Recette créée");
-  navigate(`/recipe/${recipeId}`);
+  navigate(`/new_recipe_details/${recipeId}`);
 };
 
 
