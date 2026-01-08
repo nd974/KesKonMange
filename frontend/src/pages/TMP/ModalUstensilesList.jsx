@@ -3,7 +3,7 @@ import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../../config/consta
 
 export default function ModalUstensilesList({ utensils }) {
   return (
-    <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 h-full">
+    <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 sm:h-full max-h-[55vh]">
       <h2 className="font-bold text-lg mb-2">Ustensiles</h2>
       <div className="overflow-y-auto flex-1 thin-scrollbar">
         <div className="grid grid-cols-2 gap-4 justify-items-center">

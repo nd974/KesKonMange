@@ -420,21 +420,21 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 {/* <div className="hidden lg:block mx-4 h-full border-r-4 border-accentGreen border-dashed"></div> */}
 
     {/* Sidebar */}
-<div className="hidden md:flex lg:w-1/3 w-full flex-shrink-0">
+<div className="hidden md:flex lg:w-1/3 w-full flex-shrink-0 h-[83vh]">
   <div className="w-full h-full flex flex-col gap-6 overflow-hidden">
 
-    {/* Zone ingrédients / ustensiles */}
-    <div className="flex flex-col lg:flex-row gap-6 w-full min-h-[40vh] flex-1">
-      <div className="lg:flex-[55%] flex-1">
+    {/* ING / UST : prennent l'espace restant */}
+    <div className="flex flex-col lg:flex-row gap-6 w-full min-h-[40vh] flex-1 overflow-hidden">
+      <div className="lg:flex-[55%] flex-1 overflow-y-auto">
         <ModalIngredientsList ingredients={recipe.ingredients} />
       </div>
-      <div className="lg:flex-[45%] flex-1">
+      <div className="lg:flex-[45%] flex-1 overflow-y-auto">
         <ModalUstensilesList utensils={recipe.utensils} />
       </div>
     </div>
 
-    {/* Commentaires collés en bas */}
-    <div className="mt-auto">
+    {/* COMMENTAIRES : hauteur naturelle */}
+    <div className="shrink-0 max-h-[35vh]">
       <CommentsSection
         comments={comments}
         profileId={profileId}
@@ -444,6 +444,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 
   </div>
 </div>
+
 
 
 

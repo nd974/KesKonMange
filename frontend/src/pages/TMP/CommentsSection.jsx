@@ -77,7 +77,7 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
   return (
     <>
       {/* SECTION COMMENTAIRES */}
-      <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100">
+      <div className="rounded-3xl p-4 flex flex-col shadow-lg bg-gray-100 h-full">
         <div className="flex justify-between items-center mb-4">
           <h2 className="font-bold text-lg">Commentaires</h2>
           <button
@@ -89,7 +89,7 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
           </button>
         </div>
 
-        <div className="overflow-y-auto max-h-[30vh] space-y-4 thin-scrollbar">
+        <div className="overflow-y-auto space-y-4 thin-scrollbar">
           {comments.map((comment, index) => (
             comment.comment && (
               <div key={index} className="flex gap-4">
