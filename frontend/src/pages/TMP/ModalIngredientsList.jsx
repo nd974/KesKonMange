@@ -18,7 +18,7 @@ export default function ModalIngredientsList({ ingredients }) {
   };
 
   return (
-    <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 sm:h-full max-h-[55vh]">
+    <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 max-h-[55vh] sm:max-h-none sm:h-full">
       <h2 className="font-bold text-lg mb-2">Ingrédients</h2>
       <div className="overflow-y-auto flex-1 thin-scrollbar">
         <ul className="space-y-4">

@@ -23,7 +23,7 @@ export default function ModalCommentAdd({
           <button
             type="button"
             key={n}
-            onClick={() => setMyNote(n)}
+            onClick={() => setMyNote(myNote === n ? 0 : n)}
             className={n <= myNote ? "text-yellow-500" : "text-gray-300"}
           >
             ★

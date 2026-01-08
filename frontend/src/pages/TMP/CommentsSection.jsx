@@ -114,7 +114,7 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
                           : comment.profile_name}
                       </span>
 
-                      {comment.note > 0 && (
+                      {comment.note !== null && (
                         <p className="text-yellow-500 text-sm">
                           {"★".repeat(comment.note)}
                           {"☆".repeat(5 - comment.note)}
