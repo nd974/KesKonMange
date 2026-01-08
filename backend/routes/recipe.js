@@ -958,7 +958,7 @@ router.post("/getComments", async (req, res) => {
     if (!profileId) {
       return res.status(400).json({ error: "profileId est requis" });
     }
-    // AND rs.profile_id <> $2 -- exclut le commentaire du profil connecté
+
     const result = await pool.query(
       `
       SELECT 
@@ -968,15 +968,15 @@ router.post("/getComments", async (req, res) => {
         rs.updated_date, 
         p.name AS profile_name,
         p.username AS profile_username,
-        p.avatar AS profile_avatar    
+        p.avatar AS profile_avatar,
+        -- colonne temporaire : 0 si c'est le profil connecté, 1 sinon
+        CASE WHEN rs.profile_id = $2 THEN 0 ELSE 1 END AS is_other
       FROM recipes_stats rs
       JOIN "Profile" p ON p.id = rs.profile_id
       WHERE rs.recipe_id = $1
-        AND rs.comment IS NOT NULL
-        AND rs.comment <> ''
-      ORDER BY rs.note DESC, rs.profile_id ASC;
+      ORDER BY is_other ASC, rs.note DESC, rs.profile_id ASC;
       `,
-      [recipeId]
+      [recipeId, profileId]
     );
 
     res.json({ ok: true, comments: result.rows });
@@ -1033,6 +1033,8 @@ router.post("/deleteStats", async (req, res) => {
       `,
       [recipeId, profileId]
     );
+
+    console.log(recipeId, profileId);
 
     if (result.rows.length === 0) {
       return res.status(404).json({ ok: false, error: "Aucune entrée trouvée pour ce profil et cette recette" });

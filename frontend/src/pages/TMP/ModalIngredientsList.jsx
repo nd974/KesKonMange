@@ -3,16 +3,13 @@ import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../../config/consta
 
 
 export default function ModalIngredientsList({ ingredients }) {
-
-  // Supprime les zéros inutiles
   const formatNumber = (num) => {
     if (num === null || num === undefined) return "";
-    const n = Number(num); // convertit en nombre
-    if (isNaN(n)) return ""; // si ce n'est pas un nombre, retourne vide
-    return n % 1 === 0 ? n : parseFloat(n.toFixed(2)); // entier → 6, décimal → 6.5
+    const n = Number(num);
+    if (isNaN(n)) return "";
+    return n % 1 === 0 ? n : parseFloat(n.toFixed(2));
   };
 
-  // Met le nombre et l'unité ensemble correctement
   const formatAmountWithUnit = (amount, unit) => {
     if (!amount && amount !== 0) return "";
     const formattedAmount = formatNumber(amount);
@@ -21,9 +18,9 @@ export default function ModalIngredientsList({ ingredients }) {
   };
 
   return (
-    <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100">
+    <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 h-full">
       <h2 className="font-bold text-lg mb-2">Ingrédients</h2>
-      <div className="overflow-y-auto h-[calc(40vh-40px)] thin-scrollbar">
+      <div className="overflow-y-auto flex-1 thin-scrollbar">
         <ul className="space-y-4">
           {ingredients.map((ingredient, index) => (
             <li key={index} className="flex gap-4 items-center">
@@ -46,3 +43,4 @@ export default function ModalIngredientsList({ ingredients }) {
     </div>
   );
 }
+

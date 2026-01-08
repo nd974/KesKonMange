@@ -267,7 +267,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       </div>
     )} */}
 
-    <div className="w-[40vh] sm:-mt-10">
+    <div className="w-[40vh]">
         <ModalRecipeInfo
       tags={recipe.tags}
       times={times}
@@ -283,7 +283,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 <div
   className="
     w-full
-    max-w-full
+    max-w-[45vh]
     lg:flex-1
     rounded-3xl
     bg-softBeige
@@ -292,6 +292,10 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     flex
     flex-col
     gap-4
+    p-4
+    mx-auto
+    items-center
+    justify-center
   "
 >
   <StepsSection steps={recipe.steps} />
@@ -416,24 +420,35 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 {/* <div className="hidden lg:block mx-4 h-full border-r-4 border-accentGreen border-dashed"></div> */}
 
     {/* Sidebar */}
-    <div className="hidden md:flex lg:w-1/3 w-full flex-shrink-0">
-      <div className="w-full h-[83vh] flex flex-col gap-6 overflow-hidden">
-        {/* Conteneur avec 2 colonnes */}
-        <div className="flex flex-col lg:flex-row gap-6 w-full h-[40vh] mb-5">
-          <div className="lg:flex-[55%]">
-            <ModalIngredientsList ingredients={recipe.ingredients}/>
-          </div>
-          <div className="lg:flex-[45%]">
-            <ModalUstensilesList utensils={recipe.utensils}/>
-          </div>
-        </div>
+<div className="hidden md:flex lg:w-1/3 w-full flex-shrink-0">
+  <div className="w-full h-full flex flex-col gap-6 overflow-hidden">
 
-        <CommentsSection comments={comments} profileId={profileId}/>
+    {/* Zone ingrédients / ustensiles */}
+    <div className="flex flex-col lg:flex-row gap-6 w-full min-h-[40vh] flex-1">
+      <div className="lg:flex-[55%] flex-1">
+        <ModalIngredientsList ingredients={recipe.ingredients} />
+      </div>
+      <div className="lg:flex-[45%] flex-1">
+        <ModalUstensilesList utensils={recipe.utensils} />
       </div>
     </div>
 
+    {/* Commentaires collés en bas */}
+    <div className="mt-auto">
+      <CommentsSection
+        comments={comments}
+        profileId={profileId}
+        recipeId={recipe.id}
+      />
+    </div>
+
+  </div>
+</div>
+
+
+
     <div className="w-full lg:hidden">
-      <CommentsSection comments={comments} profileId={profileId}/>
+      <CommentsSection comments={comments} profileId={profileId} recipeId={recipe.id}/>
     </div>
 
     {/* --- MODALES MOBILE --- */}
