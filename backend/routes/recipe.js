@@ -958,23 +958,25 @@ router.post("/getComments", async (req, res) => {
     if (!profileId) {
       return res.status(400).json({ error: "profileId est requis" });
     }
-
+    // AND rs.profile_id <> $2 -- exclut le commentaire du profil connecté
     const result = await pool.query(
       `
       SELECT 
+        rs.profile_id,
         rs.comment, 
-        rs.note, 
-        p.name AS username   -- TODO name->username prod
+        rs.note,
+        rs.updated_date, 
+        p.name AS profile_name,
+        p.username AS profile_username,
+        p.avatar AS profile_avatar    
       FROM recipes_stats rs
       JOIN "Profile" p ON p.id = rs.profile_id
       WHERE rs.recipe_id = $1
-        AND rs.profile_id <> $2      -- exclut le commentaire du profil connecté
         AND rs.comment IS NOT NULL
         AND rs.comment <> ''
-      ORDER BY rs.note DESC, rs.profile_id ASC
-      LIMIT 5;
+      ORDER BY rs.note DESC, rs.profile_id ASC;
       `,
-      [recipeId, profileId]
+      [recipeId]
     );
 
     res.json({ ok: true, comments: result.rows });

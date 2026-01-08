@@ -15,9 +15,9 @@ export default function StepsSection({steps}) {
         Préparation
       </h2>
 
-        <div className="overflow-y-auto space-y-4 pr-2 overflow-x-hidden h-[calc(56vh-60px)] thin-scrollbar">
+        <div className="overflow-y-auto space-y-4 pr-2 overflow-x-hidden h-[calc(50vh-60px)] thin-scrollbar">
             {steps.map((step, index) => (
-            <div key={index} className="flex gap-4 items-center">
+            <div key={index} className="flex gap-4 items-center  whitespace-pre-line">
                 {/* Numéro */}
                 <span className="text-accentGreen font-bold shrink-0 sm:text-3xl text-lg">
                 {step.number}.

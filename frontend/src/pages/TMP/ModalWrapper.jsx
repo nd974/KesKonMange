@@ -1,6 +1,6 @@
 // ModalWrapper.js
-export default function ModalWrapper({ children, onClose }) {
-    console.log("children", children);
+export default function ModalWrapper({ children, onClose, className = "" }) {
+    console.log("children", children.type);
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
       <div className="rounded-xl max-w-md w-full p-6 relative">
@@ -15,3 +15,4 @@ export default function ModalWrapper({ children, onClose }) {
     </div>
   );
 }
+

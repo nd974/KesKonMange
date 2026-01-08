@@ -107,7 +107,6 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
           const data = await res.json();
           if (data.ok) {
             const filtered = data.comments
-              .filter(c => c.profile_id !== profileId)
               .slice(0, 5); // max 5 commentaires
             setComments(filtered);
           }
@@ -117,6 +116,8 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       }
       loadComments();
     }, [id, profileId]);
+
+    console.log("Comments loaded:", comments);
   
     // Fonction pour récupérer la note moyenne
     async function loadRating() {
@@ -246,11 +247,11 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
       onClick={() => navigate(`/new_recipe_details/${recipe.id}`)}
       alt={recipe.name}
-      className="w-32 h-32 sm:w-64 sm:h-64 rounded-full object-cover"
+      className="w-40 h-32 sm:w-80 sm:h-64 rounded-2xl object-cover"
     />
 
     {/* Note moyenne */}
-    {votesCount > 0 && (
+    {/* {votesCount > 0 && (
       <div className="flex items-center gap-2 text-yellow-500 py-1 sm:-mt-4 mb-2">
         <div className="flex gap-1">
           {Array.from({ length: 5 }, (_, i) => {
@@ -264,7 +265,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
           ({averageNote} / 5) - {votesCount} vote{votesCount > 1 ? "s" : ""}
         </span>
       </div>
-    )}
+    )} */}
 
     <div className="w-[40vh] sm:-mt-10">
         <ModalRecipeInfo
@@ -272,6 +273,8 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       times={times}
       level={recipe.level}
       portion={recipe.portion}
+      averageNote={averageNote} 
+      votesCount={votesCount}
     />
     </div>
   </div>
@@ -292,12 +295,19 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
   "
 >
   <StepsSection steps={recipe.steps} />
+    <div className="flex justify-center gap-4">
+      <button onClick={() => setOpenIngredients(true)} className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm">
+        🥕 Ingrédients
+      </button>
+      <button onClick={() => setOpenUstensils(true)} className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm">
+        🍳 Ustensiles
+      </button>
+  </div>
 </div>
-
 
       {openInfos && (
       <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion}/>
+        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} averageNote={averageNote} votesCount={votesCount} modal={true}/>
       </ModalWrapper>
     )}
     {openIngredients && (
@@ -369,6 +379,8 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       times={times}
       level={recipe.level}
       portion={recipe.portion}
+      averageNote={averageNote}
+      votesCount={votesCount}
     />
   </div>
 </div>
@@ -390,7 +402,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
         </div>
 
         {/* Bloc beige */}
-        <div className="rounded-3xl bg-softBeige p-4 sm:-mt-16 z-10 sm:ml-40 sm:mr-4 h-[50vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="rounded-3xl bg-softBeige p-4 sm:-mt-16 z-10 sm:ml-40 sm:mr-4 h-[53vh] overflow-hidden flex flex-col shadow-2xl">
             <StepsSection steps={recipe.steps} />
         </div>
         
@@ -405,7 +417,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 
     {/* Sidebar */}
     <div className="hidden md:flex lg:w-1/3 w-full flex-shrink-0">
-      <div className="w-full h-[83vh] flex flex-col gap-6 p-4 overflow-hidden">
+      <div className="w-full h-[83vh] flex flex-col gap-6 overflow-hidden">
         {/* Conteneur avec 2 colonnes */}
         <div className="flex flex-col lg:flex-row gap-6 w-full h-[40vh] mb-5">
           <div className="lg:flex-[55%]">
@@ -416,18 +428,18 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
           </div>
         </div>
 
-        <CommentsSection />
+        <CommentsSection comments={comments} profileId={profileId}/>
       </div>
     </div>
 
     <div className="w-full lg:hidden">
-      <CommentsSection />
+      <CommentsSection comments={comments} profileId={profileId}/>
     </div>
 
     {/* --- MODALES MOBILE --- */}
     {openInfos && (
       <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion}/>
+        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} averageNote={averageNote} votesCount={votesCount} modal={true}/>
       </ModalWrapper>
     )}
     {openIngredients && (
