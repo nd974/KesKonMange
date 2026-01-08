@@ -128,7 +128,7 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
                     </span>
                   </div>
 
-                  <p className="text-sm text-black">{comment.comment}</p>
+                  <p className="text-sm text-black whitespace-pre-line">{comment.comment}</p>
                 </div>
               </div>
               )
