@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import dayjs from "dayjs";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
+export default function ModalPickRecipe({ day, homeId,profileId, onPick, onClose }) {
   const [recipes, setRecipes] = useState([]);
   const [tags, setTags] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -17,7 +17,11 @@ export default function ModalPickRecipe({ day, homeId, onPick, onClose }) {
       setLoading(true);
       try {
         // ✅ Charge les recettes
-        const resRecipes = await fetch(`${API_URL}/recipe/get-all`);
+        const resRecipes = await fetch(`${API_URL}/recipe/get-all`, {
+            method: "POST", // ⚡ POST pour envoyer profileId
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ profileId }),
+          });
         const recipesData = await resRecipes.json();
 
         // ✅ Charge les tags enfants du tag "Repas"

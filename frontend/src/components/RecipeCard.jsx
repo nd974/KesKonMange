@@ -122,7 +122,7 @@ export default function RecipeCard({ recipe , homeId}) {
   
   return (
     <div
-      className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-white"
+      className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-gray-100"
       onClick={() => {
         if (!showAddToMenuModal) navigate(`/new_recipe_details/${recipe.id}`);
       }}
@@ -159,7 +159,7 @@ export default function RecipeCard({ recipe , homeId}) {
           {visibleTags.map((tag) => (
             <span
               key={tag.id}
-              className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-xs"
+              className="tags"
             >
               {tag.name}
             </span>
@@ -167,12 +167,12 @@ export default function RecipeCard({ recipe , homeId}) {
 
           {remaining > 0 && (
             <div className="relative group">
-              <span className="bg-gray-200 text-gray-700 px-2 py-1 rounded-full text-xs cursor-pointer">
+              <span className="tags bg-gray-200 px-2 py-1">
                 +{remaining}
               </span>
 
               {/* Tooltip */}
-              <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+              <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-[10px] rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
                 {hiddenTags.map((tag) => tag.name).join(", ")}
               </div>
             </div>

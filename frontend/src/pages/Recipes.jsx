@@ -6,7 +6,7 @@ import RecipeCard from "../components/RecipeCard.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function Recipes({ homeId }) {
+export default function Recipes({ homeId, profileId }) {
   const navigate = useNavigate();
 
   const [recipes, setRecipes] = useState([]);
@@ -27,12 +27,20 @@ export default function Recipes({ homeId }) {
       setLoading(true);
       try {
         const [recipesRes, tagsRes] = await Promise.all([
-          fetch(`${API_URL}/recipe/get-all`).then((r) => r.json()),
+          fetch(`${API_URL}/recipe/get-all`, {
+            method: "POST", // ⚡ POST pour envoyer profileId
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ profileId }),
+          }).then((r) => r.json()),
+
           fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),
         ]);
+
         if (!mounted) return;
+
         setRecipes(recipesRes || []);
         setTagsFlat(tagsRes || []);
+
       } catch (err) {
         console.error("Erreur chargement données:", err);
       } finally {
@@ -116,6 +124,8 @@ export default function Recipes({ homeId }) {
 
   const totalPages = Math.ceil(filteredRecipes.length / RECIPES_PER_PAGE);
 
+  console.log("RECIPES +====================", recipes);
+
   return (
     <div className="">
       {/* <Header homeId={homeId}/> */}
@@ -184,7 +194,7 @@ export default function Recipes({ homeId }) {
         </div>
 
         <div className="main-grid flex gap-4 py-4">
-          <aside className="hidden md:block sidebar bg-gray-100 p-4 rounded">
+          <aside className="hidden md:block sidebar bg-softBeige p-4 rounded">
             <h3 className="font-semibold mb-2">Tags</h3>
             <TagTree
               tagsFlat={tagsFlat}

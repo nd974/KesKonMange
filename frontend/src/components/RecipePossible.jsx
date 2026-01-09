@@ -1,0 +1,137 @@
+import React, { useEffect, useState } from "react";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { CLOUDINARY_RES, CLOUDINARY_ICONS } from "../config/constants";
+
+export default function RecipePossible({ homeId, profileId }) {
+  const [recipesOk, setRecipesOk] = useState([]);
+  const [recipesPossible, setRecipesPossible] = useState([]);
+
+  const GAP_CARD = 20;
+  const MAX_DISPLAY = 20;
+
+  useEffect(() => {
+    if (!homeId) return;
+
+    const loadRecipes = async () => {
+      try {
+        const res = await fetch(`${API_URL}/recipe/get-possible`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ homeId }),
+        });
+
+        if (!res.ok) throw new Error("Erreur chargement recettes");
+
+        const data = await res.json();
+
+        // 🔹 Randomiser et limiter les recettes OK
+        const shuffledOk = data.recipesOk
+          .sort(() => 0.5 - Math.random())
+          .slice(0, MAX_DISPLAY);
+
+        // 🔹 Pour les recettes possibles, on groupe par missingCount, puis random dans chaque groupe
+        const grouped = {};
+        data.recipesPossible.forEach((r) => {
+          const count = r.missingIngredients.length;
+          if (!grouped[count]) grouped[count] = [];
+          grouped[count].push(r);
+        });
+
+        const sortedPossible = Object.keys(grouped)
+          .sort((a, b) => Number(a) - Number(b)) // +1, +2, ...
+          .flatMap((key) =>
+            grouped[key].sort(() => 0.5 - Math.random())
+          )
+          .slice(0, MAX_DISPLAY);
+
+        setRecipesOk(shuffledOk);
+        setRecipesPossible(sortedPossible);
+      } catch (e) {
+        console.error(e);
+        setRecipesOk([]);
+        setRecipesPossible([]);
+      }
+    };
+
+    loadRecipes();
+  }, [homeId, profileId]);
+
+  const renderRow = (recipes, isPossible = false) => (
+    <div className="flex gap-0 overflow-x-auto scroll-smooth relative px-5 gap-4">
+      {recipes.map((item, index) => {
+        const recipe = isPossible ? item.recipe : item;
+        const missingCount = isPossible ? item.missingIngredients.length : 0;
+
+        return (
+          <div
+            key={recipe.id}
+            className="w-[150px] flex-shrink-0 cursor-pointer transition-transform duration-300 py-5 relative"
+          >
+            <div className="rounded-2xl overflow-hidden shadow-soft bg-softBeige">
+              {/* HEADER: Nom de la recette tronqué */}
+                <div className="w-full px-2 py-1 text-center text-sm font-semibold bg-softBeige overflow-hidden whitespace-nowrap text-ellipsis">
+                {recipe.name}
+                </div>
+
+              {/* IMAGE DE LA RECETTE */}
+              <div className="w-full h-[120px] bg-gray-200 flex items-center justify-center overflow-hidden">
+                {recipe.picture ? (
+                  <img
+                    src={`${CLOUDINARY_RES}${recipe.picture}`}
+                    alt={recipe.name}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="text-gray-400 text-sm">Pas d'image</div>
+                )}
+              </div>
+
+              {/* Badge ingrédients manquants */}
+              {isPossible && missingCount > 0 && (
+                <div className="absolute bottom-3 left-3">
+                  <span className="text-xs px-2 py-1 rounded-full bg-orange-200 text-orange-800">
+                    +{missingCount} ingrédient
+                    {missingCount > 1 ? "s" : ""}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+
+  return (
+    <div>
+      <h3 className="text-2xl font-bold text-gray-800 flex items-center">
+        <img
+          src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
+          alt="Recette Icon"
+          className="w-6 h-6 inline-block mr-2"
+        />
+        Recettes possibles
+      </h3>
+
+      {recipesOk.length > 0 && (
+        <>
+        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
+            Recettes disponibles
+        </p>
+        {renderRow(recipesOk)}
+        </>
+      )}
+
+      {recipesPossible.length > 0 && (
+        <>
+        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
+            Recettes avec ingrédients manquants
+        </p>
+        {renderRow(recipesPossible, true)}
+        </>
+      )}
+
+    </div>
+  );
+}

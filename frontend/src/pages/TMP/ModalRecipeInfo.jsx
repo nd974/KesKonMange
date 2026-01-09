@@ -1,6 +1,6 @@
 import { FullStar, HalfStar, EmptyStar } from "../../components/Stars";
 
-export default function ModalRecipeInfo({ tags, times, level, portion, averageNote, votesCount, modal=false}) {
+export default function ModalRecipeInfo({ tags, times, level, portion, usage_count, averageNote, votesCount, modal=false}) {
   console.log("tags =",tags);
   console.log("times =",times);
   console.log(averageNote, votesCount);
@@ -133,7 +133,7 @@ export default function ModalRecipeInfo({ tags, times, level, portion, averageNo
           <span className="font-semibold">Réalisées</span>
           <div className="flex items-center gap-2">
             <button className="bg-gray-300 w-6 h-6 rounded flex items-center justify-center bg-gray-400">−</button>
-            <span>{portion}</span>
+            <span>{usage_count}</span>
             <button className="bg-gray-300 w-6 h-6 rounded flex items-center justify-center bg-gray-500">+</button>
           </div>
         </div>

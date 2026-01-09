@@ -144,13 +144,13 @@ return (
             <Route path="/login" element={<Login />} />
             <Route path="/profiles" element={<ProfileSelect key={home_id} homeId={home_id} />} />
             <Route path="/" element={<Dashboard key={home_id} homeId={home_id} profileId={profile_id} />} />
-            <Route path="/recipes" element={<Recipes key={home_id} homeId={home_id} />} />
-            <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} />} />
+            <Route path="/recipes" element={<Recipes key={home_id} homeId={home_id} profileId={profile_id}/>} />
+            <Route path="/calendar" element={<Calendar key={home_id} homeId={home_id} profileId={profile_id}/>} />
             <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
             <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id} />} />
 
             <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
-            <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} />} />
+            <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} profileId={profile_id}/>} />
             <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
 
 

@@ -508,23 +508,27 @@ router.put("/update/:id", async (req, res) => {
  * GET /recipe/get-all
  * Récupère toutes les recettes avec leurs tags
  */
-router.get("/get-all", async (req, res) => {
+router.post("/get-all", async (req, res) => {
+  const { profileId } = req.body;
   try {
     // 🔹 Récupérer toutes les recettes
     const { rows: recipes } = await pool.query(`
       SELECT 
-        id,
-        name,
-        time_prep,
-        time_cook,
-        time_rest,
-        time_clean,
-        portion,
-        level,
-        picture
-      FROM "Recipe"
-      ORDER BY name ASC
-    `);
+        r.id,
+        r.name,
+        r.time_prep,
+        r.time_cook,
+        r.time_rest,
+        r.time_clean,
+        r.portion,
+        r.level,
+        r.picture,
+        COALESCE(rs.usage_count, 0) AS usage_count
+      FROM "Recipe" r
+      LEFT JOIN recipes_stats rs 
+        ON r.id = rs.recipe_id AND rs.profile_id = $1
+      ORDER BY r.name ASC
+    `, [profileId]);
 
     // 🔹 Récupérer tous les tags liés
     const { rows: recipeTags } = await pool.query(`
@@ -1047,6 +1051,83 @@ router.post("/deleteStats", async (req, res) => {
   }
 });
 
+
+router.post("/get-possible", async (req, res) => {
+  const { homeId } = req.body;
+
+  try {
+    // 1️⃣ Recettes
+    const { rows: recipes } = await pool.query(`
+      SELECT id, name, portion, level, picture
+      FROM "Recipe"
+      ORDER BY name ASC
+    `);
+
+    // 2️⃣ Ingrédients par recette
+    const { rows: ingredients } = await pool.query(`
+      SELECT 
+        ri.recipe_id,
+        i.id AS ing_id,
+        i.name,
+        ri.unit_id
+      FROM "recipes_ingredients" ri
+      JOIN "Ingredient" i ON i.id = ri.ingredient_id
+    `);
+
+    const ingredientsByRecipe = {};
+    for (const ing of ingredients) {
+      if (!ingredientsByRecipe[ing.recipe_id]) {
+        ingredientsByRecipe[ing.recipe_id] = [];
+      }
+      ingredientsByRecipe[ing.recipe_id].push(ing);
+    }
+
+    // 3️⃣ Stock du foyer
+    const { rows: products } = await pool.query(`
+      SELECT ing_id
+      FROM "Product"
+      WHERE home_id = $1
+    `, [homeId]);
+
+    const stockIngIds = new Set(products.map(p => p.ing_id));
+
+    // 4️⃣ Séparation OK / POSSIBLE
+    const recipesOk = [];
+    const recipesPossible = [];
+
+    for (const recipe of recipes) {
+      const recipeIngredients = ingredientsByRecipe[recipe.id] || [];
+      const missingIngredients = [];
+
+      for (const ing of recipeIngredients) {
+        if (!stockIngIds.has(ing.ing_id)) {
+          missingIngredients.push({
+            ing_id: ing.ing_id,
+            name: ing.name,
+          });
+        }
+      }
+
+      if (missingIngredients.length === 0) {
+        recipesOk.push(recipe);
+      } else {
+        recipesPossible.push({
+          recipe,
+          missingIngredients,
+          missingCount: missingIngredients.length,
+        });
+      }
+    }
+
+    res.json({
+      recipesOk,
+      recipesPossible,
+    });
+  } catch (err) {
+    console.error("Erreur /recipe/get-possible:", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
 
 
 

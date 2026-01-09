@@ -6,7 +6,7 @@ import { CLOUDINARY_RES, CLOUDINARY_API, Unit_Item_List } from "../config/consta
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeAdd({ homeId }) {
+export default function RecipeAdd({ homeId , profileId }) {
   const { recipe_id } = useParams();
   const navigate = useNavigate();
 
@@ -266,7 +266,11 @@ useEffect(() => {
 useEffect(() => {
   const fetchLocalRecipes = async () => {
     try {
-      const res = await fetch(`${API_URL}/recipe/get-all`);
+      const res = await fetch(`${API_URL}/recipe/get-all`, {
+            method: "POST", // ⚡ POST pour envoyer profileId
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ profileId }),
+          });
       const data = await res.json();
       setlocalRecipes(data);
     } catch (err) {

@@ -702,13 +702,17 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       <Draggable
         key={child.localId}
         position={{ x: child.x, y: child.y }}
+        disabled={!inManage} // ← empêche le drag si inManage false
         onStart={() =>
           setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: false }))
         }
         onDrag={() =>
-          inManage && setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: true }))
+          inManage &&
+          setDraggedStorageIds((prev) => ({ ...prev, [child.localId]: true }))
         }
         onStop={(e, data) => {
+          if (!inManage) return; // ne rien faire si drag désactivé
+
           const dragged = draggedStorageIds[child.localId];
           const inZone = updateParent({ ...child, x: data.x, y: data.y });
 
@@ -726,11 +730,12 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
         }}
       >
         <g
-          style={{ cursor: "pointer" }}
+          style={{ cursor: inManage ? "grab" : "pointer" }}
           pointerEvents="all"
+          onClick={() => handleSelect()} // clic toujours actif
           onTouchEnd={(e) => {
             e.preventDefault();
-            if (!draggedStorageIds[child.localId]) handleSelect();
+            handleSelect(); // clic tactile toujours actif
           }}
         >
           <rect
@@ -738,7 +743,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
             y={0}
             width={child.w}
             height={child.h}
-            fill={child.localId === selectedStorageLocalId ? "#ff7300ff" : "#60A5FA"}  // <- NEW
+            fill={child.localId === selectedStorageLocalId ? "#ff7300ff" : "#60A5FA"}
             stroke="#111827"
             strokeWidth="2"
           />
@@ -756,6 +761,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
       </Draggable>
     );
   })}
+
 
 
 

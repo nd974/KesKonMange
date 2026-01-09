@@ -7,6 +7,7 @@ import NewRecipeDetail from "./TMP/NewRecipeDetail";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 import RecipeDetail from "./RecipeDetails";
+import RecipePossible from "../components/RecipePossible";
 
 dayjs.locale("fr");
 
@@ -554,7 +555,7 @@ useEffect(() => {
           </section>
 
           {/* RIGHT — regroupement de Menu A + Menu B */}
-          <div className="order-1 lg:order-2 flex flex-col gap-6">
+          <div className="order-1 lg:order-2 flex flex-col">
 
             {/* MENU A (toujours visible) */}
             <section>
@@ -570,9 +571,7 @@ useEffect(() => {
 
             {/* MENU B (visible seulement desktop) */}
             <section className="hidden lg:block">
-              <h3 className="text-2xl font-bold text-gray-800 mb-3">
-                Recettes Possibles
-              </h3>
+              <RecipePossible homeId={homeId} profileId={profileId}/>
             </section>
 
           </div>
@@ -605,6 +604,9 @@ useEffect(() => {
           </div>
         </div>
       )}
+            <section className="mt-5 lg:hidden">
+              <RecipePossible homeId={homeId} profileId={profileId}/>
+            </section>
         </section>
       )
 }

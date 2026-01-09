@@ -84,7 +84,7 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
             onClick={() => setIsModalOpen(true)}
             className="bg-softPink text-white px-4 py-1 rounded-full text-sm hover:bg-pink-200 transition"
           >
-            {!!myExistingComment ? "Modifier votre avis" : "Laisser un avis"}
+            {!!myExistingComment ? "Modifier l'avis" : "Laisser un avis"}
             
           </button>
         </div>

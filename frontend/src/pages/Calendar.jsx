@@ -8,7 +8,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 dayjs.extend(isoWeek);
 
-export default function Calendar({homeId}) {
+export default function Calendar({homeId, profileId}) {
   const today = dayjs();
   const [currentMonth, setCurrentMonth] = useState(today);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -138,6 +138,7 @@ export default function Calendar({homeId}) {
         <ModalPickRecipe
           day={selectedDay}
           homeId={homeId}
+          profileId={profileId}
           onPick={handlePick}
           onClose={() => setSelectedDay(null)}
         />
