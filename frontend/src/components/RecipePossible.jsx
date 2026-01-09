@@ -10,6 +10,15 @@ export default function RecipePossible({ homeId, profileId }) {
   const GAP_CARD = 20;
   const MAX_DISPLAY = 20;
 
+  const GardeMangerLink = () => (
+  <a
+    href="/stock"
+    className="text-green-600 underline hover:text-green-800"
+  >
+    Garde-manger
+  </a>
+  );
+
   useEffect(() => {
     if (!homeId) return;
 
@@ -62,15 +71,16 @@ export default function RecipePossible({ homeId, profileId }) {
       {recipes.map((item, index) => {
         const recipe = isPossible ? item.recipe : item;
         const missingCount = isPossible ? item.missingIngredients.length : 0;
+        const bgClass = isPossible ? "bg-softBeige" : "bg-accentGreen text-white";
 
         return (
           <div
             key={recipe.id}
             className="w-[150px] flex-shrink-0 cursor-pointer transition-transform duration-300 py-5 relative"
           >
-            <div className="rounded-2xl overflow-hidden shadow-soft bg-softBeige">
+            <div className={`rounded-2xl overflow-hidden shadow-soft ${bgClass}`}>
               {/* HEADER: Nom de la recette tronqué */}
-                <div className="w-full px-2 py-1 text-center text-sm font-semibold bg-softBeige overflow-hidden whitespace-nowrap text-ellipsis">
+                <div className="w-full px-2 py-1 text-center text-sm font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
                 {recipe.name}
                 </div>
 
@@ -107,26 +117,30 @@ export default function RecipePossible({ homeId, profileId }) {
     <div>
       <h3 className="text-2xl font-bold text-gray-800 flex items-center">
         <img
-          src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
+          src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Prep"]}`}
           alt="Recette Icon"
           className="w-6 h-6 inline-block mr-2"
         />
         Recettes possibles
       </h3>
 
-      {recipesOk.length > 0 && (
+      {recipesOk.length > 0 ? (
         <>
         <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
-            Recettes disponibles
+            Recettes faisables à partir du <GardeMangerLink />
         </p>
         {renderRow(recipesOk)}
         </>
+      ):(
+        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
+            Aucune recette faisables à partir du <GardeMangerLink />
+        </p>
       )}
 
       {recipesPossible.length > 0 && (
         <>
         <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
-            Recettes avec ingrédients manquants
+            Recettes presque faisables (ingrédients manquants)
         </p>
         {renderRow(recipesPossible, true)}
         </>

@@ -132,7 +132,7 @@ return (
       {/* HEADER + CONTENU */}
       <div className="flex-1">
         <div className={!pathSign ? "px-4 md:px-8 lg:px-16 py-8" : ""}>
-          {!pathSign && (<div className="print:hidden">
+          {!pathSign && (<div className="print:hidden -mt-3">
               <Header
                 homeId={home_id}
                 inAccount={location.pathname.startsWith("/settings")}

@@ -385,7 +385,7 @@ useEffect(() => {
             )}
             </div>
 
-            <div className="soft-card rounded-lg shadow-soft relative">
+            <div className="soft-card rounded-lg shadow-soft relative mt-1">
               {selectedRecipe ? (
                 <div className="flex flex-col items-center relative">
                                                           {/* TRASH À DROITE */}
@@ -397,7 +397,7 @@ useEffect(() => {
                       </button>
 
 
-                  <div className="w-full flex items-center pt-8 relative mb-4">
+                  <div className="w-full flex items-center pt-8 relative mb-9">
 
                     <div className="flex items-center gap-2 mx-auto">
 
