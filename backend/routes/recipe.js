@@ -1073,32 +1073,32 @@ router.post("/get-possible", async (req, res) => {
 
     // 3️⃣ Récupérer tous les ingrédients finaux de toutes les recettes
     const { rows: ingredientsAll } = await pool.query(`
-      WITH RECURSIVE recipe_tree AS (
-        SELECT
-          ri.recipe_id AS parent_recipe_id,
-          ri.ingredient_id AS ingredient_id,
-          i.recipe_id AS child_recipe_id
-        FROM "recipes_ingredients" ri
-        JOIN "Ingredient" i ON i.id = ri.ingredient_id
+        WITH RECURSIVE recipe_tree AS (
+          SELECT
+            ri.recipe_id AS parent_recipe_id,
+            ri.ingredient_id AS ingredient_id,
+            i.recipe_id AS child_recipe_id
+          FROM "recipes_ingredients" ri
+          JOIN "Ingredient" i ON i.id = ri.ingredient_id
 
-        UNION ALL
+          UNION ALL
 
-        SELECT
-          rt.parent_recipe_id,
-          ri.ingredient_id,
-          i.recipe_id AS child_recipe_id
+          SELECT
+            rt.parent_recipe_id,
+            ri.ingredient_id,
+            i.recipe_id AS child_recipe_id
+          FROM recipe_tree rt
+          JOIN "recipes_ingredients" ri ON ri.recipe_id = rt.child_recipe_id
+          JOIN "Ingredient" i ON i.id = ri.ingredient_id
+          WHERE rt.child_recipe_id IS NOT NULL
+        )
+        SELECT DISTINCT
+          rt.parent_recipe_id AS recipe_id,
+          i.id AS ing_id,
+          i.name
         FROM recipe_tree rt
-        JOIN "recipes_ingredients" ri ON ri.recipe_id = rt.child_recipe_id
-        JOIN "Ingredient" i ON i.id = ri.ingredient_id
-        WHERE rt.child_recipe_id IS NOT NULL
-      )
-      SELECT
-        rt.parent_recipe_id AS recipe_id,
-        i.id AS ing_id,
-        i.name
-      FROM recipe_tree rt
-      JOIN "Ingredient" i ON i.id = rt.ingredient_id
-      WHERE rt.child_recipe_id IS NULL
+        JOIN "Ingredient" i ON i.id = rt.ingredient_id
+        WHERE rt.child_recipe_id IS NULL
     `);
 
     // 4️⃣ Récupérer toutes les recettes utilisées comme sous-recette
