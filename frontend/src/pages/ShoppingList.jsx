@@ -576,7 +576,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
           <h3 className="text-2xl font-bold text-gray-800 mb-3">
             Menus enregistrés
           </h3>
-          <div className="space-y-3 max-h-[400px] overflow-y-auto pr-1">
+          <div className="space-y-3 max-h-[60vh] overflow-y-auto pr-1">
             {groups.length === 0 && (
               <p className="text-sm text-gray-500">
                 Aucun menu enregistré. Rendez-vous sur le calendrier.

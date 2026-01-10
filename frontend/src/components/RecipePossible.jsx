@@ -3,9 +3,21 @@ import React, { useEffect, useState } from "react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 import { CLOUDINARY_RES, CLOUDINARY_ICONS } from "../config/constants";
 
+import ModalAddRecipeToMenu from "../components/modals/ModalAddRecipeToMenu";
+
 export default function RecipePossible({ homeId, profileId }) {
   const [recipesOk, setRecipesOk] = useState([]);
   const [recipesPossible, setRecipesPossible] = useState([]);
+
+  const [showAddToMenuModal, setShowAddToMenuModal] = useState(false);
+  const [selectedRecipe, setSelectedRecipe] = useState(null);
+  const [selectedIngredients, setSelectedIngredients] = useState(null);
+  // états requis par la modale
+  const [menus, setMenus] = useState([]);
+  const [repasTags, setRepasTags] = useState([]);
+  const [selectedMenuId, setSelectedMenuId] = useState(null);
+  const [menuDate, setMenuDate] = useState("");
+  const [selectedMealTagId, setSelectedMealTagId] = useState(null);
 
   const GAP_CARD = 20;
   const MAX_DISPLAY = 20;
@@ -77,7 +89,15 @@ export default function RecipePossible({ homeId, profileId }) {
           <div
             key={recipe.id}
             className="w-[150px] flex-shrink-0 cursor-pointer transition-transform duration-300 py-5 relative"
+            onClick={() => {
+              setSelectedRecipe(recipe);
+              setSelectedIngredients(
+                isPossible ? item.missingIngredients : null
+              );
+              setShowAddToMenuModal(true);
+            }}
           >
+
             <div className={`rounded-2xl overflow-hidden shadow-soft ${bgClass}`}>
               {/* HEADER: Nom de la recette tronqué */}
                 <div className="w-full px-2 py-1 text-center text-sm font-semibold overflow-hidden whitespace-nowrap text-ellipsis">
@@ -144,6 +164,26 @@ export default function RecipePossible({ homeId, profileId }) {
         </p>
         {renderRow(recipesPossible, true)}
         </>
+      )}
+
+      {showAddToMenuModal && (
+        <ModalAddRecipeToMenu
+          show={showAddToMenuModal}
+          onClose={() => setShowAddToMenuModal(false)}
+          recipe={selectedRecipe}
+          homeId={homeId}
+          menus={menus}
+          setMenus={setMenus}
+          repasTags={repasTags}
+          setRepasTags={setRepasTags}
+          selectedMenuId={selectedMenuId}
+          setSelectedMenuId={setSelectedMenuId}
+          menuDate={menuDate}
+          setMenuDate={setMenuDate}
+          selectedMealTagId={selectedMealTagId}
+          setSelectedMealTagId={setSelectedMealTagId}
+          ingredients={selectedIngredients}
+        />
       )}
 
     </div>

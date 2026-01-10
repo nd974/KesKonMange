@@ -1056,57 +1056,81 @@ router.post("/get-possible", async (req, res) => {
   const { homeId } = req.body;
 
   try {
-    // 1️⃣ Recettes
-    const { rows: recipes } = await pool.query(`
+    // 1️⃣ Récupérer toutes les recettes principales
+    const { rows: allRecipes } = await pool.query(`
       SELECT id, name, portion, level, picture
       FROM "Recipe"
       ORDER BY name ASC
     `);
 
-    // 2️⃣ Ingrédients par recette
-    const { rows: ingredients } = await pool.query(`
-      SELECT 
-        ri.recipe_id,
+    // 2️⃣ Récupérer le stock du foyer
+    const { rows: products } = await pool.query(`
+      SELECT ing_id
+      FROM "Product"
+      WHERE home_id = $1
+    `, [homeId]);
+    const stockIngIds = new Set(products.map(p => p.ing_id));
+
+    // 3️⃣ Récupérer tous les ingrédients finaux de toutes les recettes
+    const { rows: ingredientsAll } = await pool.query(`
+      WITH RECURSIVE recipe_tree AS (
+        SELECT
+          ri.recipe_id AS parent_recipe_id,
+          ri.ingredient_id AS ingredient_id,
+          i.recipe_id AS child_recipe_id
+        FROM "recipes_ingredients" ri
+        JOIN "Ingredient" i ON i.id = ri.ingredient_id
+
+        UNION ALL
+
+        SELECT
+          rt.parent_recipe_id,
+          ri.ingredient_id,
+          i.recipe_id AS child_recipe_id
+        FROM recipe_tree rt
+        JOIN "recipes_ingredients" ri ON ri.recipe_id = rt.child_recipe_id
+        JOIN "Ingredient" i ON i.id = ri.ingredient_id
+        WHERE rt.child_recipe_id IS NOT NULL
+      )
+      SELECT
+        rt.parent_recipe_id AS recipe_id,
         i.id AS ing_id,
-        i.name,
-        ri.unit_id
-      FROM "recipes_ingredients" ri
-      JOIN "Ingredient" i ON i.id = ri.ingredient_id
+        i.name
+      FROM recipe_tree rt
+      JOIN "Ingredient" i ON i.id = rt.ingredient_id
+      WHERE rt.child_recipe_id IS NULL
     `);
 
+    // 4️⃣ Récupérer toutes les recettes utilisées comme sous-recette
+    const { rows: childRecipes } = await pool.query(`
+      SELECT DISTINCT i.recipe_id AS child_recipe_id
+      FROM "recipes_ingredients" ri
+      JOIN "Ingredient" i ON i.id = ri.ingredient_id
+      WHERE i.recipe_id IS NOT NULL
+    `);
+    const childRecipeIds = new Set(childRecipes.map(r => r.child_recipe_id));
+
+    // 5️⃣ Construire un mapping recette -> ingrédients finaux
     const ingredientsByRecipe = {};
-    for (const ing of ingredients) {
+    for (const ing of ingredientsAll) {
       if (!ingredientsByRecipe[ing.recipe_id]) {
         ingredientsByRecipe[ing.recipe_id] = [];
       }
       ingredientsByRecipe[ing.recipe_id].push(ing);
     }
 
-    // 3️⃣ Stock du foyer
-    const { rows: products } = await pool.query(`
-      SELECT ing_id
-      FROM "Product"
-      WHERE home_id = $1
-    `, [homeId]);
-
-    const stockIngIds = new Set(products.map(p => p.ing_id));
-
-    // 4️⃣ Séparation OK / POSSIBLE
+    // 6️⃣ Séparation OK / POSSIBLE en filtrant les sous-recettes
     const recipesOk = [];
     const recipesPossible = [];
 
-    for (const recipe of recipes) {
-      const recipeIngredients = ingredientsByRecipe[recipe.id] || [];
-      const missingIngredients = [];
+    for (const recipe of allRecipes) {
+      // Filtrer uniquement les recettes principales
+      if (childRecipeIds.has(recipe.id)) continue;
 
-      for (const ing of recipeIngredients) {
-        if (!stockIngIds.has(ing.ing_id)) {
-          missingIngredients.push({
-            ing_id: ing.ing_id,
-            name: ing.name,
-          });
-        }
-      }
+      const recipeIngredients = ingredientsByRecipe[recipe.id] || [];
+      const missingIngredients = recipeIngredients.filter(
+        ing => !stockIngIds.has(ing.ing_id)
+      );
 
       if (missingIngredients.length === 0) {
         recipesOk.push(recipe);
@@ -1119,15 +1143,16 @@ router.post("/get-possible", async (req, res) => {
       }
     }
 
-    res.json({
-      recipesOk,
-      recipesPossible,
-    });
+    // 7️⃣ Envoyer la réponse
+    res.json({ recipesOk, recipesPossible });
+
   } catch (err) {
     console.error("Erreur /recipe/get-possible:", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+
 
 
 

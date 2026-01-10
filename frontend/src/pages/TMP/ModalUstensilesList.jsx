@@ -15,7 +15,7 @@ export default function ModalUstensilesList({ utensils }) {
               <img 
                 src={`${CLOUDINARY_RES}${utensil.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
                 alt={utensil.name} 
-                className="w-15 h-10 object-cover" 
+                className="w-10 h-10 object-cover" 
               />
               <span>{utensil.name}</span>
             </div>

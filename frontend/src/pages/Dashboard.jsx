@@ -291,21 +291,11 @@ useEffect(() => {
   }
 }, [activeMenuIndex, recipeIndex, selectedMenusForDay]);
 
-
-  // const handleUpdateCountRecipe = async (menuId, recipeId, count_recipe) => {
-  //   try {
-  //     const res = await fetch(`${API_URL}/menu/update-count/${menuId}/${recipeId}`, {
-  //       method: "POST",
-  //       headers: { "Content-Type": "application/json" },
-  //       body: JSON.stringify({ count_recipe }),
-  //     });
-  //     const data = await res.json();
-  //     return true;
-  //   } catch (err) {
-  //     console.error("Erreur lors de la vérification de l'abonnement:", err);
-  //     return false;
-  //   }
-  // };
+  const refreshMenus = async () => {
+    const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
+    const data = await res.json();
+    setMenus(data || []);
+  }
 
   const handleCrementLocalCountRecipe = async(crement) => {
       const newCount = localCount + crement
@@ -391,7 +381,7 @@ useEffect(() => {
                                                           {/* TRASH À DROITE */}
                       <button
                         onClick={deleteMenuValidate}
-                        className="absolute right-0 text-right z-50"
+                        className="absolute right-0 text-right z-10"
                       >
                         ❌
                       </button>
@@ -495,50 +485,17 @@ useEffect(() => {
 
 
 
-<div className="flex justify-center w-full">
-  <div className="w-full max-w-[800px]">
-    <NewRecipeDetail
-      key={selectedRecipe?.id}
-      homeId={homeId}
-      profileId={profileId}
-      id={selectedRecipe?.id}
-      compact={true}
-    />
-  </div>
-</div>
-
-                  {/* mobile */}
-                  {/* {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-                    <div className="flex justify-center gap-4 mb-4 lg:hidden">
-                      <button
-                        onClick={showPrev}
-                        disabled={recipeIndex <= 0}
-                        className={`px-3 py-1 rounded-md ${
-                          recipeIndex > 0
-                            ? "hover:shadow cursor-pointer"
-                            : "bg-white/60 opacity-50 cursor-not-allowed"
-                        }`}
-                      >
-                        ◀
-                      </button>
-
-                      <button
-                        onClick={showNext}
-                        disabled={
-                          recipeIndex >=
-                          selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                        }
-                        className={`px-3 py-1 rounded-md ${
-                          recipeIndex <
-                          selectedMenusForDay[activeMenuIndex].recipes.length - 1
-                            ? "cursor-pointer"
-                            : "bg-white/60 opacity-50 cursor-not-allowed"
-                        }`}
-                      >
-                        ▶
-                      </button>
-                    </div>
-                  )} */}
+            <div className="flex justify-center w-full">
+              <div className="w-full max-w-[800px]">
+                <NewRecipeDetail
+                  key={selectedRecipe?.id}
+                  homeId={homeId}
+                  profileId={profileId}
+                  id={selectedRecipe?.id}
+                  compact={true}
+                />
+              </div>
+            </div>
                 </div>
               ) : (
                 <p className="text-gray-500 text-center py-10">
@@ -571,7 +528,10 @@ useEffect(() => {
 
             {/* MENU B (visible seulement desktop) */}
             <section className="hidden lg:block">
-              <RecipePossible homeId={homeId} profileId={profileId}/>
+              <RecipePossible 
+                homeId={homeId} 
+                profileId={profileId}
+              />
             </section>
 
           </div>

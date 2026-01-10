@@ -1,5 +1,6 @@
 import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
 import { FullStar, HalfStar, EmptyStar } from "../components/Stars";
+import ModalAddRecipeToMenu from "../components/modals/ModalAddRecipeToMenu";
 import { useNavigate } from "react-router-dom";
 import { useState, useEffect } from "react";
 
@@ -142,12 +143,11 @@ export default function RecipeCard({ recipe , homeId}) {
             e.stopPropagation();
             setSelectedRecipe(recipe);
             setShowAddToMenuModal(true);
-            fetchMenus(); // Pour lister les menus existants
-            fetchTagsRepas();  // Pour lister les tags enfants de Repas
           }}
         >
           📝
         </button>
+
 
       </div>
 
@@ -205,79 +205,22 @@ export default function RecipeCard({ recipe , homeId}) {
 
       {/* Modal Add to Menu */}
       {showAddToMenuModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-          <div className="bg-white p-6 rounded shadow w-full max-w-md">
-            <h3 className="text-lg font-semibold mb-4">Ajouter {selectedRecipe?.name} à un menu</h3>
-
-            {menus.length > 0 ? (
-              <>
-                <label className="block mb-2">Choisir un menu existant :</label>
-                <select
-                  className="w-full mb-4 p-2 border rounded"
-                  value={selectedMenuId || ""}
-                  onChange={(e) => setSelectedMenuId(e.target.value)}
-                >
-                  <option value="">-- Nouveau menu --</option>
-                  {menus.map(m => (
-                    <option key={m.id} value={m.id}>
-                      {m.date.slice(0, 10).split('-').reverse().join('/')} -- {m.tag.name}
-                    </option>
-                  ))}
-                </select>
-              </>
-            ) : (
-              <p className="mb-4">Aucun menu existant, créez-en un nouveau :</p>
-            )}
-
-            {!selectedMenuId && (
-              <>
-                <label className="block mb-2">Date du menu :</label>
-                <input
-                  type="date"
-                  className="w-full mb-4 p-2 border rounded"
-                  value={menuDate}
-                  onChange={(e) => setMenuDate(e.target.value)}
-                />
-
-                {/* ✅ Sélection d’un seul tag enfant de "Repas" */}
-                <label className="block mb-2 font-semibold">Type de repas :</label>
-                <div className="flex flex-wrap gap-2 mb-4">
-                  {(repasTags
-                    .filter(t => t.parent_id === repasTags.find(tag => tag.name === "Repas")?.id)
-                    || []).map(tag => (
-                    <button
-                      key={tag.id}
-                      type="button"
-                      className={`px-3 py-1 rounded-full border ${
-                        selectedMealTagId === tag.id
-                          ? "bg-blue-600 text-white border-blue-600"
-                          : "bg-gray-100 text-gray-700 border-gray-300"
-                      }`}
-                      onClick={() => setSelectedMealTagId(tag.id)}
-                    >
-                      {tag.name}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-
-            <div className="flex justify-end gap-2 mt-4">
-              <button
-                className="px-4 py-2 bg-gray-200 rounded"
-                onClick={() => setShowAddToMenuModal(false)}
-              >
-                Annuler
-              </button>
-              <button
-                className="px-4 py-2 bg-blue-600 text-white rounded"
-                onClick={addToMenu}
-              >
-                Ajouter
-              </button>
-            </div>
-          </div>
-        </div>
+        <ModalAddRecipeToMenu
+          show={showAddToMenuModal}
+          onClose={() => setShowAddToMenuModal(false)}
+          recipe={selectedRecipe}
+          homeId={homeId}
+          menus={menus}
+          setMenus={setMenus}
+          repasTags={repasTags}
+          setRepasTags={setRepasTags}
+          selectedMenuId={selectedMenuId}
+          setSelectedMenuId={setSelectedMenuId}
+          menuDate={menuDate}
+          setMenuDate={setMenuDate}
+          selectedMealTagId={selectedMealTagId}
+          setSelectedMealTagId={setSelectedMealTagId}
+        />
       )}
     </div>
   );

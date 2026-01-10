@@ -12,6 +12,26 @@ export default function Menus({
   onSelectMenu,
   homeId,
 }) {
+
+  
+  const RecipesLink = () => (
+  <a
+    href="/recipes"
+    className="text-green-600 underline hover:text-green-800"
+  >
+    Recettes(📝)
+  </a>
+  );
+
+  const CalendarLink = () => (
+  <a
+    href="/calendar"
+    className="text-green-600 underline hover:text-green-800"
+  >
+    Calendrier
+  </a>
+  );
+
   const [menus, setMenus] = useState([]);
 
   const GAP_CARD = 20; // Espace entre les cartes en pixels
@@ -66,93 +86,97 @@ export default function Menus({
         />
         Menus enregistrés
       </h3>
-      
-      <div className="flex gap-0 overflow-x-auto scroll-smooth mt-3 relative px-5">
-        {groups.map((g, index) => {
-          const isSelected = selectedDay?.format("YYYY-MM-DD") === g.date;
-          const tags = g.menus
-            .map((m) => m.tagName)
-            .filter(Boolean);
 
-          return (
-            <div
-              key={g.date}
-              onClick={() => {
-                setSelectedDay(dayjs(g.date));
-                onSelectMenu?.({ date: g.date, menus: g.menus });
-              }}
-              className={`min-w-[150px] cursor-pointer transition-transform duration-300 py-5 relative z-${index}`}
-              style={{
-                // Combine les deux transforms
-                marginLeft: index === 0 ? 0 : isSelected ? -GAP_CARD : -GAP_CARD,
-                transform: isSelected ? "scale(1.1) translateY(-10px)" : "scale(1)", // Gestion de l'effet de superposition et de l'élévation
-                zIndex: isSelected ? GAP_CARD : groups.length - index, // Assurer un z-index plus élevé pour les cartes à gauche
-              }}
-            >
-              {/* VRAIE CARTE */}
-              <div className="rounded-tl-2xl rounded-bl-2xl rounded-br-2xl">
-                {/* BANDEAU HAUT (Top Bandeau) */}
-                <div className="flex rounded-tl-2xl rounded-tr-2xl text-center">
+      {groups.length === 0 ? (
+        // Affichage quand il n'y a aucun menu
+        <div className="mt-5 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 sm:h-[20vh] flex flex-col items-center justify-center gap-2">
+          <div>Aucun menu enregistré</div>
+          <div>
+            Création dans <CalendarLink /> ou <RecipesLink />
+          </div>
+        </div>
+      ) : (
+        <div className="flex gap-0 overflow-x-auto scroll-smooth mt-3 relative px-5">
+          {groups.map((g, index) => {
+            const isSelected = selectedDay?.format("YYYY-MM-DD") === g.date;
+            const tags = g.menus
+              .map((m) => m.tagName)
+              .filter(Boolean);
+
+            return (
+              <div
+                key={g.date}
+                onClick={() => {
+                  setSelectedDay(dayjs(g.date));
+                  onSelectMenu?.({ date: g.date, menus: g.menus });
+                }}
+                className={`min-w-[150px] cursor-pointer transition-transform duration-300 py-5 relative z-${index}`}
+                style={{
+                  marginLeft: index === 0 ? 0 : -GAP_CARD,
+                  transform: isSelected ? "scale(1.1) translateY(-10px)" : "scale(1)",
+                  zIndex: isSelected ? GAP_CARD : groups.length - index,
+                }}
+              >
+                {/* CARTE */}
+                <div className="rounded-tl-2xl rounded-bl-2xl rounded-br-2xl">
+                  <div className="flex rounded-tl-2xl rounded-tr-2xl text-center">
+                    <div
+                      className={`w-2/4 px-2 py-2 text-sm font-semibold rounded-tl-2xl rounded-tr-2xl ${
+                        isSelected ? "bg-accentGreen" : "bg-softBeige"
+                      }`}
+                    >
+                      {dayjs(g.date).format("ddd D")}
+                    </div>
+                    <div className="w-2/4 bg-transparent" />
+                  </div>
+
                   <div
-                    className={`w-2/4 px-2 py-2 text-sm font-semibold rounded-tl-2xl rounded-tr-2xl ${
+                    className={`h-[150px] shadow-soft p-3 rounded-tr-2xl rounded-bl-2xl rounded-br-2xl ${
                       isSelected ? "bg-accentGreen" : "bg-softBeige"
                     }`}
                   >
-                    {dayjs(g.date).format("ddd D")}
+                    <div className="text-lg font-bold mb-4">Menu</div>
+
+                    <div className="absolute bottom-[35px] left-3 flex items-center gap-2">
+                      {tags.length > 0 &&
+                        tags.slice(0, 1).map((tag, index) => (
+                          <span
+                            key={index}
+                            className={`px-2 py-1 rounded-full text-sm ${
+                              isSelected
+                                ? "bg-[#dfffcf] text-black"
+                                : "bg-[#b9b9b9] text-[#b9b9b9]"
+                            }`}
+                          >
+                            {tag}
+                          </span>
+                        ))}
+
+                      {tags.length > 1 && (
+                        <div className="relative group">
+                          <span
+                            className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
+                              isSelected
+                                ? "bg-[#dfffcf] text-black"
+                                : "bg-[#b9b9b9] text-[#b9b9b9]"
+                            }`}
+                          >
+                            +{tags.length - 1}
+                          </span>
+                          <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
+                            {tags.slice(1, tags.length).join(" / ")}
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
-                  {/* Section sans fond ici */}
-                  <div className="w-2/4 bg-transparent" />
-                </div>
-
-                {/* CONTENU (Content) */}
-                <div
-                  className={`h-[150px] shadow-soft p-3 rounded-tr-2xl rounded-bl-2xl rounded-br-2xl ${
-                    isSelected ? "bg-accentGreen" : "bg-softBeige"
-                  }`}
-                >
-                  <div className="text-lg font-bold mb-4">Menu</div> {/* Marge réduite ici */}
-
-                  <div className="absolute bottom-[35px] left-3 flex items-center gap-2">
-  {/* Affichage des tags visibles */}
-  {tags.length > 0 &&
-    tags.slice(0, 1).map((tag, index) => (
-      <span
-        key={index}
-        className={`px-2 py-1 rounded-full text-sm ${
-          isSelected
-            ? "bg-[#dfffcf] text-black"
-            : "bg-[#b9b9b9] text-[#b9b9b9]"
-        }`}
-      >
-        {tag}
-      </span>
-    ))}
-
-  {/* Affichage du "+X" si des tags restent */}
-  {tags.length > 1 && (
-    <div className="relative group">
-      <span
-        className={`px-2 py-1 rounded-full text-sm cursor-pointer ${
-          isSelected
-            ? "bg-[#dfffcf] text-black"
-            : "bg-[#b9b9b9] text-[#b9b9b9]"
-        }`}
-      >
-        +{tags.length - 1}
-      </span>
-      <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-        {tags.slice(1, tags.length).map((tag) => tag).join(" / ")}
-      </div>
-    </div>
-  )}
-</div>
-
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
+            );
+          })}
+        </div>
+      )}
     </div>
+
   );
 }
