@@ -212,10 +212,13 @@ const filteredRecipes = useMemo(() => {
               🔍 Filtrer
             </button>
 
-            {selectedTagIds.length > 0 && (
+            {(finderConfig || selectedTagIds.length > 0) && (
               <button
                 className="hidden md:inline-block clear-filter px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 w-auto"
-                onClick={() => setSelectedTagIds([])}
+                onClick={() => {
+                  setSelectedTagIds([]);
+                  setFinderConfig(null);
+                }}
                 title="Effacer filtre"
               >
                 Effacer filtre
@@ -371,11 +374,12 @@ const filteredRecipes = useMemo(() => {
               setSelectedTagIds={setSelectedTagIds}
               isOpen={false}
             />
-            {selectedTagIds.length > 0 && (
+            {(finderConfig || selectedTagIds.length > 0) && (
               <button
                 className="mt-4 w-full bg-gray-200 rounded-lg py-2 text-sm"
                 onClick={() => {
                   setSelectedTagIds([]);
+                  setFinderConfig(null);
                   setShowMobileTags(false);
                 }}
               >
