@@ -11,8 +11,12 @@ export default function ModalRecipeFinder({
 
   // ⚡ Tous les critères disponibles
   const availableCriteria = [
-    { field: "note", label: "Note personnelle" },
+    { field: "shop_count", label: "Nombre de magasins a faire⏳" },
     { field: "usage_count", label: "Nombre de fois réalisée" },
+    { field: "note", label: "Note personnelle" },
+    { field: "note_general", label: "Note general⏳" },
+    { field: "cheaper", label: "Prix des Ingredients manquants⏳" },
+    { field: "price", label: "Prix total (bucket 5€)⏳" },
   ];
 
   // ⚡ State interne des critères, avec active ou non

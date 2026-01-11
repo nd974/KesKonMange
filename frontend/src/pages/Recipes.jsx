@@ -26,7 +26,14 @@ export default function Recipes({ homeId, profileId }) {
   const [finderConfig, setFinderConfig] = useState(null);
   const [filters, setFilters] = useState({
     ingredients: [],
-    sortCriteria: [{ field: "usage_count", order: "asc" }, { field: "note", order: "desc" }]
+    sortCriteria: [
+      { field: "shop_count"},
+      { field: "usage_count"},
+      { field: "note"},
+      { field: "note_general"},
+      { field: "cheaper"},
+      { field: "price"},
+    ]
   });
   console.log("finderConfig =======================", finderConfig);
   console.log("filters =======================", filters);

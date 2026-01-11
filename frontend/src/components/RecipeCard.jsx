@@ -7,6 +7,9 @@ import { useState, useEffect } from "react";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function RecipeCard({ recipe , homeId, finderConfig}) {
+
+
+  
   const navigate = useNavigate();
 
   if (!recipe) return null;
@@ -58,6 +61,12 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
   useEffect(() => {
     loadRating(recipe.id);
   }, [recipe.id]); // Add recipe.id to dependency array for rerun on recipe change
+
+  console.log(finderConfig);
+  console.log(finderConfig?.sortCriteria.some(criteria => criteria.field === 'note_general'));
+
+  console.log(finderConfig===null && votesCount > 0);
+  console.log(finderConfig?.sortCriteria.some(criteria => criteria.field === 'note_general') || (finderConfig===null && votesCount > 0));
   
   return (
     <div
@@ -73,7 +82,10 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
         className="w-full h-40 object-cover rounded-md mb-2"
       />
 
-      {votesCount > 0 && (
+      {(
+        (finderConfig?.sortCriteria.some(criteria => criteria.field === 'note_general')
+        || finderConfig===null) && votesCount > 0
+      ) && (
         <div className="mt-0.5 absolute top-2 left-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-yellow-500 text-sm">
           <div className="flex gap-1">
             {Array.from({ length: 5 }, (_, i) => {
@@ -100,9 +112,25 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
       </button>
 
       {finderConfig?.sortCriteria.some(criteria => criteria.field === 'usage_count') && (
-        <div className="absolute bottom-2 right-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-softPink text-sm font-bold">
+        <div className="text-xs absolute bottom-2 right-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-softPink text-sm font-bold">
           <div className="flex gap-1">
             Realises : {recipe.usage_count}
+          </div>
+        </div>
+      )}
+
+      {finderConfig?.sortCriteria.some(criteria => criteria.field === 'shop_count' || criteria.field === 'cheaper' || criteria.field === 'price') && (
+        <div className="text-xs absolute bottom-2 left-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-blue-500 text-sm font-bold">
+          <div className="flex gap-1">
+            {finderConfig?.sortCriteria.some(criteria => criteria.field === 'shop_count') && (
+              <>Shop : 1<br/></>
+            )}
+            {finderConfig?.sortCriteria.some(criteria => criteria.field === 'cheaper') && (
+              <>Prix : 4.51€<br/></>
+            )}
+            {finderConfig?.sortCriteria.some(criteria => criteria.field === 'price') && (
+              <>Total : 25€<br/></>
+            )}
           </div>
         </div>
       )}
