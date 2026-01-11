@@ -26,8 +26,10 @@ export default function Recipes({ homeId, profileId }) {
   const [finderConfig, setFinderConfig] = useState(null);
   const [filters, setFilters] = useState({
     ingredients: [],
-    sortCriteria: [{ field: "note", order: "desc" },{ field: "usage_count", order: "asc" }]
+    sortCriteria: [{ field: "usage_count", order: "asc" }, { field: "note", order: "desc" }]
   });
+  console.log("finderConfig =======================", finderConfig);
+  console.log("filters =======================", filters);
 
   // ⚡ Charger les recettes et tags
   useEffect(() => {
@@ -291,7 +293,7 @@ const filteredRecipes = useMemo(() => {
                   gap-4
                 ">
                   {paginatedRecipes.map((recipe) => (
-                    <RecipeCard key={recipe.id} recipe={recipe} homeId={homeId} />
+                    <RecipeCard key={recipe.id} recipe={recipe} homeId={homeId} finderConfig={finderConfig}/>
                   ))}
                 </div>
 

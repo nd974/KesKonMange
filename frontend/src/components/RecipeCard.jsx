@@ -6,8 +6,7 @@ import { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeCard({ recipe , homeId}) {
-  console.log("recipe ================", recipe);
+export default function RecipeCard({ recipe , homeId, finderConfig}) {
   const navigate = useNavigate();
 
   if (!recipe) return null;
@@ -74,6 +73,19 @@ export default function RecipeCard({ recipe , homeId}) {
         className="w-full h-40 object-cover rounded-md mb-2"
       />
 
+      {votesCount > 0 && (
+        <div className="mt-0.5 absolute top-2 left-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-yellow-500 text-sm">
+          <div className="flex gap-1">
+            {Array.from({ length: 5 }, (_, i) => {
+              const starNum = i + 1;
+              if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
+              if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
+              return <EmptyStar key={i} />;
+            })}
+          </div>
+        </div>
+      )}
+
       {/* Bouton Ajouter au menu */}
       <button
         className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 bg-white/80 rounded-full p-1 shadow"
@@ -87,16 +99,10 @@ export default function RecipeCard({ recipe , homeId}) {
         📝
       </button>
 
-      {/* ⭐ Étoiles en bas à droite */}
-      {votesCount > 0 && (
-        <div className="absolute bottom-2 right-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-yellow-500 text-sm">
+      {finderConfig?.sortCriteria.some(criteria => criteria.field === 'usage_count') && (
+        <div className="absolute bottom-2 right-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-softPink text-sm font-bold">
           <div className="flex gap-1">
-            {Array.from({ length: 5 }, (_, i) => {
-              const starNum = i + 1;
-              if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
-              if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
-              return <EmptyStar key={i} />;
-            })}
+            Realises : {recipe.usage_count}
           </div>
         </div>
       )}
@@ -107,7 +113,7 @@ export default function RecipeCard({ recipe , homeId}) {
 
       {/* ✅ Afficher les tags uniquement s’il y en a */}
       {visibleTags.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-2 relative">
+        <div className="mt-1 flex flex-wrap gap-1 mb-2 relative">
           {visibleTags.map((tag) => (
             <span
               key={tag.id}
@@ -140,7 +146,7 @@ export default function RecipeCard({ recipe , homeId}) {
       >
 
         {/* 🔹 Affichage des étoiles (note) */}
-        {recipe?.note > -1 && recipe?.note !==null && (
+        {finderConfig?.sortCriteria.some(criteria => criteria.field === 'note') && recipe?.note > -1 && recipe?.note !==null && (
           <div className="flex items-center gap-2 mt-2">
             <p>Ma note :</p>
             <div className="flex">

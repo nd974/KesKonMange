@@ -1,9 +1,7 @@
 import { FullStar, HalfStar, EmptyStar } from "../../components/Stars";
 
 export default function ModalRecipeInfo({ tags, times, level, portion, usage_count, averageNote, votesCount, modal=false}) {
-  console.log("tags =",tags);
-  console.log("times =",times);
-  console.log(averageNote, votesCount);
+  console.log("asdssssssssssssssssssssssssssssssssssssssssss", usage_count);
 
   const formatNumber = (num) => {
     if (num === null || num === undefined) return "";

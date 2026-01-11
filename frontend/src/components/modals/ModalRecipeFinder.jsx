@@ -1,12 +1,31 @@
 import { useState } from "react";
 
-export default function ModalRecipeFinder({ onClose, onApply, ingredients: initialIngredients = [], sortCriteria: initialSortCriteria = [] }) {
-  // Inputs
+export default function ModalRecipeFinder({
+  onClose,
+  onApply,
+  ingredients: initialIngredients = [],
+  sortCriteria: initialSortCriteria = [],
+}) {
   const [ingredientInput, setIngredientInput] = useState("");
   const [ingredients, setIngredients] = useState(initialIngredients);
 
-  // Trier par multiple
-  const [sortCriteria, setSortCriteria] = useState(initialSortCriteria);
+  // ⚡ Tous les critères disponibles
+  const availableCriteria = [
+    { field: "note", label: "Note personnelle" },
+    { field: "usage_count", label: "Nombre de fois réalisée" },
+  ];
+
+  // ⚡ State interne des critères, avec active ou non
+  const [criteriaState, setCriteriaState] = useState(
+    availableCriteria.map((c) => {
+      const existing = initialSortCriteria.find((s) => s.field === c.field);
+      return {
+        ...c,
+        active: !!existing,
+        order: existing?.order || "desc",
+      };
+    })
+  );
 
   /* ---------------- INGREDIENTS ---------------- */
   function addIngredient() {
@@ -22,29 +41,24 @@ export default function ModalRecipeFinder({ onClose, onApply, ingredients: initi
   }
 
   /* ---------------- SORT CRITERIA ---------------- */
-  function updateSort(index, field) {
-    const updated = [...sortCriteria];
-    updated[index].field = field;
-    setSortCriteria(updated);
+  function toggleActive(index) {
+    const updated = [...criteriaState];
+    updated[index].active = !updated[index].active;
+    setCriteriaState(updated);
   }
 
   function updateOrder(index, order) {
-    const updated = [...sortCriteria];
+    const updated = [...criteriaState];
     updated[index].order = order;
-    setSortCriteria(updated);
-  }
-
-  function addSortCriterion() {
-    setSortCriteria([...sortCriteria, { field: "usage_count", order: "desc" }]);
-  }
-
-  function removeSortCriterion(index) {
-    setSortCriteria(sortCriteria.filter((_, i) => i !== index));
+    setCriteriaState(updated);
   }
 
   /* ---------------- APPLY ---------------- */
   function handleApply() {
-    // On envoie la config au parent
+    const sortCriteria = criteriaState
+      .filter((c) => c.active)
+      .map((c) => ({ field: c.field, order: c.order }));
+
     onApply({
       ingredients,
       sortCriteria,
@@ -64,9 +78,7 @@ export default function ModalRecipeFinder({ onClose, onApply, ingredients: initi
 
         {/* INGREDIENTS */}
         <div className="mb-5">
-          <label className="font-semibold block mb-1">
-            Ingrédients disponibles
-          </label>
+          <label className="font-semibold block mb-1">Ingrédients dans la recette</label>
 
           <div className="flex gap-2">
             <input
@@ -76,27 +88,16 @@ export default function ModalRecipeFinder({ onClose, onApply, ingredients: initi
               onChange={(e) => setIngredientInput(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && addIngredient()}
             />
-            <button
-              onClick={addIngredient}
-              className="px-3 bg-green-600 text-white rounded"
-            >
+            <button onClick={addIngredient} className="px-3 bg-green-600 text-white rounded">
               Ajouter
             </button>
           </div>
 
           <div className="flex flex-wrap gap-2 mt-2">
             {ingredients.map((ing) => (
-              <span
-                key={ing}
-                className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm flex items-center gap-1"
-              >
+              <span key={ing} className="bg-blue-100 text-blue-700 px-2 py-1 rounded-full text-sm flex items-center gap-1">
                 {ing}
-                <button
-                  className="text-red-500 font-bold"
-                  onClick={() => removeIngredient(ing)}
-                >
-                  ×
-                </button>
+                <button className="text-red-500 font-bold" onClick={() => removeIngredient(ing)}>×</button>
               </span>
             ))}
           </div>
@@ -105,45 +106,30 @@ export default function ModalRecipeFinder({ onClose, onApply, ingredients: initi
         {/* SORT CRITERIA */}
         <div className="mb-5">
           <label className="font-semibold block mb-2">Trier par</label>
+
           <div className="space-y-2">
-            {sortCriteria.map((c, i) => (
-              <div key={i} className="flex gap-2 items-center">
-                <select
-                  className="border rounded p-2 flex-1"
-                  value={c.field}
-                  onChange={(e) => updateSort(i, e.target.value)}
-                >
-                  <option value="usage_count">Nombre de fois réalisée</option>
-                  <option value="note">Note</option>
-                </select>
+            {criteriaState.map((c, i) => (
+              <div key={c.field} className="flex gap-2 items-center">
+                <input
+                  type="checkbox"
+                  checked={c.active}
+                  onChange={() => toggleActive(i)}
+                  className="w-4 h-4"
+                />
+                <span className="flex-1">{c.label}</span>
 
                 <select
                   className="border rounded p-2"
                   value={c.order}
                   onChange={(e) => updateOrder(i, e.target.value)}
+                  disabled={!c.active}
                 >
                   <option value="desc">Décroissant</option>
                   <option value="asc">Croissant</option>
                 </select>
-
-                {sortCriteria.length > 0 && (
-                  <button
-                    className="text-red-500 font-bold"
-                    onClick={() => removeSortCriterion(i)}
-                  >
-                    ×
-                  </button>
-                )}
               </div>
             ))}
           </div>
-
-          <button
-            className="mt-2 px-3 py-1 bg-gray-200 rounded text-sm"
-            onClick={addSortCriterion}
-          >
-            Ajouter un critère
-          </button>
         </div>
 
         {/* SEARCH BUTTON */}
@@ -155,7 +141,6 @@ export default function ModalRecipeFinder({ onClose, onApply, ingredients: initi
             Rechercher
           </button>
         </div>
-
       </div>
     </div>
   );
