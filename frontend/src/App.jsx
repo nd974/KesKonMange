@@ -35,6 +35,8 @@ import Footer from "./components/Footer";
 
 import NewRecipeDetail from "./pages/TMP/NewRecipeDetail";
 
+import Notifications from "./pages/Notifications";
+
 function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -159,6 +161,8 @@ return (
             <Route path="/settings/user" element={<User key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/settings/homes" element={<Homes key={home_id} homeId={home_id} profileId={profile_id} />} />
+
+            <Route path="/notifications" element={<Notifications key={home_id} homeId={home_id}/>} />
 
             <Route path="/settings/termsofuse" element={<TermsOfUse />} />
             

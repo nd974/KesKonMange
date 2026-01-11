@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import Header from "../components/Header.jsx";
 import TagTree from "../components/TagTree.jsx";
 import RecipeCard from "../components/RecipeCard.jsx";
+import ModalRecipeFinder from "../components/modals/ModalRecipeFinder";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -19,6 +20,14 @@ export default function Recipes({ homeId, profileId }) {
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const RECIPES_PER_PAGE = 12;
+
+  // FIND RECIPE
+  const [showFinder, setShowFinder] = useState(false);
+  const [finderConfig, setFinderConfig] = useState(null);
+  const [filters, setFilters] = useState({
+    ingredients: [],
+    sortCriteria: [{ field: "note", order: "desc" },{ field: "usage_count", order: "asc" }]
+  });
 
   // ⚡ Charger les recettes et tags
   useEffect(() => {
@@ -94,26 +103,79 @@ export default function Recipes({ homeId, profileId }) {
     return roots;
   }, [tagsFlat]);
 
-  const filteredRecipes = useMemo(() => {
-    const s = search.trim().toLowerCase();
-    const selectedDescendants =
-      selectedTagIds.length > 0
-        ? selectedTagIds.flatMap((id) => collectDescendantIds(id))
-        : [];
+const filteredRecipes = useMemo(() => {
+  let temp = recipes;
 
-    return recipes.filter((r) => {
-      const matchSearch = !s || r.name.toLowerCase().includes(s);
-      const matchTag =
-        selectedDescendants.length === 0 ||
-        (r.tags || []).some((t) => t.id && selectedDescendants.includes(t.id));
-      return matchSearch && matchTag;
-    });
-  }, [recipes, search, selectedTagIds, tagsFlat]);
+  // ---------------- SEARCH BAR + TAGS ----------------
+  const s = search.trim().toLowerCase();
+  const selectedDescendants =
+    selectedTagIds.length > 0
+      ? selectedTagIds.flatMap((id) => collectDescendantIds(id))
+      : [];
+
+  temp = temp.filter((r) => {
+    const matchSearch = !s || r.name.toLowerCase().includes(s);
+    const matchTag =
+      selectedDescendants.length === 0 ||
+      (r.tags || []).some((t) => t.id && selectedDescendants.includes(t.id));
+    return matchSearch && matchTag;
+  });
+
+  // ---------------- FINDER CONFIG ----------------
+  if (finderConfig) {
+    const { ingredients, sortCriteria } = finderConfig;
+
+    // Filtre ingrédients
+    if (ingredients.length > 0) {
+      temp = temp.filter((r) =>
+        ingredients.every((ing) =>
+          (r.ingredients || []).some((ri) =>
+            ri.name.toLowerCase().includes(ing)
+          )
+        )
+      );
+    }
+
+    // Tri multiple
+    if (sortCriteria.length > 0) {
+      temp = [...temp].sort((a, b) => {
+        for (const c of sortCriteria) {
+          let aValue = a[c.field];
+          let bValue = b[c.field];
+
+          // Si la valeur est undefined ou null, on considère 0
+          if (aValue == null) aValue = 0;
+          if (bValue == null) bValue = 0;
+
+          if (aValue !== bValue) {
+            return c.order === "asc" ? aValue - bValue : bValue - aValue;
+          }
+        }
+        return 0; // égalité
+      });
+    }
+  }
+
+  return temp;
+}, [recipes, search, selectedTagIds, tagsFlat, finderConfig]);
+
+
 
   // Trier les recettes aléatoirement
   const sortedRecipes = useMemo(() => {
-    return [...filteredRecipes].sort(() => Math.random() - 0.5);
-  }, [filteredRecipes]);
+    if (finderConfig?.sortCriteria?.length > 0) {
+      // Si Finder a des critères, ne rien trier aléatoirement
+      return filteredRecipes;
+    }
+
+    // Sinon, tri aléatoire seulement une fois par chargement
+    const shuffled = [...filteredRecipes];
+    for (let i = shuffled.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    }
+    return shuffled;
+  }, [filteredRecipes, finderConfig]);
 
   // Pagination
   const paginatedRecipes = useMemo(() => {
@@ -158,6 +220,7 @@ export default function Recipes({ homeId, profileId }) {
               </button>
             )}
 
+
             <button
               className="px-4 py-2 rounded hover:bg-softPink flex items-center gap-2 hidden md:inline bg-accentGreen text-white font-bold"
               onClick={() => navigate("/recipe/add")}
@@ -195,6 +258,12 @@ export default function Recipes({ homeId, profileId }) {
 
         <div className="main-grid flex gap-4 py-4">
           <aside className="hidden md:block sidebar bg-softBeige p-4 rounded">
+            <button
+              className="px-4 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700"
+              onClick={() => setShowFinder(true)}
+            >
+              Filtres Avances
+            </button>
             <h3 className="font-semibold mb-2">Tags</h3>
             <TagTree
               tagsFlat={tagsFlat}
@@ -257,10 +326,32 @@ export default function Recipes({ homeId, profileId }) {
         </div>
       </div>
 
+      {showFinder && (
+        <ModalRecipeFinder
+          ingredients={filters.ingredients}
+          sortCriteria={filters.sortCriteria}
+          onClose={() => setShowFinder(false)}
+          onApply={(config) => {
+            setFinderConfig(config); // pour filtrer les recettes
+            setFilters(config);      // pour que le modal reprenne le même état
+          }}
+
+        />
+      )}
+
       {/* Mobile Tags */}
       {showMobileTags && (
         <div className="fixed inset-0 bg-black/50 z-50 flex">
           <div className="bg-white w-3/4 max-w-sm h-full p-4 overflow-y-auto shadow-lg">
+          <button
+            className="mt-5 px-4 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 mb-5"
+            onClick={() => {
+              setShowMobileTags(false);
+              setShowFinder(true);
+            }}
+          >
+            Avances
+          </button>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Filtres</h3>
               <button

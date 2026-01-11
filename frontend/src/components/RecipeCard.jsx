@@ -6,20 +6,8 @@ import { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-/**
- * Calcule la profondeur d’un tag dans la hiérarchie.
- */
-function getTagDepth(tagId, tagsFlat = []) {
-  let depth = 0;
-  let current = tagsFlat.find((t) => t.id === tagId);
-  while (current && current.parent_id) {
-    depth++;
-    current = tagsFlat.find((t) => t.id === current.parent_id);
-  }
-  return depth;
-}
-
 export default function RecipeCard({ recipe , homeId}) {
+  console.log("recipe ================", recipe);
   const navigate = useNavigate();
 
   if (!recipe) return null;
@@ -33,9 +21,7 @@ export default function RecipeCard({ recipe , homeId}) {
   //   const depthB = getTagDepth(b.id, allTags);
   //   return depthB - depthA;
   // });
-  console.log("tags",tags);
   const sortedTags = [...tags].reverse();
-  console.log("sortedTags", sortedTags);
   const visibleTags = sortedTags.slice(0, 2);
   const hiddenTags = sortedTags.slice(2, sortedTags.length);
   const remaining = sortedTags.length - visibleTags.length;
@@ -52,53 +38,7 @@ export default function RecipeCard({ recipe , homeId}) {
   const [selectedMealTagId, setSelectedMealTagId] = useState([]);
   const [repasTags, setRepasTags] = useState([]);
 
-  // Récupérer tags repas
-  async function fetchTagsRepas() {
-    try {
-      const repasTags = await fetch(`${API_URL}/tag/get-childs?parent=Repas`);
-      const resTags = await repasTags.json();
-      setRepasTags(resTags || []);
-    } catch (err) {
-      console.error("Erreur récupération tags (Repas) :", err);
-    }
-  }
-
-  // Récupérer menus existants
-  async function fetchMenus() {
-    try {
-      const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
-      const data = await res.json();
-      setMenus(data || []);
-    } catch (err) {
-      console.error("Erreur récupération menus :", err);
-    }
-  }
-
-  async function addToMenu() {
-    if (!selectedRecipe) return;
-    const payload = selectedMenuId
-      ? { menu_id: selectedMenuId, recipe_id: selectedRecipe.id }
-      : { recipe_id: selectedRecipe.id, date: menuDate, home_id: homeId,  tag_id: selectedMealTagId};
-
-    try {
-      const url = selectedMenuId ? `${API_URL}/menu/add-recipe` : `${API_URL}/menu/create`;
-      const res = await fetch(url, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
-      if (!res.ok) throw new Error("Erreur ajout menu");
-
-      setShowAddToMenuModal(false);
-      alert("Recette ajoutée au menu !");
-    } catch (err) {
-      console.error(err);
-      alert("Impossible d'ajouter la recette au menu.", err);
-    }
-  }
-
   async function loadRating(id) {
-    console.log("loadRating for recipe id:", id);
     if (!id) return;
     try {
       const res = await fetch(`${API_URL}/recipe/getRating`, {
@@ -111,7 +51,6 @@ export default function RecipeCard({ recipe , homeId}) {
         setAverageNote(data.averageNote);
         setVotesCount(data.votesCount); // Set votes count
       }
-      console.log("loadRating data:", data);
     } catch (e) {
       console.error("Erreur loadRating:", e);
     }
@@ -128,28 +67,41 @@ export default function RecipeCard({ recipe , homeId}) {
         if (!showAddToMenuModal) navigate(`/new_recipe_details/${recipe.id}`);
       }}
     >
-      <div className="relative">
-        <img
-          src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
-          alt={recipe.name}
-          className="w-full h-40 object-cover rounded-md mb-2"
-        />
+    <div className="relative">
+      <img
+        src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
+        alt={recipe.name}
+        className="w-full h-40 object-cover rounded-md mb-2"
+      />
 
-        {/* Bouton positionné en haut à droite */}
-        <button
-          className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 bg-white/80 rounded-full p-1 shadow"
-          title="Ajouter au menu"
-          onClick={(e) => {
-            e.stopPropagation();
-            setSelectedRecipe(recipe);
-            setShowAddToMenuModal(true);
-          }}
-        >
-          📝
-        </button>
+      {/* Bouton Ajouter au menu */}
+      <button
+        className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 bg-white/80 rounded-full p-1 shadow"
+        title="Ajouter au menu"
+        onClick={(e) => {
+          e.stopPropagation();
+          setSelectedRecipe(recipe);
+          setShowAddToMenuModal(true);
+        }}
+      >
+        📝
+      </button>
 
+      {/* ⭐ Étoiles en bas à droite */}
+      {votesCount > 0 && (
+        <div className="absolute bottom-2 right-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-yellow-500 text-sm">
+          <div className="flex gap-1">
+            {Array.from({ length: 5 }, (_, i) => {
+              const starNum = i + 1;
+              if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
+              if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
+              return <EmptyStar key={i} />;
+            })}
+          </div>
+        </div>
+      )}
+    </div>
 
-      </div>
 
       <h4 className="font-semibold text-lg truncate">{recipe.name}</h4>
 
@@ -188,15 +140,16 @@ export default function RecipeCard({ recipe , homeId}) {
       >
 
         {/* 🔹 Affichage des étoiles (note) */}
-        {votesCount > 0 && (
-          <div className="flex items-center gap-2 mt-2 text-yellow-500">
-            <div className="flex gap-1">
+        {recipe?.note > -1 && recipe?.note !==null && (
+          <div className="flex items-center gap-2 mt-2">
+            <p>Ma note :</p>
+            <div className="flex">
               {Array.from({ length: 5 }, (_, i) => {
                 const starNum = i + 1;
 
-                if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
-                if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
-                return <EmptyStar key={i} />;
+                if (starNum <= Math.floor(recipe?.note)) return <FullStar key={i} color="accentGreen" size={0.5}/>;
+                if (starNum - 1 < recipe?.note && recipe?.note < starNum) return <HalfStar key={i} color="accentGreen" size={0.5}/>;
+                return <EmptyStar key={i} color="accentGreen" size={1}/>;
               })}
             </div>
           </div>

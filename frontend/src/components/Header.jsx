@@ -6,8 +6,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { setHomeId, getHomeId, getProfileId } from "../../session";
 
-import Notifications from "./Notifications";
-
 export default function Header({homeId, inAccount=false}) {
     const location = useLocation();
     const navigate = useNavigate();
@@ -94,24 +92,9 @@ export default function Header({homeId, inAccount=false}) {
     };
   }, []);
 
-  const [isNotifOpen, setIsNotifOpen] = useState(false);
-  const [notifications, setNotifications] = useState([
-    { id: 1, text: "Nouveau menu\n[31/12/2025 - Brunch]", read: false },
-    { id: 2, text: "Inscription (Nicolas)\n[31/12/2025 - Brunch]", read: false },
-    { id: 3, text: "Menu de la semaine mis à jour", read: false },
-    { id: 4, text: "Menu de la semaine mis à jour", read: false },
-    { id: 5, text: "Menu de la semaine mis à jour", read: false },
-    { id: 6, text: "Menu de la semaine mis à jour", read: false },
-    { id: 7, text: "Menu de la semaine mis à jour", read: false },
-    { id: 8, text: "Menu de la semaine mis à jour", read: false },
-    { id: 9, text: "Menu de la semaine mis à jour", read: false },
-    { id: 10, text: "Menu de la semaine mis à jour", read: false },
-    { id: 11, text: "Menu de la semaine mis à jour", read: false },
-    { id: 12, text: "Menu de la semaine mis à jour", read: false },
-    { id: 13, text: "Menu de la semaine mis à jour", read: false },
-  ]);
-  const unreadNotifications = notifications.filter(n => !n.read);
-  const readNotifications = notifications.filter(n => n.read);
+
+
+  const unreadNotifications = 2;
 
 
   return (
@@ -239,8 +222,12 @@ export default function Header({homeId, inAccount=false}) {
           </li>
           <li
             className="px-4 py-2 hover:bg-gray-100 cursor-pointer flex items-center gap-2"
+            // onClick={() => {
+            //   setIsNotifOpen(true);
+            //   setIsProfileMenuOpen(false);
+            // }}
             onClick={() => {
-              setIsNotifOpen(true);
+              navigate("/notifications");
               setIsProfileMenuOpen(false);
             }}
           >
@@ -260,15 +247,6 @@ export default function Header({homeId, inAccount=false}) {
         </ul>
       </div>
     )}
-
-      {isNotifOpen && (
-        <Notifications
-          notifications={notifications}
-          setNotifications={setNotifications}
-          onClose={() => setIsNotifOpen(false)}
-        />
-      )}
-
 
   </div>
 </div>

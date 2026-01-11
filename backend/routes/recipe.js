@@ -523,6 +523,7 @@ router.post("/get-all", async (req, res) => {
         r.portion,
         r.level,
         r.picture,
+        rs.note,
         COALESCE(rs.usage_count, 0) AS usage_count
       FROM "Recipe" r
       LEFT JOIN recipes_stats rs 
