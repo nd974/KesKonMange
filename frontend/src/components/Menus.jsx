@@ -78,7 +78,7 @@ export default function Menus({
 
   return (
     <div>
-      <h3 className="text-2xl font-bold text-gray-800 flex items-center">
+      <h3 className="text-2xl font-bold text-gray-800 flex items-center -mt-1">
         <img
           src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
           alt="Menu Icon"

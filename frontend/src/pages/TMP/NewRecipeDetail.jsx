@@ -250,23 +250,6 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       className="w-40 h-32 sm:w-80 sm:h-64 rounded-2xl object-cover"
     />
 
-    {/* Note moyenne */}
-    {/* {votesCount > 0 && (
-      <div className="flex items-center gap-2 text-yellow-500 py-1 sm:-mt-4 mb-2">
-        <div className="flex gap-1">
-          {Array.from({ length: 5 }, (_, i) => {
-            const starNum = i + 1;
-            if (starNum <= Math.floor(averageNote)) return <FullStar key={i} />;
-            if (starNum - 1 < averageNote && averageNote < starNum) return <HalfStar key={i} />;
-            return <EmptyStar key={i} />;
-          })}
-        </div>
-        <span className="text-gray-600 text-sm">
-          ({averageNote} / 5) - {votesCount} vote{votesCount > 1 ? "s" : ""}
-        </span>
-      </div>
-    )} */}
-
     <div className="w-[40vh]">
         <ModalRecipeInfo
       tags={recipe.tags}
@@ -276,6 +259,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       usage_count={recipe.usage_count}
       averageNote={averageNote} 
       votesCount={votesCount}
+      compact={compact}
     />
     </div>
   </div>
@@ -289,7 +273,6 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     rounded-3xl
     bg-softBeige
     px-5 py-4
-    shadow
     flex
     flex-col
     gap-4
@@ -297,6 +280,8 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     mx-auto
     items-center
     justify-center
+    border-2
+    border-gray-300
   "
 >
   <StepsSection steps={recipe.steps} />
@@ -312,7 +297,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 
       {openInfos && (
       <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={recipe.usage_count} averageNote={averageNote} votesCount={votesCount} modal={true}/>
+        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={recipe.usage_count} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
       </ModalWrapper>
     )}
     {openIngredients && (
@@ -387,6 +372,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       usage_count={recipe.usage_count}
       averageNote={averageNote}
       votesCount={votesCount}
+      compact={compact}
     />
   </div>
 </div>
@@ -457,7 +443,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     {/* --- MODALES MOBILE --- */}
     {openInfos && (
       <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={recipe.usage_count} averageNote={averageNote} votesCount={votesCount} modal={true}/>
+        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={recipe.usage_count} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
       </ModalWrapper>
     )}
     {openIngredients && (

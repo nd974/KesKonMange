@@ -27,18 +27,41 @@ export default function Header({homeId, inAccount=false}) {
 
   // 🔹 Fetch du profil logué
   useEffect(() => {
-    const fetchData = async () => {
-      const profileId = await getProfileId();
-      if (profileId) {
-          fetch(`${API_URL}/profile/get/${profileId}`)
-              .then((res) => res.json())
-              .then((data) => setProfile(data))
-              .catch((err) => console.error("Erreur profil:", err));
+    const fetchProfile = async () => {
+      try {
+        const profileId = await getProfileId();
+        if (!profileId) {
+          // Si pas d'ID de profil, rediriger
+          navigate("/profiles");
+          return;
+        }
+
+        const res = await fetch(`${API_URL}/profile/get/${profileId}`);
+
+        if (!res.ok) {
+          // Si le profil n'existe pas ou erreur serveur, rediriger
+          navigate("/profiles");
+          return;
+        }
+
+        const data = await res.json();
+
+        if (!data || Object.keys(data).length === 0) {
+          // Si la réponse est vide
+          navigate("/profiles");
+          return;
+        }
+
+        setProfile(data);
+      } catch (err) {
+        console.error("Erreur fetch profil:", err);
+        navigate("/profiles");
       }
     };
 
-    fetchData();
+    fetchProfile();
   }, []);
+
 
 
   // 🔹 Fetch des homes liés au profil logué
@@ -100,7 +123,7 @@ export default function Header({homeId, inAccount=false}) {
   return (
     <header className={`relative flex items-center w-full ${inAccount && "mb-4"}`}>
       {/* 🔸 Logo + salutation */}
-      <div className={`${inAccount ? "w-1/4 justify-center" : ""} flex items-center gap-3`}>
+      <div className={`${inAccount ? "w-1/4 justify-center -mt-3" : ""} flex items-center gap-3`}>
         <div className={`${inAccount ? "w-40 h-16" : "w-11 h-12"} flex items-center justify-center text-white font-bold`}>
           <img
             src={`${CLOUDINARY_RES}${inAccount ? CLOUDINARY_LOGO_ACCOUNT : CLOUDINARY_LOGO_HEADER}`}

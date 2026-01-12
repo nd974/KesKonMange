@@ -11,12 +11,12 @@ export default function ModalRecipeFinder({
 
   // ⚡ Tous les critères disponibles
   const availableCriteria = [
-    { field: "shop_count", label: "Nombre de magasins a faire⏳" },
-    { field: "usage_count", label: "Nombre de fois réalisée" },
-    { field: "note", label: "Note personnelle" },
-    { field: "note_general", label: "Note general⏳" },
-    { field: "cheaper", label: "Prix des Ingredients manquants⏳" },
-    { field: "price", label: "Prix total (bucket 5€)⏳" },
+    { field: "shop_count", label: "Nombre de magasins a faire⏳", order:"asc"},
+    { field: "usage_count", label: "Nombre de fois réalisée" , order:"asc"},
+    { field: "note", label: "Note personnelle"},
+    { field: "note_general", label: "Note general⏳"},
+    { field: "cheaper", label: "Prix des Ingredients manquants⏳", order:"asc"},
+    { field: "price", label: "Prix total (bucket 5€)⏳", order:"asc"},
   ];
 
   // ⚡ State interne des critères, avec active ou non
@@ -26,7 +26,7 @@ export default function ModalRecipeFinder({
       return {
         ...c,
         active: !!existing,
-        order: existing?.order || "desc",
+        order: c?.order || "desc",
       };
     })
   );

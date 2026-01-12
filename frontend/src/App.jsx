@@ -134,7 +134,7 @@ return (
       {/* HEADER + CONTENU */}
       <div className="flex-1">
         <div className={!pathSign ? "px-4 md:px-8 lg:px-16 py-8" : ""}>
-          {!pathSign && (<div className="print:hidden -mt-3">
+          {!pathSign && (<div className="print:hidden">
               <Header
                 homeId={home_id}
                 inAccount={location.pathname.startsWith("/settings")}
@@ -177,7 +177,8 @@ return (
       </div>
 
       {/* FOOTER */}
-      {!pathSign && hideMobileNav && <div className="print:hidden"><Footer/></div>}
+      <div className="print:hidden"><Footer/></div>
+      {/* {!pathSign && hideMobileNav && <div className="print:hidden"><Footer/></div>} */}
     </div>
 
     {/* MOBILE NAV */}

@@ -178,6 +178,15 @@ useEffect(() => {
                           </button>
                         );
                       })}
+                      <button
+                        onClick={null}
+                        className={`
+                          px-4 py-2 rounded-full text-sm font-medium border transition
+                          bg-softPink text-white hover:bg-softPink/50
+                        `}
+                      >
+                        +
+                      </button>
                     </div>
                 </div>
             )}
@@ -230,6 +239,16 @@ useEffect(() => {
                 /> */}
 
                 <SettingsActionItem
+                icon="🏪"
+                title="Gérer Magasins"
+                descriptions={[
+                    "",
+                ]}
+                href={"/shops"}
+                onClick={null}
+                />
+
+                {/* <SettingsActionItem
                 icon="🏠"
                 title="Ajouter Maison"
                 descriptions={[
@@ -237,7 +256,7 @@ useEffect(() => {
                 ]}
                 href={null}
                 onClick={null}
-                />
+                /> */}
 
             </div>
 

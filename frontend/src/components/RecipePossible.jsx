@@ -88,7 +88,7 @@ export default function RecipePossible({ homeId, profileId }) {
         return (
           <div
             key={recipe.id}
-            className="w-[150px] flex-shrink-0 cursor-pointer transition-transform duration-300 py-5 relative"
+            className="w-[150px] flex-shrink-0 cursor-pointer transition-transform duration-300 py-4 relative"
             onClick={() => {
               setSelectedRecipe(recipe);
               setSelectedIngredients(
@@ -135,7 +135,7 @@ export default function RecipePossible({ homeId, profileId }) {
 
   return (
     <div>
-      <h3 className="text-2xl font-bold text-gray-800 flex items-center">
+      <h3 className="text-2xl font-bold text-gray-800 flex items-center mt-2">
         <img
           src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Prep"]}`}
           alt="Recette Icon"
@@ -146,21 +146,21 @@ export default function RecipePossible({ homeId, profileId }) {
 
       {recipesOk.length > 0 ? (
         <>
-        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
-            Recettes faisables à partir du <GardeMangerLink />
+        <p className="mt-2 ml-5 text-xs font-semibold text-gray-700">
+            Faisables à partir du <GardeMangerLink />
         </p>
         {renderRow(recipesOk)}
         </>
       ):(
-        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
-            Aucune recette faisables à partir du <GardeMangerLink />
+        <p className="mt-2 ml-5 text-xs font-semibold text-gray-700">
+            Aucune recettes faisables à partir du <GardeMangerLink />
         </p>
       )}
 
       {recipesPossible.length > 0 && (
         <>
-        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
-            Recettes presque faisables (ingrédients manquants)
+        <p className="ml-5 text-xs font-semibold text-gray-700">
+            Presque faisables (ingrédients manquants)
         </p>
         {renderRow(recipesPossible, true)}
         </>

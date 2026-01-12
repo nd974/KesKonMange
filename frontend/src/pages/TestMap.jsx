@@ -1,18 +1,31 @@
-
-import { MapContainer, TileLayer, Marker, useMapEvents, useMap } from "react-leaflet";
+import React, { useState, useEffect } from "react";
+import {
+  MapContainer,
+  TileLayer,
+  Marker,
+  useMapEvents,
+  useMap,
+} from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+/* ================= MAP CONTROLLER ================= */
 function MapController({ onMapReady }) {
   const map = useMap();
 
   useEffect(() => {
-    onMapReady(map);
+    if (map) {
+      onMapReady(map);
+      setTimeout(() => map.invalidateSize(), 100);
+    }
   }, [map]);
 
   return null;
 }
 
+/* ================= ICONS ================= */
 const homeMarkerIcon = L.divIcon({
   className: "",
   html: `
@@ -27,7 +40,7 @@ const homeMarkerIcon = L.divIcon({
     </svg>
   `,
   iconSize: [40, 40],
-  iconAnchor: [20, 40], // pointe bien au sol
+  iconAnchor: [20, 40],
 });
 
 const shopMarkerIcon = L.divIcon({
@@ -51,256 +64,253 @@ const shopMarkerIcon = L.divIcon({
   iconAnchor: [14, 28],
 });
 
+/* ================= CLICK MAP ================= */
 function ClickableMap({ onMapClick }) {
   useMapEvents({
     click(e) {
-      onMapClick(e.latlng); // on remonte la position
+      onMapClick(e.latlng);
     },
   });
   return null;
 }
 
-
-import React, { useState, useEffect } from "react";
-
-export default function TestMap({ homeId, profileId }) {
-  const [stores, setStores] = useState([]);
-  const centerPosition = [47.88516, 1.90147];
-
-  
-
-  const [map, setMap] = useState(null);
-
-//   Modale
-    const [pendingPosition, setPendingPosition] = useState(null);
-    const [storeName, setStoreName] = useState("");
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [editingStoreIndex, setEditingStoreIndex] = useState(null);
-
-    const handleMapClick = (latlng) => {
-        setPendingPosition(latlng);
-        setStoreName("");
-        setIsModalOpen(true);
-    };
-
-    const handleSeeStore = (store) => {
-        if (!map) return;
-
-        map.setView([store.lat, store.lng], 19, {
-            animate: true,
-        });
-    };
-
-    const handleConfirmCreate = () => {
-  if (!storeName.trim()) return;
-
-  setStores((prev) => [
-    ...prev,
-    {
-      name: storeName,
-      lat: pendingPosition.lat,
-      lng: pendingPosition.lng,
-    },
-  ]);
-
-  setIsModalOpen(false);
-  setPendingPosition(null);
-};
-
-
-const handleConfirmCreateOrUpdate = () => {
-  if (!storeName.trim()) return;
-
-  if (editingStoreIndex !== null) {
-    // Mise à jour
-    setStores((prev) => {
-      const newStores = [...prev];
-      newStores[editingStoreIndex] = {
-        ...newStores[editingStoreIndex],
-        name: storeName,
-      };
-      return newStores;
-    });
-  } else {
-    // Création
-    setStores((prev) => [
-      ...prev,
-      { name: storeName, lat: pendingPosition.lat, lng: pendingPosition.lng },
-    ]);
-  }
-
-  setIsModalOpen(false);
-  setPendingPosition(null);
-  setEditingStoreIndex(null);
-};
-
-
-
-    const handleDeleteStore = (index) => {
-    setStores((prev) => prev.filter((_, i) => i !== index));
-    };
-
-    // Fonction pour calculer la distance en km entre deux points (lat/lng)
+/* ================= UTILS ================= */
 function calculateDistance(lat1, lon1, lat2, lon2) {
-  const toRad = (value) => (value * Math.PI) / 180;
-  const R = 6371; // Rayon de la Terre en km
+  const toRad = (v) => (v * Math.PI) / 180;
+  const R = 6371;
 
   const dLat = toRad(lat2 - lat1);
   const dLon = toRad(lon2 - lon1);
 
   const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+    Math.sin(dLat / 2) ** 2 +
     Math.cos(toRad(lat1)) *
       Math.cos(toRad(lat2)) *
-      Math.sin(dLon / 2) *
-      Math.sin(dLon / 2);
+      Math.sin(dLon / 2) ** 2;
 
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  const distance = R * c;
-
-  return distance; // distance en km
+  return R * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 }
 
+/* ================= MAIN ================= */
+export default function TestMap({ homeId }) {
+  const centerPosition = [47.88516, 1.90147];
 
+  const [map, setMap] = useState(null);
+  const [stores, setStores] = useState([]);
+
+  const [pendingPosition, setPendingPosition] = useState(null);
+  const [storeName, setStoreName] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingStoreIndex, setEditingStoreIndex] = useState(null);
+
+  /* ================= API ================= */
+  async function loadShops() {
+    if (!homeId) return;
+
+    const res = await fetch(`${API_URL}/shops/get-all/${homeId}`);
+    const data = await res.json();
+
+    setStores(
+      data.map((s) => ({
+        id: s.id,
+        name: s.shop_name,
+        lat: s.shop_lat,
+        lng: s.shop_long,
+      }))
+    );
+  }
+
+  async function createShop() {
+    const res = await fetch(`${API_URL}/shops/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        home_id: homeId,
+        shop_name: storeName,
+        shop_lat: pendingPosition.lat,
+        shop_long: pendingPosition.lng,
+      }),
+    });
+
+    const s = await res.json();
+
+    setStores((prev) => [
+      ...prev,
+      { id: s.id, name: s.shop_name, lat: s.shop_lat, lng: s.shop_long },
+    ]);
+  }
+
+  async function updateShop(id) {
+    const res = await fetch(`${API_URL}/shops/update/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        shop_name: storeName,
+        shop_lat: pendingPosition.lat,
+        shop_long: pendingPosition.lng,
+      }),
+    });
+
+    const s = await res.json();
+
+    setStores((prev) =>
+      prev.map((st) => (st.id === id ? { ...st, name: s.shop_name } : st))
+    );
+  }
+
+  async function deleteShop(id) {
+    const ok = window.confirm("❗ Supprimer définitivement ce magasin ?");
+    if (!ok) return;
+
+    await fetch(`${API_URL}/shops/delete/${id}`, { method: "DELETE" });
+    setStores((prev) => prev.filter((s) => s.id !== id));
+  }
+
+  /* ================= EFFECT ================= */
+  useEffect(() => {
+    loadShops();
+  }, [homeId]);
+
+  /* ================= HANDLERS ================= */
+  const handleMapClick = (latlng) => {
+    setPendingPosition(latlng);
+    setStoreName("");
+    setEditingStoreIndex(null);
+    setIsModalOpen(true);
+  };
+
+  const handleSeeStore = (store) => {
+    if (!map) return;
+    map.setView([store.lat, store.lng], 19, { animate: true });
+  };
+
+  const handleConfirm = async () => {
+    if (!storeName.trim()) return;
+
+    if (editingStoreIndex !== null) {
+      await updateShop(stores[editingStoreIndex].id);
+    } else {
+      await createShop();
+    }
+
+    setIsModalOpen(false);
+    setPendingPosition(null);
+    setEditingStoreIndex(null);
+  };
+
+  /* ================= RENDER ================= */
   return (
-    <div>
-      {/* <Header homeId={homeId} /> */}
+    <div className="mt-8 flex flex-col md:flex-row gap-4">
+      {/* MAP */}
+      <div className="md:w-2/3 w-full h-[50vh] sm:h-[75vh]">
+        <MapContainer
+          center={centerPosition}
+          zoom={19}
+          className="w-full h-full rounded shadow"
+          whenCreated={setMap}
+        >
+          <MapController onMapReady={setMap} />
+          <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
 
-      {/* Carte responsive */}
-      <MapContainer
-        center={centerPosition}
-        zoom={19}
-        className="mt-6 w-full h-[400px] sm:h-[500px] md:h-[600px] rounded shadow z-0"
-        whenCreated={setMap}
-      >
-        <MapController onMapReady={setMap} />
-        {/* <MapController onMapReady={setMap} /> */}
+          <Marker position={centerPosition} icon={homeMarkerIcon} />
 
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-
-        {/* Marqueur au centre avec icône rouge */}
-        <Marker position={centerPosition} icon={homeMarkerIcon} />
-
-        {stores.map((store, i) => (
-          <Marker
-            key={i}
-            position={[store.lat, store.lng]}
-            icon={shopMarkerIcon}
-            eventHandlers={{
+          {stores.map((s, i) => (
+            <Marker
+              key={s.id}
+              position={[s.lat, s.lng]}
+              icon={shopMarkerIcon}
+              eventHandlers={{
                 click: () => {
-                setEditingStoreIndex(i);
-                setStoreName(store.name);
-                setPendingPosition({ lat: store.lat, lng: store.lng });
-                setIsModalOpen(true);
+                  setEditingStoreIndex(i);
+                  setStoreName(s.name);
+                  setPendingPosition({ lat: s.lat, lng: s.lng });
+                  setIsModalOpen(true);
                 },
-            }}
+              }}
             />
+          ))}
 
-        ))}
+          <ClickableMap onMapClick={handleMapClick} />
+        </MapContainer>
+      </div>
 
-        <ClickableMap onMapClick={handleMapClick} />
-      </MapContainer>
+      {/* LIST */}
+      <div className="md:w-1/3 w-full bg-white rounded shadow p-4 max-h-[75vh] overflow-y-auto">
+        <h2 className="font-semibold mb-3">Stores ajoutés</h2>
 
-    {isModalOpen && (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[2000]">
-        <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
-        <h3 className="text-lg font-semibold mb-3">
-            {editingStoreIndex === null ? "Créer un magasin" : "Modifier le magasin"}
-        </h3>
-
-        <input
-            type="text"
-            placeholder="Nom du magasin"
-            value={storeName}
-            onChange={(e) => setStoreName(e.target.value)}
-            className="w-full border rounded px-3 py-2 mb-4"
-            autoFocus
-        />
-
-<div className="flex justify-end gap-2">
-  {editingStoreIndex === null ? (
-    // --- Création ---
-    <>
-      <button
-        onClick={() => setIsModalOpen(false)}
-        className="px-3 py-1 rounded bg-gray-200 hover:bg-gray-300"
-      >
-        Annuler
-      </button>
-      <button
-        onClick={handleConfirmCreateOrUpdate}
-        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-      >
-        Créer
-      </button>
-    </>
-  ) : (
-    // --- Edition ---
-    <>
-      <button
-        onClick={() => {
-          setStores((prev) =>
-            prev.filter((_, i) => i !== editingStoreIndex)
-          );
-          setIsModalOpen(false);
-          setEditingStoreIndex(null);
-          setPendingPosition(null);
-        }}
-        className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600"
-      >
-        Supprimer
-      </button>
-      <button
-        onClick={handleConfirmCreateOrUpdate}
-        className="px-3 py-1 rounded bg-blue-600 text-white hover:bg-blue-700"
-      >
-        Sauvegarder
-      </button>
-    </>
-  )}
-</div>
-
-        </div>
-    </div>
-    )}
-
-
-      <div className="mt-4">
-        <h2 className="font-semibold mb-2">Stores ajoutés :</h2>
-        {stores.length === 0 ? (
-          <p>Aucun store pour le moment. Cliquez sur la carte pour ajouter.</p>
-        ) : (
-        <ul className="space-y-2">
-        {stores.map((store, i) => {
-        const distance = calculateDistance(
-            centerPosition[0], // Home lat
-            centerPosition[1], // Home lng
+        {stores.map((store) => {
+          const km = calculateDistance(
+            centerPosition[0],
+            centerPosition[1],
             store.lat,
             store.lng
-        );
+          );
 
-        return (
-            <li key={i} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-            <span className="text-sm">
-                🏪 {store.name} [Dist: {distance.toFixed(2)} km] 
-                {/* Lat: {store.lat.toFixed(5)}, Lng: {store.lng.toFixed(5)}, */}
-            </span>
-            <div className="flex gap-2">
-                <button onClick={() => handleSeeStore(store)} className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600">
-                👁️ See
+          return (
+            <div
+              key={store.id}
+              className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded"
+            >
+              <div className="text-sm">
+                🏪 {store.name}
+                <div className="text-xs text-gray-500">
+                  {km.toFixed(2)} km
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => handleSeeStore(store)}
+                  className="px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600"
+                >
+                  👁️ See
                 </button>
-                <button onClick={() => handleDeleteStore(i)} className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600">
-                🗑️ Trash
+                <button
+                  onClick={() => deleteShop(store.id)}
+                  className="px-2 py-1 text-xs bg-red-500 text-white rounded hover:bg-red-600"
+                >
+                  🗑️ Trash
                 </button>
+              </div>
             </div>
-            </li>
-        );
+          );
         })}
-        </ul>
-
-        )}
       </div>
+
+      {/* MODAL */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[2000]">
+          <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
+            <h3 className="text-lg font-semibold mb-3">
+              {editingStoreIndex === null
+                ? "Créer un magasin"
+                : "Modifier le magasin"}
+            </h3>
+
+            <input
+              className="w-full border rounded px-3 py-2 mb-4"
+              value={storeName}
+              onChange={(e) => setStoreName(e.target.value)}
+              placeholder="Nom du magasin"
+            />
+
+            <div className="flex justify-end gap-2">
+              <button
+                onClick={() => setIsModalOpen(false)}
+                className="px-3 py-1 rounded bg-gray-200"
+              >
+                Annuler
+              </button>
+              <button
+                onClick={handleConfirm}
+                className="px-3 py-1 rounded bg-blue-600 text-white"
+              >
+                Sauvegarder
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
-    // <div>Test Map Page</div>
   );
 }

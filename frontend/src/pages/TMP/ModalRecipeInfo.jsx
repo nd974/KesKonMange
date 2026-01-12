@@ -1,6 +1,6 @@
 import { FullStar, HalfStar, EmptyStar } from "../../components/Stars";
 
-export default function ModalRecipeInfo({ tags, times, level, portion, usage_count, averageNote, votesCount, modal=false}) {
+export default function ModalRecipeInfo({ tags, times, level, portion, usage_count, averageNote, votesCount, modal=false, compact=false}) {
   console.log("asdssssssssssssssssssssssssssssssssssssssssss", usage_count);
 
   const formatNumber = (num) => {
@@ -20,7 +20,7 @@ export default function ModalRecipeInfo({ tags, times, level, portion, usage_cou
   };
 
   return (
-    <div className="rounded-3xl w-full h-auto p-4 flex flex-col gap-6 shadow-2xl bg-gray-100 mr-4">
+    <div className={`rounded-3xl w-full h-auto p-4 flex flex-col gap-6 mr-4 ${!compact ? "shadow-2xl bg-gray-100" : "border-2 border-gray-300"}`}>
       {modal && (<h2 className="font-bold text-lg mb-2">Informations</h2>)}
       <div className="flex items-center justify-between w-full flex-wrap gap-2">
         {/* Bloc tags + +N */}
@@ -36,7 +36,7 @@ export default function ModalRecipeInfo({ tags, times, level, portion, usage_cou
           {tags.slice(0, 3).map((tag) => (
             <span
               key={tag.name}
-              className="border border-white bg-green-100 px-3 py-1 rounded-full text-xs font-semibold"
+              className="tags"
             >
               {tag.name}
             </span>
@@ -44,7 +44,7 @@ export default function ModalRecipeInfo({ tags, times, level, portion, usage_cou
 
           {tags.length > 3 && (
             <div className="relative group">
-              <span className="border border-white bg-gray-400 text-white px-1 py-1 rounded-full text-xs cursor-pointer font-semibold">
+              <span className="tags bg-gray-200 px-2 py-1">
                 +{tags.length - 3}
               </span>
 

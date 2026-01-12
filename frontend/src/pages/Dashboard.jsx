@@ -14,15 +14,15 @@ dayjs.locale("fr");
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Dashboard({ homeId, profileId}) {
-  const [loading, setLoading] = useState(false); // TODO CHARGEMENT
+  // const [loading, setLoading] = useState(false); // TODO CHARGEMENT
 
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedMenusForDay, setSelectedMenusForDay] = useState([]);
   const [activeMenuIndex, setActiveMenuIndex] = useState(0);
   const [recipeIndex, setRecipeIndex] = useState(0);
   const [selectedDay, setSelectedDay] = useState(null);
-  const [menus, setMenus] = useState([]);
-  const [todayMenus, setTodayMenus] = useState([]);
+  // const [menus, setMenus] = useState([]);
+  // const [todayMenus, setTodayMenus] = useState([]);
   const [subscriptionState, setSubscriptionState] = useState({});
   const [showSubscribers, setShowSubscribers] = useState(false);
   const [subscribers, setSubscribers] = useState([]);
@@ -30,41 +30,41 @@ export default function Dashboard({ homeId, profileId}) {
   const navigate = useNavigate();
 
   // Chargement des menus
-  const loadMenus = async (homeId) => {
-    if (!homeId) return;
-    setLoading(true); // TODO deb du CHARGEMENT
-    try {
-      const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
-      if (!res.ok) throw new Error("Erreur récupération menus");
-      const data = await res.json();
+  // const loadMenus = async (homeId) => {
+  //   if (!homeId) return;
+  //   setLoading(true); // TODO deb du CHARGEMENT
+  //   try {
+  //     const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
+  //     if (!res.ok) throw new Error("Erreur récupération menus");
+  //     const data = await res.json();
 
-      const expanded = data.map((m) => ({
-        id: `${m.id}-${m.tag?.id || "none"}`,
-        menuId: m.id,
-        tagId: m.tag?.id || null,
-        tagName: m.tag?.name || null,
-        date: dayjs(m.date).format("YYYY-MM-DD"),
-        recipes: m.recipes || [],
-      }));
+  //     const expanded = data.map((m) => ({
+  //       id: `${m.id}-${m.tag?.id || "none"}`,
+  //       menuId: m.id,
+  //       tagId: m.tag?.id || null,
+  //       tagName: m.tag?.name || null,
+  //       date: dayjs(m.date).format("YYYY-MM-DD"),
+  //       recipes: m.recipes || [],
+  //     }));
 
-      setMenus(expanded);
+  //     setMenus(expanded);
 
-      const today = dayjs().format("YYYY-MM-DD");
-      setTodayMenus(expanded.filter((m) => m.date === today));
-    } catch (e) {
-      console.error("Erreur loadMenus Dashboard:", e);
-      setMenus([]);
-      setTodayMenus([]);
-    }
-     finally {
-      setLoading(false);  // TODO fin du CHARGEMENT
+  //     const today = dayjs().format("YYYY-MM-DD");
+  //     setTodayMenus(expanded.filter((m) => m.date === today));
+  //   } catch (e) {
+  //     console.error("Erreur loadMenus Dashboard:", e);
+  //     setMenus([]);
+  //     setTodayMenus([]);
+  //   }
+  //    finally {
+  //     setLoading(false);  // TODO fin du CHARGEMENT
       
-    }
-  };
+  //   }
+  // };
 
-  useEffect(() => {
-    loadMenus(homeId);
-  }, [homeId]);
+  // useEffect(() => {
+  //   loadMenus(homeId);
+  // }, [homeId]);
 
   const checkSubscription = async (menuId, profileId) => {
     try {
@@ -82,8 +82,6 @@ export default function Dashboard({ homeId, profileId}) {
   };
 
   const updateSubscriptionState = async (menuId) => {
-    // const profileId = localStorage.getItem("profile_id");
-    console.log("menuObj", menuId);
     if (profileId && menuId) {
       const subscribed = await checkSubscription(menuId, profileId);
       setSubscriptionState(prev => ({
@@ -91,7 +89,6 @@ export default function Dashboard({ homeId, profileId}) {
         [menuId]: subscribed
       }));
     }
-    console.log("subscriptionState", subscriptionState);
   };
 
   const handleSelectMenu = async (grouped) => {
@@ -100,7 +97,6 @@ export default function Dashboard({ homeId, profileId}) {
     setRecipeIndex(0);
 
     const menusArr = (grouped.menus || []).map((m) => ({ ...m }));
-    console.log("menusArr", menusArr);
     // Cas simple : tags déjà présents
     if (menusArr.some((m) => m.tagName)) {
       setSelectedMenusForDay(menusArr);
@@ -282,20 +278,14 @@ export default function Dashboard({ homeId, profileId}) {
     }
   };
 
-const [localCount, setLocalCount] = useState(1);
+  const [localCount, setLocalCount] = useState(1);
 
-useEffect(() => {
-  const recipe = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex];
-  if (recipe) {
-    setLocalCount(recipe.count_recipe || 1);
-  }
-}, [activeMenuIndex, recipeIndex, selectedMenusForDay]);
-
-  const refreshMenus = async () => {
-    const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
-    const data = await res.json();
-    setMenus(data || []);
-  }
+  useEffect(() => {
+    const recipe = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex];
+    if (recipe) {
+      setLocalCount(recipe.count_recipe || 1);
+    }
+  }, [activeMenuIndex, recipeIndex, selectedMenusForDay]);
 
   const handleCrementLocalCountRecipe = async(crement) => {
       const newCount = localCount + crement
@@ -331,31 +321,31 @@ useEffect(() => {
           {/* <Header homeId={homeId} /> */}
 
         {/* SECTION MENUS A (toujours visible) */}
-        <main className="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <main className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* LEFT – détail */}
           <section className="order-2 lg:order-1">
             <div className="flex items-center gap-3">
             {selectedDay && (
               <>
-                <div className="bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
-                  {selectedDay.format("D MMMM YYYY")}
-                </div>
-
                 {/* tags desktop */}
-                <div className="ml-auto hidden sm:flex gap-2">
+                <div className="hidden sm:flex gap- ml-5">
                   {selectedMenusForDay?.map((m, i) => (
                     <button
                       key={m.id || `${m.menuId}-${m.tagId}-${i}`}
                       onClick={() => setActiveMenuIndex(i)}
-                      className={`px-3 py-1 rounded-xl text-sm font-medium ${
-                        i === activeMenuIndex ? "bg-accentGreen text-white shadow-soft" : "bg-white/70"
+                      className={`px-3 py-1 rounded-tl-2xl rounded-tr-lg text-sm font-medium -mb-1 ${
+                        i === activeMenuIndex ? "bg-accentGreen text-white shadow-soft" : "bg-gray-200"
                       }`}
                     >
                       {m.tagName}
                     </button>
                   ))}
                 </div>
+
+                {/* <div className="ml-auto bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
+                  {selectedDay.format("D MMMM YYYY")}
+                </div> */}
 
                 {/* mobile */}
                 <div className="ml-auto sm:hidden">
@@ -375,19 +365,19 @@ useEffect(() => {
             )}
             </div>
 
-            <div className="soft-card rounded-lg shadow-soft relative mt-1">
+            <div className="bg-gray-100 soft-card rounded-3xl shadow-soft relative">
               {selectedRecipe ? (
                 <div className="flex flex-col items-center relative">
                                                           {/* TRASH À DROITE */}
                       <button
                         onClick={deleteMenuValidate}
-                        className="absolute right-0 text-right z-10"
+                        className="absolute right-1.5 top-1.5 text-right z-10"
                       >
                         ❌
                       </button>
 
 
-                  <div className="w-full flex items-center pt-8 relative mb-9">
+                  <div className="w-full flex items-center relative mt-2">
 
                     <div className="flex items-center gap-2 mx-auto">
 
@@ -395,7 +385,7 @@ useEffect(() => {
                       <button
                         className="text-2xl"
                         onClick={() => handleSubscribeToMenu(selectedMenusForDay[activeMenuIndex].id)}
-                        disabled={subscribing} // 🔹 bloque pendant la requête
+                        disabled={subscribing}
                       >
                         {subscriptionState[selectedMenusForDay[activeMenuIndex].id] ? (
                           <span style={{ color: "green" }}>◉</span>
@@ -436,7 +426,7 @@ useEffect(() => {
     {/* Nom de la recette dans des chevrons */}
     <h1 className="text-center text-2xl sm:text-4xl font-bold text-softPink"
           style={{
-        WebkitTextStroke: "10px #f3e6d9", // ou 15px desktop
+        WebkitTextStroke: "4px white", // ou 15px desktop
         paintOrder: "stroke fill",
         overflow: "visible", // important !
       }}>
@@ -512,7 +502,7 @@ useEffect(() => {
           </section>
 
           {/* RIGHT — regroupement de Menu A + Menu B */}
-          <div className="order-1 lg:order-2 flex flex-col">
+          <div className="order-1 lg:order-2 flex flex-col mt-1">
 
             {/* MENU A (toujours visible) */}
             <section>
@@ -523,7 +513,7 @@ useEffect(() => {
                 onSelectMenu={handleSelectMenu}
                 homeId={homeId}
               />
-              <div className="h-6" />
+              {/* <div className="h-2" /> */}
             </section>
 
             {/* MENU B (visible seulement desktop) */}
