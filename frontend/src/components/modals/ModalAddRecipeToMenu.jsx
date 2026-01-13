@@ -69,7 +69,7 @@ export default function ModalAddRecipeToMenu({
       if (!res.ok) throw new Error("Erreur ajout menu");
 
       alert("Recette ajoutée au menu !");
-      await refreshMenus();
+      // await refreshMenus();
       onClose();
     } catch (err) {
       console.error(err);

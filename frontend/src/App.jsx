@@ -4,8 +4,10 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
-import Login from "./pages/Login";
-import ProfileSelect from "./pages/ProfileSelect";
+import Login from "./pages/onboarding/Login";
+import ProfileSelect from "./pages/onboarding/ProfileSelect";
+
+
 import Dashboard from "./pages/Dashboard";
 import Recipes from "./pages/Recipes";
 import Calendar from "./pages/Calendar";
@@ -21,7 +23,7 @@ import Homes from "./pages/settings/Homes";
 
 import TermsOfUse from "./pages/settings/footer/TermsOfUse";
 
-import RecipeDetail from "./pages/RecipeDetails";
+import OldRecipeDetail from "./pages/OldRecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
 
 import MobileNav from "./components/MobileNav";
@@ -151,7 +153,7 @@ return (
             <Route path="/stock" element={<Stock key={home_id} homeId={home_id} />} />
             <Route path="/shopping_list" element={<ShoppingList key={home_id} homeId={home_id} />} />
 
-            <Route path="/recipe/:id" element={<RecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/recipe/:id" element={<NewRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/recipe/add" element={<RecipeAdd key={home_id} homeId={home_id} profileId={profile_id}/>} />
             <Route path="/recipe/edit/:recipe_id" element={<RecipeAdd key={home_id} homeId={home_id} />} />
 
@@ -168,7 +170,7 @@ return (
             
 
 
-            <Route path="/new_recipe_details/:id" element={<NewRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/old_recipe_details" element={<OldRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
 
             <Route path="*" element={<Navigate to="/" replace />} />
@@ -177,8 +179,8 @@ return (
       </div>
 
       {/* FOOTER */}
-      <div className="print:hidden"><Footer/></div>
-      {/* {!pathSign && hideMobileNav && <div className="print:hidden"><Footer/></div>} */}
+      {/* <div className="print:hidden"><Footer/></div> */}
+      {!pathSign && hideMobileNav && <div className="print:hidden"><Footer/></div>}
     </div>
 
     {/* MOBILE NAV */}

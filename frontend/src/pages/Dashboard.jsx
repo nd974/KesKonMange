@@ -1,318 +1,143 @@
-// Dashboard.jsx - version corrigée avec gestion correcte de l'abonnement
 import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Header from "../components/Header";
-import Menus from "../components/Menus";
-import NewRecipeDetail from "./TMP/NewRecipeDetail";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
-import RecipeDetail from "./RecipeDetails";
+
+import Menus from "../components/Menus";
+import NewRecipeDetail from "./TMP/NewRecipeDetail";
 import RecipePossible from "../components/RecipePossible";
+
+import {
+  useSubscription,
+  useSubscribers,
+  useToggleSubscription,
+  useDeleteMenu,
+  useUpdateRecipeCount,
+} from "../hooks/useMenu";
 
 dayjs.locale("fr");
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+export default function Dashboard({ homeId, profileId }) {
+  const navigate = useNavigate();
 
-export default function Dashboard({ homeId, profileId}) {
-  // const [loading, setLoading] = useState(false); // TODO CHARGEMENT
-
+  /* ---------------- State UI ---------------- */
   const [selectedRecipe, setSelectedRecipe] = useState(null);
   const [selectedMenusForDay, setSelectedMenusForDay] = useState([]);
   const [activeMenuIndex, setActiveMenuIndex] = useState(0);
   const [recipeIndex, setRecipeIndex] = useState(0);
   const [selectedDay, setSelectedDay] = useState(null);
-  // const [menus, setMenus] = useState([]);
-  // const [todayMenus, setTodayMenus] = useState([]);
-  const [subscriptionState, setSubscriptionState] = useState({});
+
   const [showSubscribers, setShowSubscribers] = useState(false);
-  const [subscribers, setSubscribers] = useState([]);
+  const [localCount, setLocalCount] = useState(1);
 
-  const navigate = useNavigate();
+  /* ---------------- Menu actif ---------------- */
+  const activeMenu = selectedMenusForDay[activeMenuIndex];
+  const activeMenuId = activeMenu?.id;
+  const activeRecipe = activeMenu?.recipes?.[recipeIndex];
 
-  // Chargement des menus
-  // const loadMenus = async (homeId) => {
-  //   if (!homeId) return;
-  //   setLoading(true); // TODO deb du CHARGEMENT
-  //   try {
-  //     const res = await fetch(`${API_URL}/menu/get-byHome?homeId=${homeId}`);
-  //     if (!res.ok) throw new Error("Erreur récupération menus");
-  //     const data = await res.json();
+  /* ---------------- React Query ---------------- */
+  const { data: isSubscribed = false } = useSubscription(
+    activeMenuId,
+    profileId
+  );
 
-  //     const expanded = data.map((m) => ({
-  //       id: `${m.id}-${m.tag?.id || "none"}`,
-  //       menuId: m.id,
-  //       tagId: m.tag?.id || null,
-  //       tagName: m.tag?.name || null,
-  //       date: dayjs(m.date).format("YYYY-MM-DD"),
-  //       recipes: m.recipes || [],
-  //     }));
+  const { data: subscribers = [] } = useSubscribers(
+    activeMenuId,
+    showSubscribers
+  );
 
-  //     setMenus(expanded);
+  const toggleSubscription = useToggleSubscription();
+  const deleteMenuMutation = useDeleteMenu();
+  const updateRecipeCountMutation = useUpdateRecipeCount();
 
-  //     const today = dayjs().format("YYYY-MM-DD");
-  //     setTodayMenus(expanded.filter((m) => m.date === today));
-  //   } catch (e) {
-  //     console.error("Erreur loadMenus Dashboard:", e);
-  //     setMenus([]);
-  //     setTodayMenus([]);
-  //   }
-  //    finally {
-  //     setLoading(false);  // TODO fin du CHARGEMENT
-      
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   loadMenus(homeId);
-  // }, [homeId]);
-
-  const checkSubscription = async (menuId, profileId) => {
-    try {
-      const res = await fetch(`${API_URL}/menu/checkSubscription`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuId, profileId }),
-      });
-      const data = await res.json();
-      return data.isSubscribed;
-    } catch (err) {
-      console.error("Erreur lors de la vérification de l'abonnement:", err);
-      return false;
-    }
-  };
-
-  const updateSubscriptionState = async (menuId) => {
-    if (profileId && menuId) {
-      const subscribed = await checkSubscription(menuId, profileId);
-      setSubscriptionState(prev => ({
-        ...prev,
-        [menuId]: subscribed
-      }));
-    }
-  };
-
-  const handleSelectMenu = async (grouped) => {
+  /* ---------------- Sélection menu ---------------- */
+  const handleSelectMenu = (grouped) => {
     setSelectedDay(dayjs(grouped.date));
     setActiveMenuIndex(0);
     setRecipeIndex(0);
 
-    const menusArr = (grouped.menus || []).map((m) => ({ ...m }));
-    // Cas simple : tags déjà présents
-    if (menusArr.some((m) => m.tagName)) {
-      setSelectedMenusForDay(menusArr);
-      setSelectedRecipe(menusArr?.[0]?.recipes?.[0] || null);
-
-      for (const menu of menusArr) {
-        await updateSubscriptionState(menu.id); // ← 🔧 FIX ici
-      }
-
-      return;
-    }
-
-    // Cas où il faut enrichir avec les tags
-    try {
-      const menuIds = Array.from(
-        new Set(menusArr.map((m) => Number(m.menuId ?? m.id)).filter(Boolean))
-      );
-
-      if (menuIds.length === 0) {
-        setSelectedMenusForDay(menusArr);
-        setSelectedRecipe(menusArr?.[0]?.recipes?.[0] || null);
-        // await updateSubscriptionState(menusArr[0]);
-        return;
-      }
-
-      const res = await fetch(`${API_URL}/menu/get-tags-for-menus`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ menuIds }),
-      });
-
-      if (!res.ok) throw new Error("Erreur récupération tags");
-
-      const tagsData = await res.json();
-      const tagMap = {};
-
-      for (const row of tagsData) {
-        const mid = String(row.menu_id);
-        tagMap[mid] = tagMap[mid] || [];
-        tagMap[mid].push({ tag_id: row.tag_id, tag_name: row.tag_name });
-      }
-
-      const enriched = menusArr.map((m) => {
-        const mid = String(Number(m.menuId ?? m.id));
-        const tagsFor = tagMap[mid] || [];
-        return {
-          ...m,
-          tagId: m.tagId ?? (tagsFor[0]?.tag_id ?? null),
-          tagName: m.tagName ?? (tagsFor[0]?.tag_name ?? null),
-          tagNames: tagsFor.map((t) => t.tag_name),
-        };
-      });
-
-      setSelectedMenusForDay(enriched);
-      setSelectedRecipe(enriched?.[0]?.recipes?.[0] || null);
-      // await updateSubscriptionState(enriched[0]);
-    } catch (err) {
-      console.error("Erreur handleSelectMenu:", err);
-      setSelectedMenusForDay(menusArr);
-      setSelectedRecipe(menusArr?.[0]?.recipes?.[0] || null);
-      // await updateSubscriptionState(menusArr[0]);
-    }
+    const menus = grouped.menus || [];
+    setSelectedMenusForDay(menus);
+    setSelectedRecipe(menus?.[0]?.recipes?.[0] || null);
   };
 
-  const handlePick = (recipe, menu) => {
-    setSelectedRecipe(recipe);
-    if (menu) {
-      setSelectedMenusForDay([menu]);
-      setSelectedDay(dayjs(menu.date));
-      const idx = menu.recipes.findIndex((r) => String(r.id) === String(recipe.id));
-      setRecipeIndex(idx >= 0 ? idx : 0);
-    }
-  };
-  
-
-  // Navigation recettes
+  /* ---------------- Navigation recettes ---------------- */
   const showPrev = () => {
-    const active = selectedMenusForDay[activeMenuIndex];
-    if (!active?.recipes?.length || recipeIndex <= 0) return;
-    const next = recipeIndex - 1;
-    setRecipeIndex(next);
-    setSelectedRecipe(active.recipes[next]);
+    if (!activeMenu?.recipes || recipeIndex <= 0) return;
+    setRecipeIndex((i) => i - 1);
   };
 
   const showNext = () => {
-    const active = selectedMenusForDay[activeMenuIndex];
-    if (!active?.recipes?.length || recipeIndex >= active.recipes.length - 1) return;
-    const next = recipeIndex + 1;
-    setRecipeIndex(next);
-    setSelectedRecipe(active.recipes[next]);
+    if (
+      !activeMenu?.recipes ||
+      recipeIndex >= activeMenu.recipes.length - 1
+    )
+      return;
+    setRecipeIndex((i) => i + 1);
   };
 
   useEffect(() => {
-    const active = selectedMenusForDay[activeMenuIndex];
-    if (!active) {
+    if (!activeMenu) {
       setSelectedRecipe(null);
       return;
     }
 
-    // ⚠️ On garde l’index actuel s’il est valide
-    if (active.recipes?.[recipeIndex]) {
-      setSelectedRecipe(active.recipes[recipeIndex]);
+    if (activeMenu.recipes?.[recipeIndex]) {
+      setSelectedRecipe(activeMenu.recipes[recipeIndex]);
     } else {
       setRecipeIndex(0);
-      setSelectedRecipe(active.recipes?.[0] || null);
+      setSelectedRecipe(activeMenu.recipes?.[0] || null);
     }
-  }, [activeMenuIndex, selectedMenusForDay, recipeIndex]);
+  }, [activeMenu, recipeIndex]);
 
-
-  const [subscribing, setSubscribing] = useState(false);
-
-  const handleSubscribeToMenu = async (menuId) => {
-    if (subscribing) return; // 🔹 bloquer les clics multiples
-    setSubscribing(true);
-
-    // const profileId = localStorage.getItem("profile_id");
-    const current = subscriptionState[menuId] === true;
-
-    try {
-      if (current) {
-        // Désinscription
-        const res = await fetch(`${API_URL}/menu/unsubscribe`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ menuId, profileId }),
-        });
-        if (!res.ok) throw new Error("Erreur désinscription");
-        setSubscriptionState(prev => ({ ...prev, [menuId]: false }));
-      } else {
-        // Abonnement
-        const res = await fetch(`${API_URL}/menu/subscribe`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ menuId, profileId }),
-        });
-        if (!res.ok) throw new Error("Erreur abonnement");
-        setSubscriptionState(prev => ({ ...prev, [menuId]: true }));
-      }
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setSubscribing(false); // 🔹 réactivation du bouton
-    }
-  };
-
-
-  const openSubscribersPopup = async () => {
-    const menuId = selectedMenusForDay[activeMenuIndex].id;
-
-    try {
-      const res = await fetch(`${API_URL}/menu/getSubscribers?menuId=${menuId}`);
-      const data = await res.json();
-      setSubscribers(data); // ← aucun state, tu as demandé
-    } catch (err) {
-      console.error("Erreur load subscribers:", err);
-    }
-
-    setShowSubscribers(true);
-  };
-
-
-  const deleteMenuValidate = async () => {
-    const menu = selectedMenusForDay[activeMenuIndex];
-    if (!menu.id) return;
-    if (confirm(`Voulez-vous vraiment supprimer le menu ${menu.date}-${menu.tagName}?`)) {
-      try {
-        const res = await fetch(`${API_URL}/menu/delete/${menu.id}`, { method: "DELETE" });
-        const data = await res.json();
-        if (data.ok) {
-          alert("Menu supprimée !");
-          navigate("/todo");
-        } else {
-          alert("Erreur : " + data.error);
-        }
-      } catch (e) {
-        console.error(e);
-        alert("Erreur lors de la suppression");
-      }
-    }
-  };
-
-  const [localCount, setLocalCount] = useState(1);
-
+  /* ---------------- Compteur recettes ---------------- */
   useEffect(() => {
-    const recipe = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex];
-    if (recipe) {
-      setLocalCount(recipe.count_recipe || 1);
+    if (activeRecipe) {
+      setLocalCount(activeRecipe.count_recipe || 1);
     }
-  }, [activeMenuIndex, recipeIndex, selectedMenusForDay]);
+  }, [activeRecipe]);
 
-  const handleCrementLocalCountRecipe = async(crement) => {
-      const newCount = localCount + crement
-      setLocalCount(Math.max(1, newCount));
+  const handleCrementLocalCountRecipe = (crement) => {
+    if (!activeMenuId || !activeRecipe) return;
 
-      console.log("newCount",newCount);
+    const newCount = Math.max(1, localCount + crement);
+    setLocalCount(newCount);
 
-      const menuId = selectedMenusForDay[activeMenuIndex]?.id;
-      const recipeId = selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.id;
-      if (!menuId || !recipeId) return;
+    updateRecipeCountMutation.mutate({
+      menuId: activeMenuId,
+      recipeId: activeRecipe.id,
+      count: newCount,
+    });
+  };
 
-      // const success = await handleUpdateCountRecipe(menuId, recipeId, localCount);
-      try {
-        const res = await fetch(`${API_URL}/menu/update-count/${menuId}/${recipeId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ count_recipe: newCount }),
-        });
-        const updatedMenus = [...selectedMenusForDay];
-        updatedMenus[activeMenuIndex].recipes[recipeIndex].count_recipe = newCount;
-        setSelectedMenusForDay(updatedMenus);
-        // alert("Nombre de recettes mis à jour !");
-      } catch (err) {
-        alert("Erreur lors de la sauvegarde");
-      }
-  }
+  /* ---------------- Abonnement ---------------- */
+  const handleToggleSubscription = () => {
+    if (!activeMenuId || !profileId) return;
 
+    toggleSubscription.mutate({
+      menuId: activeMenuId,
+      profileId,
+      subscribed: isSubscribed,
+    });
+  };
+
+  /* ---------------- Suppression menu ---------------- */
+  const deleteMenuValidate = () => {
+    if (!activeMenuId) return;
+
+    if (confirm(`Supprimer le menu ${activeMenu.tagName} ?`)) {
+      deleteMenuMutation.mutate(activeMenuId, {
+        onSuccess: () => navigate("/todo"),
+        onError: (e) => alert(e.message),
+      });
+    }
+  };
+
+  const recipes = selectedMenusForDay?.[activeMenuIndex]?.recipes ?? [];
+  const maxNameLength = Math.max(
+    ...recipes.map((r) => r.name.length),
+    0
+  );
 
   return (
     
@@ -384,10 +209,10 @@ export default function Dashboard({ homeId, profileId}) {
 
                       <button
                         className="text-2xl"
-                        onClick={() => handleSubscribeToMenu(selectedMenusForDay[activeMenuIndex].id)}
-                        disabled={subscribing}
+                        onClick={handleToggleSubscription}
+                        disabled={toggleSubscription.isLoading}
                       >
-                        {subscriptionState[selectedMenusForDay[activeMenuIndex].id] ? (
+                        {isSubscribed ? (
                           <span style={{ color: "green" }}>◉</span>
                         ) : (
                           <span style={{ color: "red" }}>⭘</span>
@@ -395,11 +220,15 @@ export default function Dashboard({ homeId, profileId}) {
                       </button>
 
 
+
                       <h2 className="text-2xl font-semibold text-center">
                         {selectedMenusForDay[activeMenuIndex]?.tagName}
                       </h2>
 
-                      <button onClick={openSubscribersPopup} className="text-2xl">
+                      <button
+                        onClick={() => setShowSubscribers(true)}
+                        className="text-2xl"
+                      >
                         📋
                       </button>
 
@@ -426,9 +255,10 @@ export default function Dashboard({ homeId, profileId}) {
     {/* Nom de la recette dans des chevrons */}
     <h1 className="text-center text-2xl sm:text-4xl font-bold text-softPink"
           style={{
-        WebkitTextStroke: "4px white", // ou 15px desktop
+        width: `${maxNameLength + 2}ch`, // +2 pour respirer
+        WebkitTextStroke: "4px white",
         paintOrder: "stroke fill",
-        overflow: "visible", // important !
+        whiteSpace: "nowrap",
       }}>
       {selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.name}
     </h1>
@@ -509,7 +339,7 @@ export default function Dashboard({ homeId, profileId}) {
               <Menus
                 selectedDay={selectedDay}
                 setSelectedDay={setSelectedDay}
-                onPick={handlePick}
+                // onPick={handlePick}
                 onSelectMenu={handleSelectMenu}
                 homeId={homeId}
               />

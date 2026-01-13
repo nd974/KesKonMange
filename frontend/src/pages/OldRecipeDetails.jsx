@@ -6,10 +6,10 @@ import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function RecipeDetail({ homeId,profileId, id: idProp }) {
+export default function RecipeDetail({ homeId,profileId, idProp}) {
   const navigate = useNavigate();
   const { id: idFromUrl } = useParams();
-  const id = idProp ?? idFromUrl;
+  const id = 30;
 
   const [recipe, setRecipe] = useState(null);
   const [loading, setLoading] = useState(true);

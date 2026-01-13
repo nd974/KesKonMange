@@ -540,7 +540,7 @@ const handleSubmit = async (e) => {
   }
 
   alert(recipe_id ? "Recette modifiée" : "✅Recette créée");
-  navigate(`/new_recipe_details/${recipeId}`);
+  navigate(`/recipe/${recipeId}`);
 };
 
 

@@ -72,7 +72,7 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
     <div
       className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-gray-100"
       onClick={() => {
-        if (!showAddToMenuModal) navigate(`/new_recipe_details/${recipe.id}`);
+        if (!showAddToMenuModal) navigate(`/recipe/${recipe.id}`);
       }}
     >
     <div className="relative">

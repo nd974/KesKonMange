@@ -245,7 +245,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     {/* Image */}
     <img
       src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
-      onClick={() => navigate(`/new_recipe_details/${recipe.id}`)}
+      onClick={() => navigate(`/recipe/${recipe.id}`)}
       alt={recipe.name}
       className="w-40 h-32 sm:w-80 sm:h-64 rounded-2xl object-cover"
     />

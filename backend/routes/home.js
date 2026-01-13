@@ -3,6 +3,27 @@ import { pool } from "../db.js";
 
 const router = express.Router();
 
+router.get("/search", async (req, res) => {
+  const { q } = req.query;
+  if (!q) return res.json([]);
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(q)}&format=json&limit=5`,
+      {
+        headers: {
+          "User-Agent": "Keskonmange/1.0 (contact@keskonmange.fr)"
+        }
+      }
+    );
+
+    const data = await response.json();
+    res.json(data);
+  } catch (err) {
+    res.status(500).json({ error: "Geocoding failed" });
+  }
+});
+
 // ------------------- TEST DATABASE -------------------
 router.get("/testDB", async (req, res) => {
   try {

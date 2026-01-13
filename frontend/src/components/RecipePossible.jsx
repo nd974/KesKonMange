@@ -158,7 +158,7 @@ export default function RecipePossible({ homeId, profileId }) {
 
       {recipesPossible.length > 0 && (
         <>
-        <p className="ml-5 text-xs font-semibold text-gray-700">
+        <p className="mt-1 ml-5 text-xs font-semibold text-gray-700">
             Presque faisables (ingrédients manquants)
         </p>
         {renderRow(recipesPossible, true)}

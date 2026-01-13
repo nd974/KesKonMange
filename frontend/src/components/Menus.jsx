@@ -1,7 +1,6 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import dayjs from "dayjs";
-
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+import { useMenusByHome } from "../hooks/useMenu";
 
 import { CLOUDINARY_RES, CLOUDINARY_ICONS } from "../config/constants";
 
@@ -13,58 +12,21 @@ export default function Menus({
   homeId,
 }) {
 
-  
+  const GAP_CARD = 20;
+
   const RecipesLink = () => (
-  <a
-    href="/recipes"
-    className="text-green-600 underline hover:text-green-800"
-  >
-    Recettes(📝)
-  </a>
+    <a href="/recipes" className="text-green-600 underline hover:text-green-800">
+      Recettes(📝)
+    </a>
   );
 
   const CalendarLink = () => (
-  <a
-    href="/calendar"
-    className="text-green-600 underline hover:text-green-800"
-  >
-    Calendrier
-  </a>
+    <a href="/calendar" className="text-green-600 underline hover:text-green-800">
+      Calendrier
+    </a>
   );
 
-  const [menus, setMenus] = useState([]);
-
-  const GAP_CARD = 20; // Espace entre les cartes en pixels
-
-  useEffect(() => {
-    if (!homeId) return;
-
-    const loadMenus = async () => {
-      try {
-        const res = await fetch(
-          `${API_URL}/menu/get-byHome?homeId=${homeId}`
-        );
-        if (!res.ok) throw new Error("Erreur chargement menus");
-        const data = await res.json();
-
-        const formatted = data
-          .map((m) => ({
-            id: m.id,
-            date: dayjs(m.date).format("YYYY-MM-DD"),
-            tagName: m.tag ? m.tag.name : null,
-            recipes: m.recipes || [],
-          }))
-          .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
-
-        setMenus(formatted);
-      } catch (e) {
-        console.error(e);
-        setMenus([]);
-      }
-    };
-
-    loadMenus();
-  }, [homeId]);
+  const { data: menus = [], isLoading } = useMenusByHome(homeId);
 
   const grouped = menus.reduce((acc, m) => {
     acc[m.date] = acc[m.date] || [];
@@ -75,6 +37,25 @@ export default function Menus({
   const groups = Object.keys(grouped)
     .map((d) => ({ date: d, menus: grouped[d] }))
     .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
+
+  if (isLoading) {
+    return (
+      <>
+        <h3 className="text-2xl font-bold text-gray-800 flex items-center -mt-1">
+          <img
+            src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
+            alt="Menu Icon"
+            className="w-6 h-6 inline-block mr-2"
+          />
+          Menus enregistrés
+        </h3>
+
+        <div className="mt-5 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 sm:h-[20vh] flex flex-col items-center justify-center gap-2">
+          <div>Chargement ...</div>
+        </div>
+      </>
+    );
+  }
 
   return (
     <div>
@@ -88,7 +69,6 @@ export default function Menus({
       </h3>
 
       {groups.length === 0 ? (
-        // Affichage quand il n'y a aucun menu
         <div className="mt-5 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 sm:h-[20vh] flex flex-col items-center justify-center gap-2">
           <div>Aucun menu enregistré</div>
           <div>
@@ -98,7 +78,9 @@ export default function Menus({
       ) : (
         <div className="flex gap-0 overflow-x-auto scroll-smooth mt-3 relative px-5">
           {groups.map((g, index) => {
-            const isSelected = selectedDay?.format("YYYY-MM-DD") === g.date;
+            const isSelected =
+              selectedDay?.format("YYYY-MM-DD") === g.date;
+
             const tags = g.menus
               .map((m) => m.tagName)
               .filter(Boolean);
@@ -110,10 +92,12 @@ export default function Menus({
                   setSelectedDay(dayjs(g.date));
                   onSelectMenu?.({ date: g.date, menus: g.menus });
                 }}
-                className={`min-w-[150px] cursor-pointer transition-transform duration-300 py-5 relative z-${index}`}
+                className="min-w-[150px] cursor-pointer transition-transform duration-300 py-5 relative"
                 style={{
                   marginLeft: index === 0 ? 0 : -GAP_CARD,
-                  transform: isSelected ? "scale(1.1) translateY(-10px)" : "scale(1)",
+                  transform: isSelected
+                    ? "scale(1.1) translateY(-10px)"
+                    : "scale(1)",
                   zIndex: isSelected ? GAP_CARD : groups.length - index,
                 }}
               >
@@ -138,19 +122,18 @@ export default function Menus({
                     <div className="text-lg font-bold mb-4">Menu</div>
 
                     <div className="absolute bottom-[35px] left-3 flex items-center gap-2">
-                      {tags.length > 0 &&
-                        tags.slice(0, 1).map((tag, index) => (
-                          <span
-                            key={index}
-                            className={`px-2 py-1 rounded-full text-sm ${
-                              isSelected
-                                ? "bg-[#dfffcf] text-black"
-                                : "bg-[#b9b9b9] text-[#b9b9b9]"
-                            }`}
-                          >
-                            {tag}
-                          </span>
-                        ))}
+                      {tags.slice(0, 1).map((tag, i) => (
+                        <span
+                          key={i}
+                          className={`px-2 py-1 rounded-full text-sm ${
+                            isSelected
+                              ? "bg-[#dfffcf] text-black"
+                              : "bg-[#b9b9b9] text-[#b9b9b9]"
+                          }`}
+                        >
+                          {tag}
+                        </span>
+                      ))}
 
                       {tags.length > 1 && (
                         <div className="relative group">
@@ -163,8 +146,8 @@ export default function Menus({
                           >
                             +{tags.length - 1}
                           </span>
-                          <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity z-10 whitespace-nowrap">
-                            {tags.slice(1, tags.length).join(" / ")}
+                          <div className="absolute left-1/2 -translate-x-1/2 mt-1 w-max bg-gray-800 text-white text-xs rounded px-2 py-1 opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap">
+                            {tags.slice(1).join(" / ")}
                           </div>
                         </div>
                       )}
@@ -177,6 +160,5 @@ export default function Menus({
         </div>
       )}
     </div>
-
   );
 }
