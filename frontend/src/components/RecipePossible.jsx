@@ -121,8 +121,7 @@ export default function RecipePossible({ homeId, profileId }) {
               {isPossible && missingCount > 0 && (
                 <div className="absolute bottom-3 left-3">
                   <span className="text-xs px-2 py-1 rounded-full bg-orange-200 text-orange-800">
-                    +{missingCount} ingrédient
-                    {missingCount > 1 ? "s" : ""}
+                    +{missingCount} {missingCount > 1 ? "ingrédients" : "ingrédient"} 
                   </span>
                 </div>
               )}
