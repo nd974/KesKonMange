@@ -551,7 +551,7 @@ useEffect(() => {
 
   const loadRecipe = async () => {
     try {
-      const res = await fetch(`${API_URL}/recipe/get-one/${recipe_id}`);
+      const res = await fetch(`${API_URL}/recipe/get-one/${homeId}/${recipe_id}`);
       if (!res.ok) {
         console.error("Erreur serveur :", res.status);
         return;
@@ -619,7 +619,7 @@ useEffect(() => {
   };
 
   loadRecipe();
-}, [recipe_id]);
+}, [homeId, recipe_id]);
 
 
 const StarRating = ({ value, onChange }) => {

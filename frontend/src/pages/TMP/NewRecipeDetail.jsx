@@ -55,7 +55,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     useEffect(() => {
       async function fetchRecipe() {
         try {
-          const res = await fetch(`${API_URL}/recipe/get-one/${id}`);
+          const res = await fetch(`${API_URL}/recipe/get-one/${homeId}/${id}`);
           const data = await res.json();
           setRecipe(data);
         } catch (err) {
@@ -65,7 +65,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
         }
       }
       fetchRecipe();
-    }, [id]);
+    }, [homeId, id]);
   
     // === Fetch stats utilisateur ===
     useEffect(() => {

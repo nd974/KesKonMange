@@ -26,6 +26,8 @@ import TermsOfUse from "./pages/settings/footer/TermsOfUse";
 import OldRecipeDetail from "./pages/OldRecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
 
+import Ingredients from "./pages/Ingredients";
+
 import MobileNav from "./components/MobileNav";
 
 import {refreshHomeId, refreshProfileId } from "../session";
@@ -168,7 +170,7 @@ return (
 
             <Route path="/settings/termsofuse" element={<TermsOfUse />} />
             
-
+            <Route path="/ingredients" element={<Ingredients key={home_id} homeId={home_id} />} />
 
             <Route path="/old_recipe_details" element={<OldRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />

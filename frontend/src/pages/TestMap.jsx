@@ -236,7 +236,7 @@ export default function TestMap({ homeId }) {
 
       {/* LIST */}
       <div className="md:w-1/3 w-full bg-white rounded shadow p-4 max-h-[75vh] overflow-y-auto">
-        <h2 className="font-semibold mb-3">Stores ajoutés</h2>
+        <h2 className="font-semibold mb-3">Magasins ajoutés</h2>
 
         {stores.map((store) => {
           const km = calculateDistance(

@@ -203,7 +203,7 @@ const Unit_hasBuy = [
     const recipesWithIngredients = await Promise.all(
       menu.recipes.map(async (r) => {
         try {
-          const res = await fetch(`${API_URL}/recipe/get-one/${r.id}`);
+          const res = await fetch(`${API_URL}/recipe/get-one/${homeId}/${r.id}`);
           if (!res.ok) return r;
           const data = await res.json();
           return { ...r, ingredients: data.ingredients || [] };
@@ -330,7 +330,7 @@ const expandIngredientAsync = async (
 
   // cache recette
   if (!recipeCacheRef.current[ingredient.recipe_id]) {
-    const res = await fetch(`${API_URL}/recipe/get-one/${ingredient.recipe_id}`);
+    const res = await fetch(`${API_URL}/recipe/get-one/${homeId}/${ingredient.recipe_id}`);
     if (!res.ok) {
       return [{
         ...ingredient,

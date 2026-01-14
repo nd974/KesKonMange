@@ -565,9 +565,9 @@ router.post("/get-all", async (req, res) => {
   }
 });
 
-router.get("/get-one/:id", async (req, res) => {
+router.get("/get-one/:homeId/:id", async (req, res) => {
   try {
-    const { id } = req.params;
+    const { homeId, id } = req.params;
 
     const recipeRes = await pool.query(
       `SELECT id, name, time_prep, time_cook, time_rest, time_clean, portion, level, picture
@@ -601,28 +601,59 @@ router.get("/get-one/:id", async (req, res) => {
 
     const ingredientRes = await pool.query(
       `
-      SELECT 
-        i.id, 
-        i.name, 
-        i.selected,
-        i.recipe_id,
+SELECT
+  i.id,
+  i.name,
+  i.selected,
+  i.recipe_id,
+  COALESCE(r.picture, i.picture) AS picture,
 
-        ri.amount, 
-        u.abbreviation AS unit,
-        u.id AS unit_id,
+  ri.amount,
+  u.abbreviation AS unit,
+  u.id AS unit_id,
 
-        ri.amount_item,
-        ui.abbreviation AS unit_item,
-        ui.id AS unit_item_id
+  ri.amount_item,
+  ui.abbreviation AS unit_item,
+  ui.id AS unit_item_id,
 
-      FROM recipes_ingredients ri
-      JOIN "Ingredient" i ON i.id = ri.ingredient_id
+  -- prix minimum parmi tous les shops du home
+  MIN(si.price) AS price,
+  MIN(si.unit_id) AS price_unit_id
 
-      LEFT JOIN "Unit" u  ON u.id  = ri.unit_id
-      LEFT JOIN "Unit" ui ON ui.id = ri.unit_item_id
+FROM recipes_ingredients ri
+JOIN "Ingredient" i ON i.id = ri.ingredient_id
+LEFT JOIN "Unit" u ON u.id = ri.unit_id
+LEFT JOIN "Unit" ui ON ui.id = ri.unit_item_id
+LEFT JOIN "Recipe" r ON i.recipe_id = r.id
 
-      WHERE ri.recipe_id = $1`,
-      [id]
+-- joindre les shops du home
+LEFT JOIN homes_shops hs ON hs.home_id = $2
+
+-- prix pour chaque shop
+LEFT JOIN shops_ingredients si
+  ON si.ing_id = i.id AND si.shop_id = hs.id
+
+WHERE ri.recipe_id = $1
+
+GROUP BY
+  i.id,
+  i.name,
+  i.selected,
+  i.recipe_id,
+  r.picture,
+  i.picture,
+  ri.amount,
+  u.abbreviation,
+  u.id,
+  ri.amount_item,
+  ui.abbreviation,
+  ui.id
+
+ORDER BY i.recipe_id, u.abbreviation NULLS FIRST;
+
+
+      `,
+      [id, homeId]  // $1 = recipe_id, $2 = homeId pour les prix
     );
     recipe.ingredients = ingredientRes.rows || [];
 
