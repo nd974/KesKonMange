@@ -41,6 +41,11 @@ import NewRecipeDetail from "./pages/TMP/NewRecipeDetail";
 
 import Notifications from "./pages/Notifications";
 
+
+import UnusedIngredients from "./pages/utils/UnusedIngredients";
+
+import { Toaster } from "react-hot-toast";
+
 function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -126,7 +131,7 @@ function AppRoutes() {
     );
   }
 
-
+      
 
 return (
   <>
@@ -175,8 +180,18 @@ return (
             <Route path="/old_recipe_details" element={<OldRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
 
+
+            <Route path="/utils/unusedIngredients" element={<UnusedIngredients key={home_id} homeId={home_id} profileId={profile_id}  />} />
+
             <Route path="*" element={<Navigate to="/" replace />} />
+
+
+            
+
           </Routes>
+
+
+          <Toaster position="top-center" toastOptions={{ duration: 1500}}/>
         </div>
       </div>
 

@@ -1127,7 +1127,8 @@ router.post("/get-possible", async (req, res) => {
         SELECT DISTINCT
           rt.parent_recipe_id AS recipe_id,
           i.id AS ing_id,
-          i.name
+          i.name,
+          i.picture
         FROM recipe_tree rt
         JOIN "Ingredient" i ON i.id = rt.ingredient_id
         WHERE rt.child_recipe_id IS NULL

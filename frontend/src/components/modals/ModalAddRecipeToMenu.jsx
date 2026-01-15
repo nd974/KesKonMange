@@ -159,7 +159,7 @@ export default function ModalAddRecipeToMenu({
           <img
             src={`${CLOUDINARY_RES}${ing.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
             alt={ing.name}
-            className="w-12 h-12 object-cover rounded-full border mb-1"
+            className="w-12 h-12 object-cover mb-1"
           />
           <span className="text-xs text-center leading-tight break-words">
             {ing.name}

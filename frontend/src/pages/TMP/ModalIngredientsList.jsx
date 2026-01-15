@@ -39,7 +39,8 @@ export default function ModalIngredientsList({ ingredients }) {
               <img
                 src={`${CLOUDINARY_RES}${ingredient.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
                 alt={ingredient.name}
-                className="w-10 h-10 object-cover flex-shrink-0"
+                className={`w-12 h-12 object-cover flex-shrink-0 ${ingredient.recipe_id ? "rounded-2xl" : ""}`}
+                
               />
               <span>
                   {formatAmountWithUnit(ingredient.amount, ingredient.unit)}

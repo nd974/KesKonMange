@@ -20,6 +20,30 @@ router.get("/get-all", async (req, res) => {
   }
 });
 
+router.get("/get-unused", async (req, res) => {
+  try {
+    // Récupérer tous les ingrédients
+    const { rows: ingredients } = await pool.query(`
+        select id, name, picture FROM "Ingredient" i
+        WHERE NOT EXISTS (
+            SELECT 1
+            FROM recipes_ingredients ri
+            WHERE ri.ingredient_id = i.id
+        )
+        AND NOT EXISTS (
+            SELECT 1
+            FROM "Product" p
+            WHERE p.ing_id = i.id
+        );
+    `);
+
+    res.json(ingredients);
+  } catch (err) {
+    console.error("Erreur /ingredient/get-all:", err);
+    res.status(500).json({ error: "Erreur serveur" });
+  }
+});
+
 // 🔹 Récupérer tous les prix des ingrédients pour un home donné
 router.get("/get-price/:homeId", async (req, res) => {
   const { homeId } = req.params;

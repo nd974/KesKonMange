@@ -6,6 +6,8 @@ export default function Footer() {
           <p>© {new Date().getFullYear()} KesKonMange</p>
 
           <div className="flex flex-wrap gap-4">
+            
+            <a href="/utils/unusedIngredients" className="hover:underline">⏳ UnusedIngredients</a>
             <a href="/old_recipe_details" className="hover:underline">⏳ OLD RECIPE</a>
             <a href="/shops" className="hover:underline">⏳ TMP STORE</a>
             
