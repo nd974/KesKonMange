@@ -6,7 +6,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { setHomeId, getHomeId, getProfileId } from "../../session";
 
-export default function Header({homeId, inAccount=false}) {
+export default function Header({homeId, unreadCountNotif, inAccount=false}) {
+  console.log("unreadCountNotif", unreadCountNotif);
     const location = useLocation();
     const navigate = useNavigate();
     const profileMenuRef = useRef(null);
@@ -207,10 +208,10 @@ export default function Header({homeId, inAccount=false}) {
       )}
 
       {/* 🔔 Badge notification */}
-      {unreadNotifications.length > 0 && (
+      {unreadCountNotif > 0 && (
         <span className="absolute -bottom-0.5 -right-0.5 bg-red-500 text-white text-[10px] 
                         w-4 h-4 flex items-center justify-center rounded-full border-2 border-white">
-          {unreadNotifications.length}
+          {unreadCountNotif}
         </span>
       )}
     </div>

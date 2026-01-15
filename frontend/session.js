@@ -24,7 +24,6 @@ export async function setHomeId(homeId) {
     const id = parseInt(homeId, 10);
     if (isNaN(id)) throw new Error(`homeId invalide : ${homeId}`);
     await db.put(STORE_NAME, id, KEY_HOME_ID);
-    console.log("home_id sauvegardé :", id);
   } catch (err) {
     console.error("Erreur setHomeId:", err);
   }
@@ -45,7 +44,6 @@ export async function refreshHomeId() {
   try {
     const db = await getDb();
     const homeId = await db.get(STORE_NAME, KEY_HOME_ID);
-    console.log("home_id rafraîchi :", homeId);
     return homeId; // retourne la valeur actuelle
   } catch (err) {
     console.error("Erreur refreshHomeId:", err);

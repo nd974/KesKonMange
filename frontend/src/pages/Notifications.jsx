@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
-export default function NotificationsPage({ homeId }) {
-
+export default function NotificationsPage({ homeId, notifications, setNotifications }) {
+  // const [notifications, setNotifications] = useState(initialNotifications);
   const [home, setHome] = useState(null); // valeur par défaut
 
   useEffect(() => {
@@ -20,36 +20,7 @@ export default function NotificationsPage({ homeId }) {
   }, []);
 
   console.log(home);
-
-  const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      subject: `Nouveau menu – ${menu_add.datetime} [${menu_add.tag_id}]`,
-      date: "31/12/2025",
-      to_home: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
-      to_profile: {id:5, username:"nd974", name:"Nicolas"},
-      read: false,
-      body: `Bonjour,
-
-Un nouveau menu a été proposé pour le brunch du 31/01/2026.
-
-Merci de confirmer votre participation.`,
-      actions: [
-        { label: "✅ Accepter", type: "accept" },
-        { label: "❌ Refuser", type: "reject" }
-      ],
-      link: "/calendar/2025-12-31"
-    },
-    {
-      id: 2,
-      subject: "Nouvelle inscription",
-      to: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
-      date: "30/12/2025",
-      read: true,
-      body: "Nicolas s'est inscrit à l'événement Brunch.",
-    },    
-  ]);
+  
 
   const [selected, setSelected] = useState(null);
 

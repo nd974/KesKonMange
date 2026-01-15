@@ -46,6 +46,8 @@ import UnusedIngredients from "./pages/utils/UnusedIngredients";
 
 import { Toaster } from "react-hot-toast";
 
+import useBadge from "./pages/utils/badgeApp/useBadge";
+
 function AppRoutes() {
   const location = useLocation();
   const navigate = useNavigate();
@@ -67,20 +69,46 @@ function AppRoutes() {
   const [error, setError] = useState(null);
   const [dbStatus, setDbStatus] = useState("checking");
 
+  const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};
+  const [notifications, setNotifications] = useState([
+      {
+        id: 1,
+        subject: `Nouveau menu – ${menu_add.datetime} [${menu_add.tag_id}]`,
+        date: "31/12/2025",
+        to_home: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
+        to_profile: {id:5, username:"nd974", name:"Nicolas"},
+        read: false,
+        body: `Bonjour,
+
+  Un nouveau menu a été proposé pour le brunch du 31/01/2026.
+
+  Merci de confirmer votre participation.`,
+        actions: [
+          { label: "✅ Accepter", type: "accept" },
+          { label: "❌ Refuser", type: "reject" }
+        ],
+        link: "/calendar/2025-12-31"
+      },
+      {
+        id: 2,
+        subject: "Nouvelle inscription",
+        to: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
+        date: "30/12/2025",
+        read: true,
+        body: "Nicolas s'est inscrit à l'événement Brunch.",
+      },    
+    ]);
+  const unreadCountNotif = notifications.filter(n => !n.read).length;
+
   // ✅ TEST DB
   useEffect(() => {
     async function testDB() {
       try {
-        console.log("DB CHECK START");
         const res = await fetch(`${API_URL}/home/testDB`);
-
         if (!res.ok) throw new Error("API error");
-
         await res.json();
-        console.log("DB OK");
         setDbStatus("ok");
       } catch (e) {
-        console.error("DB ERROR", e);
         setDbStatus("error");
       }
     }
@@ -108,8 +136,12 @@ function AppRoutes() {
     loadHome();
   }, [location.pathname, navigate]);
 
-  // ⏳ Attente test DB
-  console.log("DB STATUS:", dbStatus);
+
+
+
+
+
+
   if (dbStatus === "error") {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -146,6 +178,7 @@ return (
           {!pathSign && (<div className="print:hidden">
               <Header
                 homeId={home_id}
+                unreadCountNotif={unreadCountNotif}
                 inAccount={location.pathname.startsWith("/settings")}
               />
             </div>
@@ -171,7 +204,7 @@ return (
             <Route path="/settings/security" element={<Security key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/settings/homes" element={<Homes key={home_id} homeId={home_id} profileId={profile_id} />} />
 
-            <Route path="/notifications" element={<Notifications key={home_id} homeId={home_id}/>} />
+            <Route path="/notifications" element={<Notifications key={home_id} homeId={home_id} notifications={notifications} setNotifications={setNotifications}/>} />
 
             <Route path="/settings/termsofuse" element={<TermsOfUse />} />
             

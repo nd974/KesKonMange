@@ -227,48 +227,6 @@ router.post("/update-count/:menuId/:recipeId", async (req, res) => {
   }
 });
 
-
-
-import admin from "../firebase.js";
-
-// 🔹 Envoi des notifications FCM avec tokens uniques
-// 🔹 Fonction FCM sécurisée
-async function sendFCMNotification(tokens, title, body) {
-  if (!tokens || tokens.length === 0) return;
-
-  const uniqueTokens = [...new Set(tokens)];
-
-  const message = {
-    notification: { title, body },
-    tokens: uniqueTokens,
-  };
-
-  console.log("Envoi notification FCM :", JSON.stringify(message, null, 2));
-
-  const response = await admin.messaging().sendEachForMulticast(message);
-
-  // Supprimer automatiquement les tokens invalides
-  response.responses.forEach(async (resp, idx) => {
-    if (!resp.success) {
-      const errorCode = resp.error.code;
-      if (
-        errorCode === "messaging/registration-token-not-registered" ||
-        errorCode === "messaging/invalid-registration-token"
-      ) {
-        const badToken = uniqueTokens[idx];
-        console.log("Token invalide, suppression :", badToken);
-        await pool.query(
-          `UPDATE "Profile" SET push_token = NULL WHERE push_token = $1`,
-          [badToken]
-        );
-      }
-    }
-  });
-
-  console.log("Réponse FCM :", response);
-  return response;
-}
-
 /* ---------------------- SUBSCRIBE ---------------------- */
 router.post("/subscribe", async (req, res) => {
   try {
@@ -287,27 +245,6 @@ router.post("/subscribe", async (req, res) => {
        ON CONFLICT (menu_id, profile_id) DO NOTHING`,
       [menuId, profileId]
     );
-
-    // Récupérer tous les tokens uniques pour cette maison sauf le profile courant
-    const tokensResult = await pool.query(
-      `
-      SELECT DISTINCT p.push_token
-      FROM "Profile" p
-      INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL AND p.id <> $2
-      `,
-      [homeId, profileId]
-    );
-
-    const tokens = tokensResult.rows.map(r => r.push_token);
-
-    if (tokens.length > 0) {
-      await sendFCMNotification(
-        tokens,
-        "Nouvelle inscription",
-        "Une mise à jour est disponible dans votre dashboard."
-      );
-    }
 
     res.json({ ok: true, notified: tokens.length });
   } catch (err) {
@@ -331,27 +268,6 @@ router.post("/unsubscribe", async (req, res) => {
       `DELETE FROM menus_profiles WHERE menu_id = $1 AND profile_id = $2`,
       [menuId, profileId]
     );
-
-    // Récupérer tous les tokens uniques pour cette maison sauf le profile courant
-    const tokensResult = await pool.query(
-      `
-      SELECT DISTINCT p.push_token
-      FROM "Profile" p
-      INNER JOIN homes_profiles hp ON p.id = hp.profile_id
-      WHERE hp.home_id = $1 AND p.push_token IS NOT NULL AND p.id <> $2
-      `,
-      [homeId, profileId]
-    );
-
-    const tokens = tokensResult.rows.map(r => r.push_token);
-
-    if (tokens.length > 0) {
-      await sendFCMNotification(
-        tokens,
-        "Désinscription",
-        "Une mise à jour est disponible dans votre dashboard."
-      );
-    }
 
     res.json({ success: true, message: "Désinscription réussie", notified: tokens.length });
   } catch (err) {
