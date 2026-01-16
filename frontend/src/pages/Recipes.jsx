@@ -35,8 +35,6 @@ export default function Recipes({ homeId, profileId }) {
       { field: "price"},
     ]
   });
-  console.log("finderConfig =======================", finderConfig);
-  console.log("filters =======================", filters);
 
   // ⚡ Charger les recettes et tags
   useEffect(() => {
@@ -48,7 +46,7 @@ export default function Recipes({ homeId, profileId }) {
           fetch(`${API_URL}/recipe/get-all`, {
             method: "POST", // ⚡ POST pour envoyer profileId
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profileId }),
+            body: JSON.stringify({ homeId, profileId }),
           }).then((r) => r.json()),
 
           fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),

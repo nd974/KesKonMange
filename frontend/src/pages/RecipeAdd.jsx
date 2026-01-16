@@ -269,7 +269,7 @@ useEffect(() => {
       const res = await fetch(`${API_URL}/recipe/get-all`, {
             method: "POST", // ⚡ POST pour envoyer profileId
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ profileId }),
+            body: JSON.stringify({ homeId, profileId }),
           });
       const data = await res.json();
       setlocalRecipes(data);

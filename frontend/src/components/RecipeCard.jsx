@@ -61,12 +61,6 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
   useEffect(() => {
     loadRating(recipe.id);
   }, [recipe.id]); // Add recipe.id to dependency array for rerun on recipe change
-
-  console.log(finderConfig);
-  console.log(finderConfig?.sortCriteria.some(criteria => criteria.field === 'note_general'));
-
-  console.log(finderConfig===null && votesCount > 0);
-  console.log(finderConfig?.sortCriteria.some(criteria => criteria.field === 'note_general') || (finderConfig===null && votesCount > 0));
   
   return (
     <div
@@ -123,13 +117,13 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
         <div className="text-xs absolute bottom-2 left-2 bg-white/80 px-2 py-1 rounded shadow flex items-center gap-1 text-blue-500 text-sm font-bold">
           <div className="flex gap-1">
             {finderConfig?.sortCriteria.some(criteria => criteria.field === 'shop_count') && (
-              <>Shop : 1<br/></>
+              <>Shop : {recipe.shop_count}<br/></>
             )}
             {finderConfig?.sortCriteria.some(criteria => criteria.field === 'cheaper') && (
-              <>Prix : 4.51€<br/></>
+              <>Rest : {recipe.cheaper}€<br/></>
             )}
             {finderConfig?.sortCriteria.some(criteria => criteria.field === 'price') && (
-              <>Total : 25€<br/></>
+              <>Total : {recipe.budget_range}<br/></>
             )}
           </div>
         </div>

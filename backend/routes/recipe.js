@@ -509,9 +509,12 @@ router.put("/update/:id", async (req, res) => {
  * Récupère toutes les recettes avec leurs tags
  */
 router.post("/get-all", async (req, res) => {
-  const { profileId } = req.body;
+  const { profileId, homeId } = req.body;
+
   try {
-    // 🔹 Récupérer toutes les recettes
+    /* =========================
+       RECETTES
+    ========================== */
     const { rows: recipes } = await pool.query(`
       SELECT 
         r.id,
@@ -531,39 +534,142 @@ router.post("/get-all", async (req, res) => {
       ORDER BY r.name ASC
     `, [profileId]);
 
-    // 🔹 Récupérer tous les tags liés
+    /* =========================
+       TAGS
+    ========================== */
     const { rows: recipeTags } = await pool.query(`
-      SELECT rt.recipe_id, t.id AS tag_id, t.name, t.parent_id
+      SELECT rt.recipe_id, t.id, t.name, t.parent_id
       FROM "recipes_tags" rt
       JOIN "Tag" t ON t.id = rt.tag_id
     `);
 
-    // 🔹 Créer un map recipe_id => tags
     const tagsByRecipe = {};
     for (const t of recipeTags) {
       if (!tagsByRecipe[t.recipe_id]) tagsByRecipe[t.recipe_id] = [];
-      // 🔹 Ne pas ajouter de tag null
-      if (t.tag_id && t.name) {
-        tagsByRecipe[t.recipe_id].push({
-          id: t.tag_id,
-          name: t.name,
-          parent_id: t.parent_id,
-        });
-      }
+      tagsByRecipe[t.recipe_id].push(t);
     }
 
-    // 🔹 Ajouter les tags à chaque recette
-    const recipesWithTags = recipes.map((r) => ({
-      ...r,
-      tags: tagsByRecipe[r.id] || [], // 🔹 tableau vide si pas de tags
-    }));
+    /* =========================
+       PRIX / MASSE / SHOPS / MANQUANTS
+    ========================== */
+    const { rows: prices } = await pool.query(`
+      WITH ingredient_prices AS (
+        SELECT
+          ri.recipe_id,
+          i.id AS ingredient_id,
+          ri.amount,
+          u.abbreviation AS unit_name,
+          i.mass_g,
 
-    res.json(recipesWithTags);
+          -- conversion en kg
+          CASE
+            WHEN u.abbreviation = 'g' THEN ri.amount / 1000
+            WHEN u.abbreviation = 'kg' THEN ri.amount
+            WHEN u.abbreviation = 'ml' THEN ri.amount / 1000
+            WHEN u.abbreviation = 'cl' THEN ri.amount / 100
+            WHEN u.abbreviation IS NULL OR u.abbreviation IN ('pièce','tranche') THEN
+                CASE
+                  WHEN ri.amount_item IS NOT NULL THEN ri.amount_item / 1000
+                  ELSE ri.amount * COALESCE(i.mass_g, 100) / 1000
+                END
+            ELSE 0
+          END AS qty_kg,
+
+          CASE
+            WHEN (u.abbreviation IS NULL OR u.abbreviation IN ('pièce','tranche'))
+                AND (i.mass_g IS NULL OR i.mass_g = 0)
+            THEN 1
+            ELSE 0
+          END AS missing_mass_alert,
+
+          NOT EXISTS (
+            SELECT 1
+            FROM "Product" p
+            WHERE p.ing_id = i.id
+              AND p.home_id = $1
+          ) AS is_missing,
+
+          -- prix minimal pour le home
+          si_min.price AS price_kg,
+          si_min.shop_id
+
+        FROM recipes_ingredients ri
+        JOIN "Ingredient" i ON i.id = ri.ingredient_id
+        LEFT JOIN "Unit" u ON u.id = ri.unit_id
+        LEFT JOIN LATERAL (
+          SELECT si2.price, si2.shop_id
+          FROM shops_ingredients si2
+          JOIN homes_shops hs2 ON hs2.id = si2.shop_id
+          WHERE si2.ing_id = i.id
+            AND hs2.home_id = $1
+          ORDER BY si2.price ASC
+          LIMIT 1
+        ) AS si_min ON TRUE
+      )
+
+      SELECT
+        recipe_id,
+        COUNT(DISTINCT shop_id) AS shop_count,
+        SUM(qty_kg * price_kg) AS price,
+        SUM(CASE WHEN is_missing THEN qty_kg * price_kg ELSE 0 END) AS cheaper,
+        SUM(missing_mass_alert) AS missing_mass_ingredients
+      FROM ingredient_prices
+      GROUP BY recipe_id
+    `, [homeId]);
+
+    const priceByRecipe = {};
+    for (const p of prices) {
+      priceByRecipe[p.recipe_id] = {
+        shop_count: Number(p.shop_count || 0),
+        price: Number(p.price || 0),
+        cheaper: Number(p.cheaper || 0),
+        missing_mass_ingredients: Number(p.missing_mass_ingredients || 0),
+      };
+    }
+
+    /* =========================
+       MERGE FINAL
+    ========================== */
+    const result = recipes.map(r => {
+      const priceData = priceByRecipe[r.id] || {
+        price: 0,
+        cheaper: 0,
+        shop_count: 0,
+        missing_mass_ingredients: 0,
+      };
+
+      // Normaliser le prix par portion = 1
+      const portionRatio = r.portion > 0 ? 4 / r.portion : 1;
+      const pricePerPortion = priceData.price * portionRatio;
+      const cheaperPerPortion = priceData.cheaper * portionRatio;
+
+      const min = Math.floor(pricePerPortion / 5) * 5;
+      const max = min + 5;
+
+      return {
+        ...r,
+        portion: 1, // toujours 1 pour cohérence
+        tags: tagsByRecipe[r.id] || [],
+        price: Number(pricePerPortion.toFixed(2)),
+        cheaper: Number(cheaperPerPortion.toFixed(2)),
+        shop_count: priceData.shop_count,
+        budget_range: `${min}–${max}€`,
+        alert_missing_mass: priceData.missing_mass_ingredients > 0
+          ? `⚠ ${priceData.missing_mass_ingredients} ingrédient(s) sans masse renseignée`
+          : null
+      };
+    });
+
+    res.json(result);
+
   } catch (err) {
     console.error("Erreur /recipe/get-all:", err);
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
+
+
 
 router.get("/get-one/:homeId/:id", async (req, res) => {
   try {

@@ -302,7 +302,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     )}
     {openIngredients && (
       <ModalWrapper onClose={() => setOpenIngredients(false)}>
-        <ModalIngredientsList ingredients={recipe.ingredients} />
+        <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} />
       </ModalWrapper>
     )}
     {openUstensils && (
@@ -414,7 +414,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     {/* ING / UST : prennent l'espace restant */}
     <div className="flex flex-col lg:flex-row gap-6 w-full min-h-[40vh] flex-1 overflow-hidden">
       <div className="lg:flex-[55%] flex-1 overflow-y-auto">
-        <ModalIngredientsList ingredients={recipe.ingredients} />
+        <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} />
       </div>
       <div className="lg:flex-[45%] flex-1 overflow-y-auto">
         <ModalUstensilesList utensils={recipe.utensils} />
@@ -448,7 +448,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     )}
     {openIngredients && (
       <ModalWrapper onClose={() => setOpenIngredients(false)}>
-        <ModalIngredientsList ingredients={recipe.ingredients} />
+        <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId}/>
       </ModalWrapper>
     )}
     {openUstensils && (
