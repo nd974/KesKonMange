@@ -24,17 +24,26 @@ export default function Recipes({ homeId, profileId }) {
   // FIND RECIPE
   const [showFinder, setShowFinder] = useState(false);
   const [finderConfig, setFinderConfig] = useState(null);
-  const [filters, setFilters] = useState({
-    ingredients: [],
-    sortCriteria: [
-      { field: "shop_count"},
-      { field: "usage_count"},
-      { field: "note"},
-      { field: "note_general"},
-      { field: "cheaper"},
-      { field: "price"},
-    ]
+  const [filters, setFilters] = useState(() => {
+    const saved = localStorage.getItem("recipeFilters");
+    if (saved) return JSON.parse(saved);
+
+    return {
+      ingredients: [],
+      sortCriteria: [
+        { field: "shop_count" },
+        { field: "usage_count" },
+        { field: "note" },
+        { field: "note_general" },
+        { field: "cheaper" },
+        { field: "price" },
+      ],
+    };
   });
+  useEffect(() => {
+  localStorage.setItem("recipeFilters", JSON.stringify(filters));
+}, [filters]);
+
 
   // ⚡ Charger les recettes et tags
   useEffect(() => {
@@ -46,7 +55,7 @@ export default function Recipes({ homeId, profileId }) {
           fetch(`${API_URL}/recipe/get-all`, {
             method: "POST", // ⚡ POST pour envoyer profileId
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ homeId, profileId }),
+            body: JSON.stringify({ homeId, profileId, hideUsedRecipes: true }),
           }).then((r) => r.json()),
 
           fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),
@@ -128,15 +137,18 @@ const filteredRecipes = useMemo(() => {
     return matchSearch && matchTag;
   });
 
+  console.log("temp", temp);
+
   // ---------------- FINDER CONFIG ----------------
   if (finderConfig) {
     const { ingredients, sortCriteria } = finderConfig;
-
+    console.log(ingredients);
+    const searchIngredients = ingredients.map(i => i.trim().toLowerCase());
     // Filtre ingrédients
     if (ingredients.length > 0) {
-      temp = temp.filter((r) =>
-        ingredients.every((ing) =>
-          (r.ingredients || []).some((ri) =>
+      temp = temp.filter(r =>
+        searchIngredients.every(ing =>
+          (r.ingredients || []).some(ri =>
             ri.name.toLowerCase().includes(ing)
           )
         )
@@ -268,12 +280,14 @@ const filteredRecipes = useMemo(() => {
 
         <div className="main-grid flex gap-4 py-4">
           <aside className="hidden md:block sidebar bg-softBeige p-4 rounded">
-            <button
-              className="px-4 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700"
-              onClick={() => setShowFinder(true)}
+            <p
+              className="text-blue-600 underline cursor-pointer hover:text-blue-700 mb-5"
+              onClick={() => {
+                setShowFinder(true);
+              }}
             >
-              Filtres Avances
-            </button>
+              Filtres avancés
+            </p>
             <h3 className="font-semibold mb-2">Tags</h3>
             <TagTree
               tagsFlat={tagsFlat}
@@ -353,15 +367,15 @@ const filteredRecipes = useMemo(() => {
       {showMobileTags && (
         <div className="fixed inset-0 bg-black/50 z-50 flex">
           <div className="bg-white w-3/4 max-w-sm h-full p-4 overflow-y-auto shadow-lg">
-          <button
-            className="mt-5 px-4 py-2 rounded bg-blue-600 text-white font-bold hover:bg-blue-700 mb-5"
+          <p
+            className="mt-5 text-blue-600 underline cursor-pointer hover:text-blue-700 mb-5"
             onClick={() => {
               setShowMobileTags(false);
               setShowFinder(true);
             }}
           >
-            Avances
-          </button>
+            Avancés
+          </p>
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-lg font-semibold">Filtres</h3>
               <button

@@ -34,6 +34,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     const [comments, setComments] = useState([]);
     const [averageNote, setAverageNote] = useState(0);
     const [votesCount, setVotesCount] = useState(0);
+    const [usageCount, setUsageCount] = useState(0);
     const [statsSaved, setStatsSaved] = useState(false);
   
   
@@ -81,6 +82,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
           if (data.ok && data.stats) {
             setMyNote(data.stats.note);
             setMyComment(data.stats.comment || "");
+            setUsageCount(data.stats.usage_count || 0);
             setStatsSaved(data.stats.note !== null || !!data.stats.comment);
           }
         } catch (e) {
@@ -256,7 +258,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       times={times}
       level={recipe.level}
       portion={recipe.portion}
-      usage_count={recipe.usage_count}
+      usage_count={usageCount}
       averageNote={averageNote} 
       votesCount={votesCount}
       compact={compact}
@@ -297,7 +299,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 
       {openInfos && (
       <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={recipe.usage_count} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
+        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={usageCount} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
       </ModalWrapper>
     )}
     {openIngredients && (
@@ -369,7 +371,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       times={times}
       level={recipe.level}
       portion={recipe.portion}
-      usage_count={recipe.usage_count}
+      usage_count={usageCount}
       averageNote={averageNote}
       votesCount={votesCount}
       compact={compact}
@@ -443,7 +445,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     {/* --- MODALES MOBILE --- */}
     {openInfos && (
       <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={recipe.usage_count} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
+        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={usageCount} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
       </ModalWrapper>
     )}
     {openIngredients && (

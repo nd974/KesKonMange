@@ -7,7 +7,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function CommentsSection({ comments, profileId, recipeId }) {
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [myNote, setMyNote] = useState(0);
+  const [myNote, setMyNote] = useState(null);
   const [myComment, setMyComment] = useState("");
 
   // 🔍 Commentaire existant de l'utilisateur

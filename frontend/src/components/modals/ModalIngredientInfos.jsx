@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import ModalWrapper from "./ModalWrapper";
+
 // Les unités avec leurs IDs directement
 const UNITS = [
   { id: 13, label: "/kg - /L" },
@@ -113,66 +115,56 @@ export default function ModalIngredientInfos({ ingredientId, homeId, profileId, 
   if (!ingredient) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl shadow-xl max-w-lg w-full p-6 relative">
-        {/* Bouton fermer */}
-        <button
-          onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 font-bold text-xl"
-        >
-          ×
-        </button>
+    <ModalWrapper onClose={onClose}>
+      <h2 className="text-xl font-bold mb-4">{ingredient.name}</h2>
 
-        <h2 className="text-xl font-bold mb-4">{ingredient.name}</h2>
+      {shops.length === 0 ? (
+        <div className="p-4 bg-yellow-100 text-yellow-800 rounded mb-4">
+          Aucun shop trouvé pour ce home.
+        </div>
+      ) : (
+        <div className="space-y-3 mb-4">
+          {shops.map(shop => {
+            const key = `${ingredientId}-${shop.id}`;
+            const current = prices[key] || {};
 
-        {shops.length === 0 ? (
-          <div className="p-4 bg-yellow-100 text-yellow-800 rounded mb-4">
-            Aucun shop trouvé pour ce home.
-          </div>
-        ) : (
-          <div className="space-y-3 mb-4">
-            {shops.map(shop => {
-              const key = `${ingredientId}-${shop.id}`;
-              const current = prices[key] || {};
+            return (
+              <div key={shop.id} className="flex items-center gap-2">
+                <span className="w-32">{shop.shop_name}</span>
 
-              return (
-                <div key={shop.id} className="flex items-center gap-2">
-                  <span className="w-32">{shop.shop_name}</span>
-
-                  <div className="relative w-32">
-                    <input
-                      type="number"
-                      step="0.01"
-                      className="border rounded px-2 py-1 pr-7 w-full"
-                      placeholder="Prix"
-                      value={current.price ?? ""}
-                      onChange={e => handlePriceChange(shop.id, e.target.value)}
-                    />
-                    <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-700">€</span>
-                  </div>
-
-                  <select
-                    className="border rounded px-2 py-1 ml-2"
-                    value={current.unit_id ?? UNITS[0].id}
-                    onChange={e => handleUnitChange(shop.id, Number(e.target.value))}
-                  >
-                    {UNITS.map(u => (
-                      <option key={u.id} value={u.id}>{u.label}</option>
-                    ))}
-                  </select>
+                <div className="relative w-32">
+                  <input
+                    type="number"
+                    step="0.01"
+                    className="border rounded px-2 py-1 pr-7 w-full"
+                    placeholder="Prix"
+                    value={current.price ?? ""}
+                    onChange={e => handlePriceChange(shop.id, e.target.value)}
+                  />
+                  <span className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-700">€</span>
                 </div>
-              );
-            })}
-          </div>
-        )}
 
-        <button
-          onClick={savePrices}
-          className="bg-accentGreen text-white px-4 py-2 rounded-xl w-full"
-        >
-          Enregistrer
-        </button>
-      </div>
-    </div>
+                <select
+                  className="border rounded px-2 py-1 ml-2"
+                  value={current.unit_id ?? UNITS[0].id}
+                  onChange={e => handleUnitChange(shop.id, Number(e.target.value))}
+                >
+                  {UNITS.map(u => (
+                    <option key={u.id} value={u.id}>{u.label}</option>
+                  ))}
+                </select>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      <button
+        onClick={savePrices}
+        className="bg-accentGreen text-white px-4 py-2 rounded-xl w-full"
+      >
+        Enregistrer
+      </button>
+    </ModalWrapper>
   );
 }

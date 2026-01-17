@@ -7,7 +7,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 import { setHomeId, getHomeId, getProfileId } from "../../session";
 
 export default function Header({homeId, unreadCountNotif, inAccount=false}) {
-  console.log("unreadCountNotif", unreadCountNotif);
     const location = useLocation();
     const navigate = useNavigate();
     const profileMenuRef = useRef(null);

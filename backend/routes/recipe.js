@@ -10,8 +10,6 @@ router.post("/create", async (req, res) => {
 
       const missingFields = [];
 
-      console.log("INGGGGGGGGGGGGG:", ingredients);
-
       // Vérifier string vide ou absent
       if (!recipeName || recipeName.trim() === '') missingFields.push('Nom de la recette manquant');
 
@@ -62,7 +60,7 @@ router.post("/create", async (req, res) => {
       });
       await Promise.all(insertTagPromises);
     }
-    console.log("ingredientsingredientsingredientsingredients :", ingredients);
+
     // Insertion des ingrédients
     if (Array.isArray(ingredients) && ingredients.length > 0) {
       const insertIngPromises = ingredients.map(async (ing) => {
@@ -509,12 +507,13 @@ router.put("/update/:id", async (req, res) => {
  * Récupère toutes les recettes avec leurs tags
  */
 router.post("/get-all", async (req, res) => {
-  const { profileId, homeId } = req.body;
+  const { profileId, homeId, hideUsedRecipes } = req.body;
 
   try {
-    /* =========================
-       RECETTES
-    ========================== */
+
+    // =========================
+    // RECETTES
+    // =========================
     const { rows: recipes } = await pool.query(`
       SELECT 
         r.id,
@@ -534,9 +533,34 @@ router.post("/get-all", async (req, res) => {
       ORDER BY r.name ASC
     `, [profileId]);
 
-    /* =========================
-       TAGS
-    ========================== */
+    // 🚀 FILTRE OPTIONNEL : cacher les recettes utilisées comme ingrédient
+    let filteredRecipes = recipes;
+    if (hideUsedRecipes) {
+      const { rows: usedRecipeRows } = await pool.query(`
+        SELECT DISTINCT recipe_id
+        FROM "Ingredient"
+        WHERE recipe_id IS NOT NULL
+      `);
+
+      const usedRecipeIds = new Set(usedRecipeRows.map(r => r.recipe_id));
+      filteredRecipes = recipes.filter(r => !usedRecipeIds.has(r.id));
+    }
+
+    const { rows: ingredientRes } = await pool.query(`
+      SELECT 
+        ri.recipe_id,
+        i.id,
+        i.name,
+        ri.amount,
+        ri.unit_id
+      FROM recipes_ingredients ri
+      JOIN "Ingredient" i ON i.id = ri.ingredient_id
+      ORDER BY i.name ASC
+    `);
+
+    // =========================
+    // TAGS
+    // =========================
     const { rows: recipeTags } = await pool.query(`
       SELECT rt.recipe_id, t.id, t.name, t.parent_id
       FROM "recipes_tags" rt
@@ -549,9 +573,9 @@ router.post("/get-all", async (req, res) => {
       tagsByRecipe[t.recipe_id].push(t);
     }
 
-    /* =========================
-       PRIX / MASSE / SHOPS / MANQUANTS
-    ========================== */
+    // =========================
+    // PRIX / MASSE / SHOPS / MANQUANTS
+    // =========================
     const { rows: prices } = await pool.query(`
       WITH ingredient_prices AS (
         SELECT
@@ -563,15 +587,14 @@ router.post("/get-all", async (req, res) => {
 
           -- conversion en kg
           CASE
-            WHEN u.abbreviation = 'g' THEN ri.amount / 1000
-            WHEN u.abbreviation = 'kg' THEN ri.amount
-            WHEN u.abbreviation = 'ml' THEN ri.amount / 1000
-            WHEN u.abbreviation = 'cl' THEN ri.amount / 100
             WHEN u.abbreviation IS NULL OR u.abbreviation IN ('pièce','tranche') THEN
-                CASE
-                  WHEN ri.amount_item IS NOT NULL THEN ri.amount_item / 1000
-                  ELSE ri.amount * COALESCE(i.mass_g, 100) / 1000
-                END
+              CASE
+                WHEN ri.amount_item IS NOT NULL THEN ri.amount_item / 1000
+                ELSE ri.amount * COALESCE(i.mass_g, 100) / 1000
+              END
+
+            WHEN u.conv_kg IS NOT NULL THEN ri.amount / u.conv_kg
+
             ELSE 0
           END AS qty_kg,
 
@@ -627,15 +650,41 @@ router.post("/get-all", async (req, res) => {
       };
     }
 
-    /* =========================
-       MERGE FINAL
-    ========================== */
-    const result = recipes.map(r => {
+    // =========================
+    // NOTE / VOTES
+    // =========================
+    const { rows: ratings } = await pool.query(`
+      SELECT 
+        recipe_id,
+        ROUND(AVG(note)::numeric, 1) AS average_note,
+        COUNT(note) AS votes_count
+      FROM recipes_stats
+      WHERE note IS NOT NULL
+      GROUP BY recipe_id
+    `);
+
+    const ratingByRecipe = {};
+    for (const r of ratings) {
+      ratingByRecipe[r.recipe_id] = {
+        averageNote: Number(r.average_note || 0),
+        votesCount: Number(r.votes_count || 0),
+      };
+    }
+
+    // =========================
+    // MERGE FINAL
+    // =========================
+    const result = filteredRecipes.map(r => {
       const priceData = priceByRecipe[r.id] || {
         price: 0,
         cheaper: 0,
         shop_count: 0,
         missing_mass_ingredients: 0,
+      };
+
+      const ratingData = ratingByRecipe[r.id] || {
+        averageNote: 0,
+        votesCount: 0
       };
 
       // Normaliser le prix par portion = 1
@@ -648,15 +697,18 @@ router.post("/get-all", async (req, res) => {
 
       return {
         ...r,
+        ingredients: ingredientRes.filter(i => i.recipe_id === r.id),
         portion: 1, // toujours 1 pour cohérence
         tags: tagsByRecipe[r.id] || [],
-        price: Number(pricePerPortion.toFixed(2)),
-        cheaper: Number(cheaperPerPortion.toFixed(2)),
+        price: pricePerPortion.toFixed(2),
+        cheaper: cheaperPerPortion.toFixed(2),
         shop_count: priceData.shop_count,
         budget_range: `${min}–${max}€`,
         alert_missing_mass: priceData.missing_mass_ingredients > 0
           ? `⚠ ${priceData.missing_mass_ingredients} ingrédient(s) sans masse renseignée`
-          : null
+          : null,
+        note_general: ratingData.averageNote,
+        votesCount: ratingData.votesCount
       };
     });
 
@@ -667,6 +719,7 @@ router.post("/get-all", async (req, res) => {
     res.status(500).json({ error: "Erreur serveur" });
   }
 });
+
 
 
 

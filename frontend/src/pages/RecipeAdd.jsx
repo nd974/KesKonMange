@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
 import { CLOUDINARY_RES, CLOUDINARY_API, Unit_Item_List } from "../config/constants";
+import IngredientNameInput from "../components/IngredientNameInput";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -1015,60 +1016,22 @@ const StarRating = ({ value, onChange }) => {
       </div>
 
       {/* 🔸 Nom ingrédient + suppression */}
-      <div className="relative flex items-center gap-2">
-        <input
-          type="text"
-          value={ing.name}
-          onChange={(e) => {
-            const updated = [...ingredients];
-            updated[i].name = e.target.value;
-            updated[i].selected = false;
-            setIngredients(updated);
-            debounceSearchIngredient(i, e.target.value);
-          }}
-          className={`border rounded p-2 w-full ${
-            ing.warning ? "border-orange-400 border-2" : "border-gray-300"
-          }`}
-          placeholder="Nom ingrédient"
-        />
-
-        {/* ⚠️ warning */}
-        {ing.warning && (
-          <button
-            type="button"
-            onClick={() => setWarningIndex(i)}
-            className="text-orange-500"
-          >
-            ⚠️
-          </button>
-        )}
-
-        {/* ❌ supprimer */}
-        <button
-          type="button"
-          onClick={() => removeIngredient(i)}
-          className="text-red-500"
-        >
-          ❌
-        </button>
-
-        {/* Suggestions */}
-        {ing.suggestions.length > 0 && (
-          <ul className="absolute left-0 top-full bg-white border rounded shadow w-full mt-1 z-50 max-h-40 overflow-auto">
-            {ing.suggestions.map((s, j) => (              
-              <li
-                key={j}
-                className={`p-2 hover:bg-gray-100 cursor-pointer ${
-                  s.isRec ? "text-orange-600" : s.isIng ? "text-green-600" : "text-yellow-600"
-                }`}
-                onMouseDown={() => selectSuggestion(i, s.name)}
-              >
-                <b>{s.name}</b>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+      <IngredientNameInput
+        value={ing.name}
+        onChange={(v) => {
+          const updated = [...ingredients];
+          updated[i].name = v;
+          setIngredients(updated);
+        }}
+        onSelect={(name) => {
+          const updated = [...ingredients];
+          updated[i].name = name;
+          updated[i].suggestions = [];
+          setIngredients(updated);
+        }}
+        allowRemove={true}
+        onRemove={() => removeIngredient(i)}
+      />
     </div>
   );
 })}
@@ -1084,7 +1047,7 @@ const StarRating = ({ value, onChange }) => {
   </button>
 
 {/* ⚠️ Popin warning pour l’ingrédient */}
-{warningIndex !== null && (
+{/* {warningIndex !== null && (
   <div
     className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
     onClick={() => setWarningIndex(null)} // clic en dehors ferme la popin
@@ -1110,7 +1073,7 @@ const StarRating = ({ value, onChange }) => {
       </div>
     </div>
   </div>
-)}
+)} */}
 
   {showIngredientInfo && (
     <div

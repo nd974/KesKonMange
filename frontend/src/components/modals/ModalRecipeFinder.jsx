@@ -1,4 +1,6 @@
 import { useState } from "react";
+import IngredientNameInput from "../IngredientNameInput";
+import ModalWrapper from "./ModalWrapper";
 
 export default function ModalRecipeFinder({
   onClose,
@@ -8,15 +10,16 @@ export default function ModalRecipeFinder({
 }) {
   const [ingredientInput, setIngredientInput] = useState("");
   const [ingredients, setIngredients] = useState(initialIngredients);
-
+  const [isValidSuggestion, setIsValidSuggestion] = useState(false);
+  
   // ⚡ Tous les critères disponibles
   const availableCriteria = [
-    { field: "shop_count", label: "Nombre de magasins a faire⏳", order:"asc"},
+    { field: "shop_count", label: "Nombre de magasins a faire", order:"asc"},
     { field: "usage_count", label: "Nombre de fois réalisée" , order:"asc"},
     { field: "note", label: "Note personnelle"},
-    { field: "note_general", label: "Note general⏳"},
-    { field: "cheaper", label: "Prix des Ingredients manquants⏳", order:"asc"},
-    { field: "price", label: "Prix total (bucket 5€)⏳", order:"asc"},
+    { field: "note_general", label: "Note general"},
+    { field: "cheaper", label: "Prix des Ingredients manquants", order:"asc"},
+    { field: "price", label: "Prix total (bucket 5€)", order:"asc"},
   ];
 
   // ⚡ State interne des critères, avec active ou non
@@ -71,28 +74,37 @@ export default function ModalRecipeFinder({
   }
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center">
-      <div className="bg-white w-full max-w-3xl rounded-lg shadow-lg p-6 max-h-[90vh] overflow-y-auto">
-
-        {/* HEADER */}
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-bold">Recherche avancée</h2>
-          <button onClick={onClose} className="text-xl text-gray-500">✕</button>
-        </div>
+    <ModalWrapper onClose={onClose}>
+        <h2 className="text-xl font-semibold mb-4 text-center text-accentGreen">
+          Recherche avancée
+        </h2>
 
         {/* INGREDIENTS */}
         <div className="mb-5">
           <label className="font-semibold block mb-1">Ingrédients dans la recette</label>
 
           <div className="flex gap-2">
-            <input
-              className="flex-1 border rounded p-2"
-              placeholder="Ex : pomme de terre"
+            <IngredientNameInput
               value={ingredientInput}
-              onChange={(e) => setIngredientInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && addIngredient()}
+              onChange={(v) => {
+                setIngredientInput(v);
+                setIsValidSuggestion(false);
+              }}
+              onSelect={(name) => {
+                setIngredientInput(name);
+                setIsValidSuggestion(true);
+              }}
+              showWarning={false} // <-- important
             />
-            <button onClick={addIngredient} className="px-3 bg-green-600 text-white rounded">
+
+
+            <button
+              onClick={addIngredient}
+              disabled={!isValidSuggestion}
+              className={`px-3 rounded text-white ${
+                isValidSuggestion ? "bg-green-600" : "bg-gray-400 cursor-not-allowed"
+              }`}
+            >
               Ajouter
             </button>
           </div>
@@ -145,7 +157,6 @@ export default function ModalRecipeFinder({
             Rechercher
           </button>
         </div>
-      </div>
-    </div>
+    </ModalWrapper>
   );
 }

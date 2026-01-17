@@ -547,7 +547,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
 
       <div className="mb-8"></div>
 
-      {/* <div className="border rounded-lg p-4 bg-white shadow mb-4">
+      <div className="border rounded-lg p-4 bg-white shadow mb-4">
         <div className="flex gap-4">
           <button
             onClick={() => setShowScannerPopin(true)}
@@ -567,7 +567,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
             ✏️ Saisie manuelle
           </button>
         </div>
-      </div> */}
+      </div>
 
       <div className="mt-8 flex flex-col gap-8 md:flex-row md:gap-8">
 

@@ -26,8 +26,6 @@ import TermsOfUse from "./pages/settings/footer/TermsOfUse";
 import OldRecipeDetail from "./pages/OldRecipeDetails";
 import RecipeAdd from "./pages/RecipeAdd";
 
-import Ingredients from "./pages/Ingredients";
-
 import MobileNav from "./components/MobileNav";
 
 import {refreshHomeId, refreshProfileId } from "../session";
@@ -46,9 +44,8 @@ import UnusedIngredients from "./pages/utils/UnusedIngredients";
 
 import { Toaster } from "react-hot-toast";
 
-import useBadge from "./pages/utils/badgeApp/useBadge";
-
 function AppRoutes() {
+
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -68,7 +65,7 @@ function AppRoutes() {
 
   const [error, setError] = useState(null);
   const [dbStatus, setDbStatus] = useState("checking");
-
+  
   const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};
   const [notifications, setNotifications] = useState([
       {
@@ -149,11 +146,6 @@ function AppRoutes() {
       </div>
     );
   }
-
-
-  
-  
-  
   
   if (isLoading) {
     return (
@@ -207,8 +199,6 @@ return (
             <Route path="/notifications" element={<Notifications key={home_id} homeId={home_id} notifications={notifications} setNotifications={setNotifications}/>} />
 
             <Route path="/settings/termsofuse" element={<TermsOfUse />} />
-            
-            <Route path="/ingredients" element={<Ingredients key={home_id} homeId={home_id} />} />
 
             <Route path="/old_recipe_details" element={<OldRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
             <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
