@@ -8,22 +8,59 @@ const router = express.Router();
 // ---------------------------
 router.post("/create", async (req, res) => {
   try {
-    const { ing_id, amount, unit_id, amount_item, unit_item_id, stock_id, expiry, homeId } = req.body;
+    let {
+      ing_id,
+      ing_name,
+      amount,
+      unit_id,
+      amount_item,
+      unit_item_id,
+      stock_id,
+      expiry,
+      homeId
+    } = req.body;
 
     if (!amount || !stock_id || !expiry) {
       return res.status(400).json({ error: "missing fields" });
     }
 
-    // Vérifier si un produit identique existe déjà (fusion seulement si ing_id + stock_id + expiry + amount_item + unit_item_id sont identiques)
+    /* --------------------------------------------------
+       1. CRÉATION DE L’INGRÉDIENT SI NÉCESSAIRE
+    -------------------------------------------------- */
+    if (!ing_id && ing_name) {
+      // chercher l’ingrédient existant
+      const existingIng = await pool.query(
+        `SELECT id FROM "Ingredient" WHERE name = $1`,
+        [ing_name.trim()]
+      );
+
+      if (existingIng.rows.length > 0) {
+        ing_id = existingIng.rows[0].id;
+      } else {
+        // créer l’ingrédient
+        const newIng = await pool.query(
+          `INSERT INTO "Ingredient" (name)
+           VALUES ($1)
+           RETURNING id`,
+          [ing_name.trim()]
+        );
+
+        ing_id = newIng.rows[0].id;
+      }
+    }
+
+    /* --------------------------------------------------
+       2. FUSION SI PRODUIT IDENTIQUE
+    -------------------------------------------------- */
     if (ing_id) {
       const existing = await pool.query(
-        `SELECT id, amount 
-         FROM "Product" 
-         WHERE ing_id = $1 
-           AND stock_id = $2 
+        `SELECT id, amount
+         FROM "Product"
+         WHERE ing_id = $1
+           AND stock_id = $2
            AND expiry = $3
-           AND amount_item = $4
-           AND unit_item_id = $5`,
+           AND amount_item IS NOT DISTINCT FROM $4
+           AND unit_item_id IS NOT DISTINCT FROM $5`,
         [ing_id, stock_id, expiry, amount_item || null, unit_item_id || null]
       );
 
@@ -45,21 +82,38 @@ router.post("/create", async (req, res) => {
       }
     }
 
-    // Sinon insertion normale
+    /* --------------------------------------------------
+       3. INSERTION NORMALE
+    -------------------------------------------------- */
     const insert = await pool.query(
-      `INSERT INTO "Product" (ing_id, amount, unit_id, amount_item, unit_item_id, stock_id, expiry, home_id)
+      `INSERT INTO "Product"
+       (ing_id, amount, unit_id, amount_item, unit_item_id, stock_id, expiry, home_id)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
        RETURNING id`,
-      [ing_id || null, amount, unit_id || null, amount_item || null, unit_item_id || null, stock_id, expiry, homeId]
+      [
+        ing_id || null,
+        amount,
+        unit_id || null,
+        amount_item || null,
+        unit_item_id || null,
+        stock_id,
+        expiry,
+        homeId
+      ]
     );
 
-    res.json({ ok: true, merged: false, productId: insert.rows[0].id });
+    res.json({
+      ok: true,
+      merged: false,
+      productId: insert.rows[0].id
+    });
 
   } catch (e) {
     console.error("ERROR /product/create:", e);
     res.status(500).json({ error: e.message });
   }
 });
+
 
 
 // ---------------------------

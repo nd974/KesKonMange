@@ -20,6 +20,18 @@ export default function Stock({ homeId }) {
   const [editProduct, setEditProduct] = useState(null);
   const [showModal, setShowModal] = useState(false);
 
+  const [manualLock, setManualLock] = useState(false);
+  const [wizardStep, setWizardStep] = useState(null);
+  const [manualValues, setManualValues] = useState({
+    name: "",
+    quantity: "",
+    unit: "",
+    quantity_item: "",
+    unit_item: "",
+    brand: "",
+    ean: "",
+  });
+
   const nb_day_postmeal = 7;
   const today = new Date();
 
@@ -204,6 +216,42 @@ function DisplayIngredient({ ing }) {
   );
 }
 
+const handleInsertProduct = async (finalProduct) => {
+    try {
+      const body = {
+        ing_id: finalProduct.ing_id ?? null,
+        ing_name: finalProduct.name ?? null,
+        amount: finalProduct.quantity,
+        unit_id: finalProduct.unit_id ?? null,
+        amount_item: finalProduct.quantity_item || null,
+        unit_item_id: finalProduct.unit_item_id || null,
+        stock_id: finalProduct.stock_id,
+        expiry: finalProduct.expiry,
+        home_storage_id: finalProduct.storage?.id || null,
+        homeId: homeId,
+      };
+
+      console.log("Inserting product with body:", body);
+
+      const res = await fetch(`${API_URL}/product/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      alert("Produit ajouté !");
+      setWizardStep(null);
+      // setProduct(null);
+      // setExpirationDate("");
+    } catch (e) {
+      console.error(e);
+      alert("Erreur lors de l’ajout du produit");
+    }
+  };
+
 // const units = [...new Set(ingredients.map(i => i.unit_name))];
 
   return (
@@ -248,15 +296,35 @@ function DisplayIngredient({ ing }) {
               {selectedStorage && selectedStorage !== "all" &&
                 `Ingrédients dans ${selectedStorage.displayName || selectedStorage.name}`}
             </h2>
+            <div className="controls flex flex-wrap md:flex-nowrap items-center gap-2">
+              <input
+                className="search-bar flex-1 min-w-[150px] p-2 border rounded"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Recherche un ingrédient..."
+              />
 
-            <input
-              type="text"
-              className="border px-3 py-2 rounded w-full"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Recherche un ingrédient..."
-            />
+              <button
+                className="px-4 py-2 rounded hover:bg-softPink flex items-center gap-2 bg-accentGreen text-white font-bold"
+                onClick={() => {
+                  setManualLock(false);
+                  setManualValues({ name: "", quantity: "", unit: "", quantity_item: "", unit_item: "", brand: "", ean: "" });
+                  setWizardStep(1);
+                }}
+              >
+                Ajouter Produits
+              </button>
+            </div>
           </div>
+
+          <ModalProducts
+            homeId={homeId}
+            mode="create"
+            open={wizardStep !== null}
+            manualLock={manualLock}   // ← NOUVEAU ICI
+            onClose={() => setWizardStep(null)}
+            onSave={(finalProduct) => handleInsertProduct(finalProduct)}
+          />
 
           {/* ✅ FILTRES en bas */}
           <div className="flex flex-col md:flex-row gap-4 mb-4">

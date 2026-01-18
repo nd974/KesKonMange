@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import HomeZone from "../HomeZone.jsx";
 import {Unit_Item_List} from "../../config/constants.js";
+import ModalWrapper from "./ModalWrapper";
+import IngredientNameInput from "../IngredientNameInput";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -92,6 +94,7 @@ useEffect(() => {
   // ----------------------------
   // HANDLERS
   // ----------------------------
+  const [isValidSuggestion, setIsValidSuggestion] = useState(false);
   const isStep1Valid = () => {
     if (form.unit_item) {
       if (!form.quantity_item || Number(form.quantity_item) <= 0) {
@@ -101,6 +104,7 @@ useEffect(() => {
     if (form.name == "" || !form.quantity || Number(form.quantity) <= 0) {
       return false;
     }
+    if (!manualLock && !isValidSuggestion) {return false;}
     return true;
   };
 
@@ -123,33 +127,23 @@ useEffect(() => {
   if (!open) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white p-6 rounded-lg w-[90%] max-w-md relative">
-
-        {/* ---- CLOSE BUTTON ---- */}
-        <button
-          className="absolute top-2 right-2 text-xl"
-          onClick={onClose}
-        >
-          ✕
-        </button>
+    <ModalWrapper onClose={onClose}>
 
         {/* ----------------------- */}
         {/* STEP 1 : INFOS PRODUIT */}
         {/* ----------------------- */}
         {step === 1 && (
         <div>
-
-            <h2 className="text-xl font-bold mb-4 text-center">
-            Informations du produit
+            <h2 className="text-xl font-semibold mb-4 text-center text-accentGreen">
+              Informations du produit
             </h2>
 
             {/* Nom */}
-            <div className="mb-4">
+            <div className="mb-1">
             <label className="block text-sm font-medium mb-1">
               Nom du produit<span className="text-red-500"><b>*</b></span>
             </label>
-            <input
+            {/* <input
                 type="text"
                 value={form.name}
                 disabled={manualLock} 
@@ -157,12 +151,25 @@ useEffect(() => {
                 className={`w-full p-2 border rounded ${
                 manualLock ? "bg-gray-100 text-gray-500" : ""
                 }`}
-            />
+            /> */}
             </div>
+            <IngredientNameInput
+              value={form.name}
+              disabled={manualLock} 
+              onChange={(value) => {
+                setForm({ ...form, name: value})
+                setIsValidSuggestion(false);
+              }}
+              onSelect={(suggestion) => {
+                setForm({ ...form, name: suggestion })
+                setIsValidSuggestion(true);
+              }}
+              showWarning={false}
+            />
 
             {/* Marque */}
             {manualLock && (
-              <div className="mb-4">
+              <div className="mt-4">
               <label className="block text-sm font-medium mb-1">Marque</label>
               <input
                   type="text"
@@ -178,7 +185,7 @@ useEffect(() => {
 
 
             {/* Quantité (toujours editable) */}
-            <div className="mb-4">
+            <div className="mt-4 mb-4">
             <label className="block text-sm font-medium mb-1">
               Quantité<span className="text-red-500"><b>*</b></span>
             </label>
@@ -280,7 +287,9 @@ useEffect(() => {
         {/* ----------------------- */}
 {step === 2 && (
   <div>
-    <h2 className="text-xl font-bold mb-4 text-center">Date de péremption</h2>
+    <h2 className="text-xl font-semibold mb-4 text-center text-accentGreen">
+      Date de péremption
+    </h2>
 
     <input
       type="date"
@@ -307,8 +316,8 @@ useEffect(() => {
         {/* STEP 3 : STOCKAGE       */}
         {/* ----------------------- */}
 {step === 3 && (
-  <div className="relative">
-    <h2 className="text-xl font-bold mb-4 text-center">
+  <div>
+    <h2 className="text-xl font-semibold mb-4 text-center text-accentGreen">
       Choisir le stockage
     </h2>
 
@@ -319,19 +328,20 @@ useEffect(() => {
       onSelectStorage={(storage) => {
         setSelectedStorage(storage);
         setForm({ ...form, stock_id: storage.id });
-        setStep(4); // ➜ passer à l'étape finale
+        setStep(4);
       }}
       inPopinStorageSelect={form.stock_id}
     />
 
     <button
-      className="absolute top-2 right-2 text-gray-600 hover:text-black text-2xl"
+      className="mt-4 w-full bg-green-600 flex items-center justify-center gap-2 text-gray-700 hover:text-black p-2 rounded border"
       onClick={() => setStep(2)}
     >
-      ✕
+      ← Retour
     </button>
   </div>
 )}
+
 
         {/* ----------------------- */}
         {/* STEP 4 : CONFIRMATION   */}
@@ -359,9 +369,6 @@ useEffect(() => {
             </button>
         </div>
         )}
-
-
-      </div>
-    </div>
+    </ModalWrapper>
   );
 }

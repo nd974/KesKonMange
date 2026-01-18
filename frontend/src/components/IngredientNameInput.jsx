@@ -12,6 +12,8 @@ export default function IngredientNameInput({
 
   showWarning = true, // <-- nouvelle prop
 
+  disabled = false,
+
   onSuggestionsChange,
 }) {
   const [suggestions, setSuggestions] = useState([]);
@@ -90,6 +92,7 @@ export default function IngredientNameInput({
         value={value}
         onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
+        disabled={disabled}
         className={`border rounded p-2 w-full ${
           warning ? "border-orange-400 border-2" : "border-gray-300"
         }`}

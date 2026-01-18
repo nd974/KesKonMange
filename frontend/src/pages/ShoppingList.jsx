@@ -553,9 +553,9 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
             onClick={() => setShowScannerPopin(true)}
             className="flex-1 bg-gray-700 text-white p-3 rounded-lg flex items-center justify-center gap-2"
           >
-            📷 Scanner un code-barres
+            📷 Scan ⏳
           </button>
-
+{/* 
           <button
             onClick={() => {
               setManualLock(false);
@@ -565,7 +565,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
             className="flex-1 bg-accentGreen text-white p-3 rounded-lg flex items-center justify-center gap-2"
           >
             ✏️ Saisie manuelle
-          </button>
+          </button> */}
         </div>
       </div>
 
