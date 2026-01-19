@@ -10,6 +10,7 @@ export default function ModalProducts({
   homeId,
   mode,
   open,
+  initialStep = 1,
   initialProduct,
   manualLock,   // <-- AJOUT ICI
   onDelete,
@@ -46,6 +47,23 @@ export default function ModalProducts({
       .then(data => setUnits(data))
       .catch(err => console.error("Erreur chargement unités:", err));
   }, []);
+
+  useEffect(() => {
+    if (!units.length) return;
+    if (!form.unit || form.unit_id) return;
+
+    const found = units.find(
+      (u) => u.abbreviation.toLowerCase() === form.unit.toLowerCase()
+    );
+
+    if (found) {
+      setForm((prev) => ({
+        ...prev,
+        unit_id: found.id,
+        unit: found.abbreviation,
+      }));
+    }
+  }, [units, form.unit, form.unit_id]);
 //   const [expiry, setExpiry] = useState(initialProduct?.expiry || "");
 
   // ----------------------------
@@ -78,13 +96,14 @@ useEffect(() => {
       stock_id: initialProduct.stock_id || null,
     });
 
+    alert(`${initialProduct.name}/ ${initialProduct.id} / ${initialProduct.ing_id} / ${initialProduct.brand}`);
+
     console.log("Initial product storage:", initialProduct);
 
     setSelectedStorage(initialProduct.storage || null);
   }
-
-  setStep(1);
-}, [open, initialProduct]);
+  setStep(initialStep || 1);
+}, [open, initialStep, initialProduct]);
 
 
 // console.log("ModalProducts [form]", form);
@@ -202,7 +221,7 @@ useEffect(() => {
               <label className="block text-sm font-medium mb-1">Unité</label>
              <select
                 value={form.unit_id || ""}
-                onChange={(e) => setForm({ ...form, unit_id: e.target.value, unit: e.target.selectedOptions[0].text })}
+                onChange={(e) => setForm({ ...form, unit_id: Number(e.target.value), unit: e.target.selectedOptions[0].text })}
                 disabled={manualLock}
                 className={`w-full p-2 border rounded ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
               >

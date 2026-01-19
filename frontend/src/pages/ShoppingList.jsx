@@ -760,9 +760,9 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
         homeId={homeId}
         mode="create"
         open={wizardStep !== null}
+        initialStep={wizardStep}
         initialProduct={{
-          ...product,
-          ...manualValues,
+          ...(product ? product : manualValues),
           ing_id: manualValues.ing_id,
           unit_id: manualValues.unit_id,
           unit_item_id: manualValues.unit_item_id,
