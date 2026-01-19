@@ -43,8 +43,15 @@ export default function IngredientNameInput({
       .catch(console.error);
   }, []);
 
+
+  const normalizeStr = (str) =>
+  str
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+
   const search = (q) => {
-    const name = q.trim().toLowerCase();
+    const name = normalizeStr(q.trim().toLowerCase());
     if (name.length < 2) {
       setSuggestions([]);
       setWarning(false);
@@ -58,11 +65,11 @@ export default function IngredientNameInput({
     }
 
     const ingMatches = localIngredients
-      .filter((i) => i.name.toLowerCase().includes(name))
+      .filter((i) => normalizeStr(i.name.toLowerCase()).includes(name))
       .map((i) => ({ name: i.name, isIng: true }));
 
     const recMatches = localRecipes
-      .filter((r) => r.name.toLowerCase().includes(name))
+      .filter((r) => normalizeStr(r.name.toLowerCase()).includes(name))
       .map((r) => ({ name: r.name, isRec: true }));
 
     const merged = [...recMatches, ...ingMatches];

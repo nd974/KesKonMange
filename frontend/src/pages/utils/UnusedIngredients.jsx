@@ -49,7 +49,7 @@ export default function UnusedIngredients() {
             className="flex items-center justify-between border p-3 rounded"
           >
             <div className="flex items-center gap-4">
-              {ingredient.picture && (
+              {ingredient.picture ? (
                 <img
                 src={`${CLOUDINARY_RES}${ingredient.picture}`}
                 alt={ingredient.name}
@@ -63,9 +63,12 @@ export default function UnusedIngredients() {
                     });
                 }}
                 />
+              ):(
+                <div className="w-12 h-12 flex items-center justify-center rounded bg-gray-200 text-gray-400 text-sm">
+                  X
+                </div>
               )}
-
-              <span>{ingredient.name}</span>
+              <span>id: {ingredient.id} → {ingredient.name}</span>
             </div>
 
             <button

@@ -3,6 +3,7 @@ import HomeZone from "../HomeZone.jsx";
 import {Unit_Item_List} from "../../config/constants.js";
 import ModalWrapper from "./ModalWrapper";
 import IngredientNameInput from "../IngredientNameInput";
+import Swal from "sweetalert2";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -96,8 +97,6 @@ useEffect(() => {
       stock_id: initialProduct.stock_id || null,
     });
 
-    alert(`${initialProduct.name}/ ${initialProduct.id} / ${initialProduct.ing_id} / ${initialProduct.brand}`);
-
     console.log("Initial product storage:", initialProduct);
 
     setSelectedStorage(initialProduct.storage || null);
@@ -114,7 +113,7 @@ useEffect(() => {
   // HANDLERS
   // ----------------------------
   const [isValidSuggestion, setIsValidSuggestion] = useState(false);
-  const isStep1Valid = () => {
+  const isStep1Valid = async() => {
     if (form.unit_item) {
       if (!form.quantity_item || Number(form.quantity_item) <= 0) {
         return false;
@@ -123,7 +122,24 @@ useEffect(() => {
     if (form.name == "" || !form.quantity || Number(form.quantity) <= 0) {
       return false;
     }
-    if (!manualLock && !isValidSuggestion) {return false;}
+      // ⚠️ Vérifie suggestion si pas de manuelLock
+    if (!manualLock && !isValidSuggestion) {
+        const result = await Swal.fire({
+          title: "⚠️ Attention",
+          html: `
+          Le nom du produit n'est pas une suggestion sélectionnée.<br>
+          Voulez-vous continuer quand même ?<br>
+          Il faudra que le produit soit utilisé tel quel dans la recette et pas sous un autre nom.
+          `,
+          icon: "warning",
+          showCancelButton: true,
+          confirmButtonText: "Oui",
+          cancelButtonText: "Non",
+        });
+
+        if (!result.isConfirmed) return; // Stoppe si annule
+        setIsValidSuggestion(true); // Passe à true si confirmé
+      }
     return true;
   };
 
@@ -278,15 +294,17 @@ useEffect(() => {
               )}
 
               <button
-                disabled={!isStep1Valid()}
+                // disabled={form.name && form.quantity && Number(form.quantity) > 0}
                 className={`p-2 rounded text-white ${
-                  isStep1Valid()
+                  form.name && form.quantity && Number(form.quantity) > 0
                     ? "bg-green-600"
-                    : "bg-gray-400 cursor-not-allowed"
+                    : "bg-gray-400"
                 } ${form.id ? "w-1/2" : "w-full"}`}
-                onClick={() => {
-                  if (!isStep1Valid()) return;
-                  setStep(2);
+                onClick={async () => {
+                  // ⚠️ On attend le résultat de la validation
+                  const valid = await isStep1Valid();
+                  if (!valid) return; // Stop si annule
+                  setStep(2); // Passe à l'étape 2 seulement si valide
                 }}
               >
                 Continuer →

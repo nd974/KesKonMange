@@ -21,7 +21,8 @@
     "react-draggable": "^4.5.0",
     "react-hot-toast": "^2.6.0",
     "react-leaflet": "^4.2.1",
-    "react-router-dom": "^6.28.0"
+    "react-router-dom": "^6.28.0",
+    "sweetalert2": "^11.26.17"
   },
   "devDependencies": {
     "@vitejs/plugin-react": "^4.7.0",

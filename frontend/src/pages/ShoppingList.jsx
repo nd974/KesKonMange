@@ -239,6 +239,7 @@ const Unit_hasBuy = [
     try {
       const body = {
         ing_id: finalProduct.ing_id ?? null,
+        ing_name: finalProduct.name ?? null,
         amount: finalProduct.quantity,
         unit_id: finalProduct.unit_id ?? null,
         amount_item: finalProduct.quantity_item || null,
@@ -546,7 +547,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
 
       <div className="mb-8"></div>
 
-      <div className="border rounded-lg p-4 bg-white shadow mb-4">
+      {/* <div className="border rounded-lg p-4 bg-white shadow mb-4">
         <div className="flex gap-4">
           <button
             onClick={() => setShowScannerPopin(true)}
@@ -554,7 +555,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
           >
             📷 Scan ⏳
           </button>
-{/* 
+
           <button
             onClick={() => {
               setManualLock(false);
@@ -564,9 +565,9 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
             className="flex-1 bg-accentGreen text-white p-3 rounded-lg flex items-center justify-center gap-2"
           >
             ✏️ Saisie manuelle
-          </button> */}
+          </button>
         </div>
-      </div>
+      </div> */}
 
       <div className="mt-8 flex flex-col gap-8 md:flex-row md:gap-8">
 
