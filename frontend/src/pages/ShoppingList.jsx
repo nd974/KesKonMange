@@ -9,7 +9,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 export default function ShoppingList({ homeId }) {
   const [scannedCode, setScannedCode] = useState("");
   const [product, setProduct] = useState(null);
-  const [error, setError] = useState(null);
 
   // --- Nouveau wizard multi-step (remplace les 3 anciennes popins)
   const [wizardStep, setWizardStep] = useState(null);
@@ -88,7 +87,6 @@ const Unit_hasBuy = [
     if (!scannedCode) return;
 
     async function fetchProduct() {
-      setError(null);
       setProduct(null);
 
       try {
@@ -98,7 +96,7 @@ const Unit_hasBuy = [
         const data = await response.json();
 
         if (data.status === 0) {
-          setError("Produit non trouvé dans OpenFoodFacts 😕");
+          alert("Produit non trouvé dans OpenFoodFacts 😕");
           return;
         }
 
@@ -126,12 +124,13 @@ const Unit_hasBuy = [
           image: p.image_small_url || p.image_front_url || null,
           stock_id: null,
         });
+        alert(`${p.product_name}/ ${quantity} / ${unit} / ${p.brands}`);
 
         // → On lance directement le wizard étape 2 (expiration)
         setWizardStep(2);
       } catch (err) {
         console.error(err);
-        setError("Erreur lors de la récupération du produit");
+        alert("Erreur lors de la récupération du produit");
       }
     }
 
