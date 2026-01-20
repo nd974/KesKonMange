@@ -6,6 +6,9 @@ import ModalProducts from "../components/modals/ModalProducts";
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function Stock({ homeId }) {
+  const ITEMS_PER_PAGE = 14;
+  const [currentPage, setCurrentPage] = useState(1);
+
   const [storages, setStorages] = useState([]);
   const [selectedStorage, setSelectedStorage] = useState("all");
 
@@ -110,6 +113,13 @@ function handleSort(column) {
 
       return 0;
     });
+
+  const totalPages = Math.ceil(filteredIngredients.length / ITEMS_PER_PAGE);
+
+  const paginatedIngredients = filteredIngredients.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
 
   // Création d'un tableau de stockages fusionnés
@@ -252,6 +262,10 @@ const handleInsertProduct = async (finalProduct) => {
     }
   };
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, selectedStorage, unitFilter, sortColumn, sortOrder]);
+
 // const units = [...new Set(ingredients.map(i => i.unit_name))];
 
   return (
@@ -262,7 +276,7 @@ const handleInsertProduct = async (finalProduct) => {
       <div className="flex flex-col lg:flex-row gap-6 py-8">
 
         {/* HomeZone */}
-        <div className="w-full lg:w-1/3">
+        <div className="w-full lg:w-1/3 mt-5">
           <HomeZone
             key={homeId}
             homeId={homeId}
@@ -425,7 +439,7 @@ const handleInsertProduct = async (finalProduct) => {
                 </tr>
               )}
 
-              {!loading && filteredIngredients.map((ing, idx) => {
+              {!loading && paginatedIngredients.map((ing, idx) => {
                 const status = getExpirationStatus(ing.expiry);
 
                 return (
@@ -470,6 +484,33 @@ const handleInsertProduct = async (finalProduct) => {
               })}
             </tbody>
           </table>
+
+          {!loading && totalPages > 1 && (
+  <div className="flex justify-center items-center gap-4 mt-4">
+
+    <button
+      className="px-3 py-1 border rounded disabled:opacity-50"
+      disabled={currentPage === 1}
+      onClick={() => setCurrentPage(p => p - 1)}
+    >
+      ◀ Précédent
+    </button>
+
+    <span className="text-sm">
+      Page {currentPage} / {totalPages}
+    </span>
+
+    <button
+      className="px-3 py-1 border rounded disabled:opacity-50"
+      disabled={currentPage === totalPages}
+      onClick={() => setCurrentPage(p => p + 1)}
+    >
+      Suivant ▶
+    </button>
+
+  </div>
+)}
+
 
         </div>
       </div>
