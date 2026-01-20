@@ -150,57 +150,58 @@ export default function Dashboard({ homeId, profileId }) {
 
           {/* LEFT – détail */}
           <section className="order-2 lg:order-1">
-<div className="flex items-center gap-3">
-  {selectedDay && (
-    <>
-      {/* tags desktop */}
-      <div className="hidden sm:flex ml-5">
-        {selectedMenusForDay?.map((m, i) => (
-          <button
-            key={m.id || `${m.menuId}-${m.tagId}-${i}`}
-            onClick={() => setActiveMenuIndex(i)}
-            className={`px-3 py-1 rounded-tl-2xl rounded-tr-lg text-sm font-medium -mb-1 ${
-              i === activeMenuIndex
-                ? "bg-accentGreen text-white shadow-soft"
-                : "bg-gray-200"
-            }`}
-          >
-            {m.tagName}
-          </button>
-        ))}
-      </div>
+            <div className="flex items-center gap-3">
+              {selectedDay && (
+                <>
+                  {/* tags desktop */}
+                  <div   className={`hidden sm:flex ml-5 ${selectedMenusForDay?.length === 1 ? "mb-9" : ""}`}>
+                    {selectedMenusForDay.length > 1 && selectedMenusForDay?.map((m, i) => (
+                      <button
+                        key={m.id || `${m.menuId}-${m.tagId}-${i}`}
+                        onClick={() => setActiveMenuIndex(i)}
+                        className={`px-3 py-1 sm:px-5 sm:py-2 rounded-tl-2xl rounded-tr-lg 
+                          text-sm sm:text-base font-medium -mb-1 transition-all ${
+                            i === activeMenuIndex
+                              ? "bg-accentGreen text-white shadow-soft"
+                              : "bg-gray-200 hover:bg-gray-300"
+                          }`}
+                      >
+                        {m.tagName}
+                      </button>
+                    ))}
+                  </div>
 
-      {/* date desktop */}
-      <div className="hidden ml-auto bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
-        {selectedDay.format("D MMMM YYYY")}
-      </div>
+                  {/* date desktop */}
+                  <div className="hidden ml-auto bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
+                    {selectedDay.format("D MMMM YYYY")}
+                  </div>
 
-      {/* mobile */}
-      <div className="flex sm:hidden w-full items-center justify-between px-4 -mb-0.5">
-        {/* liste déroulante à gauche */}
-        <select
-          onChange={(e) => setActiveMenuIndex(Number(e.target.value))}
-          className="bg-accentGreen text-white px-3 py-1 rounded-full text-sm font-semibold"
-          value={activeMenuIndex}
-        >
-          {selectedMenusForDay?.map((m, i) => (
-            <option
-              key={m.id || `${m.menuId}-${m.tagId}-${i}`}
-              value={i}
-            >
-              {m.tagName}
-            </option>
-          ))}
-        </select>
+                  {/* mobile */}
+                  <div className="flex sm:hidden w-full items-center justify-between px-4 -mb-0.5">
+                    {/* liste déroulante à gauche */}
+                    <select
+                      onChange={(e) => setActiveMenuIndex(Number(e.target.value))}
+                      className="bg-accentGreen text-white px-3 py-1 rounded-full text-sm font-semibold"
+                      value={activeMenuIndex}
+                    >
+                      {selectedMenusForDay?.map((m, i) => (
+                        <option
+                          key={m.id || `${m.menuId}-${m.tagId}-${i}`}
+                          value={i}
+                        >
+                          {m.tagName}
+                        </option>
+                      ))}
+                    </select>
 
-        {/* date à droite */}
-        <div className="bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
-          {selectedDay.format("D MMMM YYYY")}
-        </div>
-      </div>
-    </>
-  )}
-</div>
+                    {/* date à droite */}
+                    <div className="bg-softBeige px-3 py-1 rounded-full text-sm font-semibold">
+                      {selectedDay.format("D MMMM YYYY")}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
 
 
             <div className="bg-gray-100 soft-card rounded-3xl shadow-soft relative">

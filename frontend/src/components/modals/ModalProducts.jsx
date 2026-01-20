@@ -5,6 +5,8 @@ import ModalWrapper from "./ModalWrapper";
 import IngredientNameInput from "../IngredientNameInput";
 import Swal from "sweetalert2";
 
+import dayjs from "dayjs";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function ModalProducts({
@@ -77,8 +79,7 @@ useEffect(() => {
     // Formater la date en YYYY-MM-DD pour l'input date
     let formattedExpiry = "";
     if (initialProduct.expiry) {
-      const d = new Date(initialProduct.expiry);
-      formattedExpiry = d.toISOString().split("T")[0];
+      formattedExpiry = dayjs(initialProduct.expiry).format("YYYY-MM-DD");
     }
 
     console.log("initialProduct.unit_item_id----------------------------", initialProduct.unit_item_id);
@@ -234,12 +235,12 @@ useEffect(() => {
 
             {/* Unité */}
             <div className="mb-4">
-              <label className="block text-sm font-medium mb-1">Unité</label>
+              <label className="block text-sm font-medium mb-1">Unités</label>
              <select
                 value={form.unit_id || ""}
                 onChange={(e) => setForm({ ...form, unit_id: Number(e.target.value), unit: e.target.selectedOptions[0].text })}
-                disabled={manualLock}
-                className={`w-full p-2 border rounded ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
+                // disabled={manualLock}
+                className={`w-full p-2 border rounded`}//${manualLock ? "bg-gray-100 text-gray-500" : ""}
               >
                 <option value="">-</option>
                 {units.map((unit) => (
@@ -269,8 +270,8 @@ useEffect(() => {
               <select
                   value={form.unit_item_id || ""}
                   onChange={(e) => setForm({ ...form, unit_item_id: e.target.value, unit_item: e.target.selectedOptions[0].text })}
-                  disabled={manualLock}
-                  className={`w-full p-2 border rounded ${manualLock ? "bg-gray-100 text-gray-500" : ""}`}
+                  // disabled={manualLock}
+                  className={`w-full p-2 border rounded`}//${manualLock ? "bg-gray-100 text-gray-500" : ""}
                 >
                   <option value="">-</option>
                   {units.map((unit) => (

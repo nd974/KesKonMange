@@ -119,7 +119,7 @@ export default function ModalRecipeInfo({ tags, times, level, portion, usage_cou
       <div className="grid grid-cols-3 gap-6 text-sm text-center items-center text-black">
         <div className="flex flex-col items-center gap-1">
           <span className="font-semibold">Difficulté</span>
-          <span>{["Très facile", "Facile", "Moyen", "Difficile", "Très difficile"][level]}</span>
+          <span>{["Très facile", "Facile", "Moyen", "Difficile", "Très difficile"][level-1]}</span>
         </div>
 
         <div className="flex flex-col items-center gap-1">

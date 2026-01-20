@@ -44,6 +44,8 @@ import UnusedIngredients from "./pages/utils/UnusedIngredients";
 
 import { Toaster } from "react-hot-toast";
 
+import "./lib/dayjs";
+
 function AppRoutes() {
 
   const location = useLocation();
