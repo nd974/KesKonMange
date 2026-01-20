@@ -204,7 +204,7 @@ useEffect(() => {
             />
 
             {/* Marque */}
-            {manualLock && (
+            {/* {manualLock && (
               <div className="mt-4">
               <label className="block text-sm font-medium mb-1">Marque</label>
               <input
@@ -217,7 +217,7 @@ useEffect(() => {
                   }`}
               />
               </div>
-            )}
+            )} */}
 
 
             {/* Quantité (toujours editable) */}

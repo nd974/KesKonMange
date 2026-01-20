@@ -90,13 +90,42 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
         </div>
 
         <div className="overflow-y-auto space-y-4 thin-scrollbar">
+          {comments[0]?.profile_id === profileId && !comments[0]?.comment && (
+            <div className="flex gap-4">
+              <img
+                src={`${CLOUDINARY_RES}${comments[0].profile_avatar}`}
+                alt={comments[0].username}
+                className="w-12 h-12 ro+unded-2xl object-cover"
+              />
+
+              <div className="flex flex-col w-full">
+                <div className="flex items-center w-full">
+<div className="flex flex-col">
+  <span className="font-bold text-xs text-white bg-accentGreen px-2 py-1 rounded w-fit">
+    Vous
+  </span>
+
+  {comments[0].note !== null && (
+    <p className="text-yellow-500 text-xl">
+      {"★".repeat(comments[0].note)}
+      {"☆".repeat(5 - comments[0].note)}
+    </p>
+  )}
+</div>
+                  <span className="ml-auto text-xs text-gray-500">
+                    {new Date(comments[0].updated_date).toLocaleDateString("fr-FR")}
+                  </span>
+                </div>
+              </div>
+            </div>
+          )}
           {comments.map((comment, index) => (
             comment.comment && (
               <div key={index} className="flex gap-4">
                 <img
                   src={`${CLOUDINARY_RES}${comment.profile_avatar}`}
                   alt={comment.username}
-                  className="w-12 h-12 rounded-2xl object-cover"
+                  className="w-12 h-12 ro+unded-2xl object-cover"
                 />
 
                 <div className="flex flex-col w-full">
