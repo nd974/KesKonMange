@@ -565,6 +565,7 @@ router.post("/get-all", async (req, res) => {
       SELECT rt.recipe_id, t.id, t.name, t.parent_id
       FROM "recipes_tags" rt
       JOIN "Tag" t ON t.id = rt.tag_id
+      ORDER BY t.id ASC
     `);
 
     const tagsByRecipe = {};
