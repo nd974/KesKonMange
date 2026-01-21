@@ -90,7 +90,7 @@ function AppRoutes() {
       },
       {
         id: 2,
-        subject: "Nouvelle inscription",
+        subject: `Inscription - ${menu_add.datetime} [${menu_add.tag_id}]`,
         to: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
         date: "30/12/2025",
         read: true,

@@ -396,7 +396,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
         </div>
 
         {/* Bloc beige */}
-        <div className="rounded-3xl bg-softBeige p-4 sm:-mt-16 z-10 sm:ml-40 sm:mr-4 h-[53vh] overflow-hidden flex flex-col shadow-2xl">
+        <div className="rounded-3xl bg-softBeige p-4 sm:-mt-16 z-50 sm:ml-40 sm:mr-4 h-[53vh] overflow-hidden flex flex-col shadow-2xl">
             <StepsSection steps={recipe.steps} />
         </div>
         

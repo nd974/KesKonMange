@@ -1136,7 +1136,7 @@ const StarRating = ({ value, onChange }) => {
           value={step.level}
           onChange={(lvl) => {
             const updated = [...steps];
-            updated[i].level = lvl;
+            updated[i].level = updated[i].level === lvl ? null : lvl;
             setSteps(updated);
           }}
         />

@@ -134,10 +134,6 @@ export default function Dashboard({ homeId, profileId }) {
   };
 
   const recipes = selectedMenusForDay?.[activeMenuIndex]?.recipes ?? [];
-  const maxNameLength = Math.max(
-    ...recipes.map((r) => r.name.length),
-    0
-  );
 
   return (
     
@@ -254,6 +250,26 @@ export default function Dashboard({ homeId, profileId }) {
 <div className="py-2 relative">
   {/* Navigation entre les recettes (précédent / suivant) */}
   <div className="flex items-center justify-center gap-4">
+    {/* Nom de la recette dans des chevrons */}
+    <h1
+      className="text-center text-2xl sm:text-4xl font-bold text-softPink"
+      style={{
+        WebkitTextStroke: "4px white",
+        paintOrder: "stroke fill",
+        whiteSpace: "normal",        // autorise les retours à la ligne
+        wordWrap: "break-word",      // coupe les mots trop longs
+        overflowWrap: "break-word",  // compatibilité tous navigateurs
+        textAlign: "center",
+        margin: "0 auto",
+      }}
+    >
+      {selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.name}
+    </h1>
+
+  </div>
+
+  {/* Ligne avec les boutons de décrémentation et d'incrémentation */}
+  <div className="flex items-center justify-center gap-4 py-2">
     {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
       <button
         onClick={showPrev}
@@ -267,35 +283,6 @@ export default function Dashboard({ homeId, profileId }) {
         ◀
       </button>
     )}
-
-    {/* Nom de la recette dans des chevrons */}
-    <h1 className="text-center text-2xl sm:text-4xl font-bold text-softPink"
-          style={{
-        width: `${maxNameLength + 2}ch`, // +2 pour respirer
-        WebkitTextStroke: "4px white",
-        paintOrder: "stroke fill",
-        whiteSpace: "nowrap",
-      }}>
-      {selectedMenusForDay[activeMenuIndex]?.recipes[recipeIndex]?.name}
-    </h1>
-
-    {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
-      <button
-        onClick={showNext}
-        disabled={recipeIndex >= selectedMenusForDay[activeMenuIndex].recipes.length - 1}
-        className={`px-3 py-1 rounded-md ${
-          recipeIndex < selectedMenusForDay[activeMenuIndex].recipes.length - 1
-            ? "cursor-pointer"
-            : "bg-white/60 opacity-50 cursor-not-allowed"
-        }`}
-      >
-        ▶
-      </button>
-    )}
-  </div>
-
-  {/* Ligne avec les boutons de décrémentation et d'incrémentation */}
-  <div className="flex items-center justify-center gap-4 py-2">
     {/* Décrément à gauche */}
     <button
       onClick={() => handleCrementLocalCountRecipe(-1)}
@@ -314,6 +301,19 @@ export default function Dashboard({ homeId, profileId }) {
     >
       +
     </button>
+    {selectedMenusForDay?.[activeMenuIndex]?.recipes?.length > 1 && (
+      <button
+        onClick={showNext}
+        disabled={recipeIndex >= selectedMenusForDay[activeMenuIndex].recipes.length - 1}
+        className={`px-3 py-1 rounded-md ${
+          recipeIndex < selectedMenusForDay[activeMenuIndex].recipes.length - 1
+            ? "cursor-pointer"
+            : "bg-white/60 opacity-50 cursor-not-allowed"
+        }`}
+      >
+        ▶
+      </button>
+    )}
   </div>
 </div>
 
