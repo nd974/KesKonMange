@@ -1,6 +1,7 @@
 import express from "express";
 import { pool } from "../db.js";
 
+
 const router = express.Router();
 
 router.get("/get", async (req, res) => {
@@ -15,17 +16,32 @@ router.get("/get", async (req, res) => {
   try {
     const result = await pool.query(
       `SELECT
-         id,
-         subject,
-         body,
-         link,
-         read,
-         date_create
-       FROM profiles_notifications
-       WHERE home_id = $1
-         AND profile_id = $2
-       ORDER BY date_create DESC`,
-      [home_id, profile_id]
+        pn.id,
+        pn.subject,
+        pn.body,
+        pn.link,
+        pn.read,
+        pn.date_create,
+        pn.tag_id,
+        t.name as tag_name,
+        pn.home_id,
+        h.name AS home_name,
+        pn.date_event,
+        (COUNT(DISTINCT hp.home_id) > 1) AS multiple_home
+      FROM profiles_notifications pn
+      JOIN "Home" h
+        ON pn.home_id = h.id
+      LEFT JOIN "Tag" t
+        ON pn.tag_id = t.id
+      LEFT JOIN homes_profiles hp
+        ON hp.profile_id = pn.profile_id
+      WHERE pn.profile_id = $1
+      GROUP BY
+        pn.id,
+        t.name,
+        h.name
+      ORDER BY pn.date_create DESC`,
+      [profile_id]
     );
 
     res.json(result.rows);
@@ -84,10 +100,10 @@ export async function createMenuNotifications({ pool, home_id, date, menuTagId }
 
   console.log("sssssssssssssssssssssssssssssssss=", profilesResult);
 
-  const subject = `Nouveau menu – ${date} [${menuTagId}]`;
+  const subject = `Nouveau menu`;
   const body = `Bonjour,
 
-Un nouveau menu a été proposé pour le ${date}.
+Un nouveau menu a été proposé.
 
 Merci de confirmer votre participation.`;
 
@@ -95,15 +111,17 @@ Merci de confirmer votre participation.`;
     console.log("d=", row.profile_id);
     await pool.query(
     `INSERT INTO profiles_notifications
-        (profile_id, home_id, subject, body, link)
-    VALUES ($1, $2, $3, $4, $5)
+        (profile_id, home_id, subject, body, link, tag_id, date_event)
+    VALUES ($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT (profile_id, home_id, link) DO NOTHING`,
     [
         row.profile_id,
         home_id,
         subject,
         body,
-        `/calendar/${date}`
+        `/calendar/${date}`,
+        menuTagId,
+        date
     ]
     );
   }

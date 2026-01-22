@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import dayjs from "dayjs";
 import "dayjs/locale/fr";
 
@@ -15,10 +15,16 @@ import {
   useUpdateRecipeCount,
 } from "../hooks/useMenu";
 
+
+
 dayjs.locale("fr");
 
 export default function Dashboard({ homeId, profileId }) {
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const targetDate = location.state?.targetDate || null;
+  const targetTagId = location.state?.targetTagId || null;
 
   /* ---------------- State UI ---------------- */
   const [selectedRecipe, setSelectedRecipe] = useState(null);
@@ -52,14 +58,21 @@ export default function Dashboard({ homeId, profileId }) {
 
   /* ---------------- Sélection menu ---------------- */
   const handleSelectMenu = (grouped) => {
+    const menus = grouped.menus || [];
+
+    // 🔹 STOP si le menu est déjà sélectionné pour éviter boucle
+    const menusIds = menus.map(m => m.id).join(",");
+    const currentMenusIds = selectedMenusForDay.map(m => m.id).join(",");
+    if (menusIds === currentMenusIds) return; // ⚠️ vérifie côté Dashboard
+
     setSelectedDay(dayjs(grouped.date));
     setActiveMenuIndex(0);
     setRecipeIndex(0);
-
-    const menus = grouped.menus || [];
     setSelectedMenusForDay(menus);
     setSelectedRecipe(menus?.[0]?.recipes?.[0] || null);
   };
+
+
 
   /* ---------------- Navigation recettes ---------------- */
   const showPrev = () => {
@@ -89,6 +102,7 @@ export default function Dashboard({ homeId, profileId }) {
       setSelectedRecipe(activeMenu.recipes?.[0] || null);
     }
   }, [activeMenu, recipeIndex]);
+
 
   /* ---------------- Compteur recettes ---------------- */
   useEffect(() => {
@@ -134,6 +148,41 @@ export default function Dashboard({ homeId, profileId }) {
   };
 
   const recipes = selectedMenusForDay?.[activeMenuIndex]?.recipes ?? [];
+
+
+  console.log(targetDate, targetTagId);
+  // Selection du target
+  useEffect(() => {
+    if (
+      !targetTagId ||
+      !selectedMenusForDay.length
+    ) return;
+
+    const index = selectedMenusForDay.findIndex(
+      (m) => m.tagId === targetTagId
+    );
+
+    if (index !== -1) {
+      setActiveMenuIndex(index);
+      setRecipeIndex(0);
+      setSelectedRecipe(
+        selectedMenusForDay[index]?.recipes?.[0] || null
+      );
+    }
+  }, [selectedMenusForDay, targetTagId]);
+  useEffect(() => {
+    if (!targetDate) return;
+
+    setSelectedDay(dayjs(targetDate));
+  }, [targetDate]);
+
+  useEffect(() => {
+    if (!targetDate && !targetTagId) return;
+
+    // Supprime le state de l’historique sans changer l’URL
+    window.history.replaceState({}, document.title);
+  }, []);
+
 
   return (
     

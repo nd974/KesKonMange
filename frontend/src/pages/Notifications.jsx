@@ -1,27 +1,12 @@
 import React, { useState, useEffect } from "react";
+import dayjs from "dayjs";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { useNavigate } from "react-router-dom";
+
 export default function NotificationsPage({ homeId, notifications, setNotifications }) {
-  // const [notifications, setNotifications] = useState(initialNotifications);
-  const [home, setHome] = useState(null); // valeur par défaut
-
-  useEffect(() => {
-    const fetchHome = async () => {
-      if (!homeId) return;
-        await fetch(`${API_URL}/home/get/${homeId}`)
-          .then((res) => res.json())
-          .then((data) => {
-            setHome(data || null);
-      });
-    };
-
-    fetchHome();
-  }, []);
-
-  console.log(home);
-  
-
+  const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
 
   const markAsRead = async(id) => {
@@ -91,7 +76,13 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
           >
             <div className="flex items-center justify-between">
               <span className="font-medium leading-tight">
-                {notif.subject}
+                {notif.multiple_home && (
+                  <>
+                    {notif.home_name}
+                    <br />
+                  </>
+                )}
+                {notif.subject} - {dayjs(notif.date_event).format("DD/MM/YYYY")} [{notif.tag_name}]
               </span>
               {!notif.read && (
                 <span className="w-2 h-2 bg-red-500 rounded-full" />
@@ -143,14 +134,14 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
 
                   {/* 💻 Desktop : 1 ligne */}
                   <span className="hidden md:block whitespace-nowrap">
-                    {selected.subject}
+                    {selected.subject} - {dayjs(selected.date_event).format("DD/MM/YYYY")} [{selected.tag_name}]
                   </span>
                 </h1>
                 <div className="text-xs md:text-sm text-gray-500 mt-1">
-                  À : Maison {home?.name}
+                  À : Maison {selected.home_name}
                   <br className="md:hidden" />
                   <span className="hidden md:inline"> . </span>
-                  {"<"}{home?.email}{">"}
+                  {"<"}Tous les membres{">"}
                 </div>
               </div>
 
@@ -161,12 +152,20 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
 
               {/* Lien */}
               {selected.link && (
-                <a
-                  href={selected.link}
+                <button
+                  // href={selected.link}
+                  onClick={() =>
+                    navigate("/", {
+                      state: {
+                        targetDate: selected.date_event,
+                        targetTagId: selected.tag_id
+                      }
+                    })
+                  }
                   className="inline-block mb-6 text-accentGreen font-semibold hover:underline"
                 >
                   👉 Voir le détail
-                </a>
+                </button>
               )}
 
               {/* Actions */}

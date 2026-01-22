@@ -1,6 +1,7 @@
 import React from "react";
 import dayjs from "dayjs";
 import { useMenusByHome } from "../hooks/useMenu";
+import { useEffect } from "react";
 
 import { CLOUDINARY_RES, CLOUDINARY_ICONS } from "../config/constants";
 
@@ -37,6 +38,19 @@ export default function Menus({
   const groups = Object.keys(grouped)
     .map((d) => ({ date: d, menus: grouped[d] }))
     .sort((a, b) => dayjs(a.date).diff(dayjs(b.date)));
+
+  useEffect(() => {
+    if (!selectedDay || !groups.length) return;
+
+    const group = groups.find(g =>
+      dayjs(g.date).isSame(selectedDay, "day")
+    );
+
+    if (group) {
+      onSelectMenu?.(group); // on laisse le Dashboard gérer si ça doit setter
+    }
+  }, [selectedDay, groups, onSelectMenu]);
+
 
   if (isLoading) {
     return (
