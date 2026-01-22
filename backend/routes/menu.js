@@ -1,6 +1,8 @@
 import express from "express";
 import { pool } from "../db.js";
 
+import { createMenuNotifications } from "./notifications.js";
+
 const router = express.Router();
 
 /**
@@ -105,6 +107,8 @@ router.post("/update-menu", async (req, res) => {
       `);
     }
 
+    await createMenuNotifications({pool,home_id:homeId,date,menuTagId:tagId});
+
     res.json({ success: true, menuId });
   } catch (err) {
     console.error("Erreur update-menu:", err);
@@ -161,26 +165,26 @@ router.post("/add-recipe", async (req, res) => {
 router.post("/create", async (req, res) => {
   const { recipe_id, date, home_id, tag_id } = req.body;
 
-  console.log("HERE", recipe_id, date, home_id, tag_id);
-
   if (!recipe_id || !date || !home_id || !tag_id) {
-    return res.status(400).json({ error: "recipe_id, date tag_id et home_id sont requis" });
+    return res.status(400).json({
+      error: "recipe_id, date, tag_id et home_id sont requis"
+    });
   }
 
   try {
-    // Si tag_id non fourni, laisse null
     const menuTagId = tag_id || null;
 
-    // 1️⃣ Crée le menu
+    // 1️⃣ Création du menu
     const result = await pool.query(
       `INSERT INTO "Menu" (datetime, home_id, tag_id)
        VALUES ($1, $2, $3)
        RETURNING id`,
       [date, home_id, menuTagId]
     );
+
     const menuId = result.rows[0].id;
 
-    // 2️⃣ Ajoute la recette
+    // 2️⃣ Ajout recette
     await pool.query(
       `INSERT INTO "menus_recipes" (menu_id, recipe_id)
        VALUES ($1, $2)
@@ -188,12 +192,17 @@ router.post("/create", async (req, res) => {
       [menuId, recipe_id]
     );
 
+    await createMenuNotifications({pool,home_id,date,menuTagId});
+
     res.json({ success: true, menuId });
   } catch (err) {
     console.error("Erreur /menu/create:", err);
-    res.status(500).json({ error: "Erreur serveur lors de la création du menu" });
+    res.status(500).json({
+      error: "Erreur serveur lors de la création du menu"
+    });
   }
 });
+
 
 // Route pour mettre à jour la portion d'une recette dans un menu
 router.post("/update-count/:menuId/:recipeId", async (req, res) => {

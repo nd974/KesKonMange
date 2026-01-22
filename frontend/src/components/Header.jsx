@@ -115,11 +115,6 @@ export default function Header({homeId, unreadCountNotif, inAccount=false}) {
     };
   }, []);
 
-
-
-  const unreadNotifications = 2;
-
-
   return (
     <header className={`relative flex items-center w-full ${inAccount && "mb-4"}`}>
       {/* 🔸 Logo + salutation */}
@@ -255,9 +250,9 @@ export default function Header({homeId, unreadCountNotif, inAccount=false}) {
             }}
           >
             🔔 Notifications
-            {unreadNotifications.length > 0 && (
+            {unreadCountNotif > 0 && (
               <span className="ml-auto bg-red-500 text-white text-xs px-2 py-0.5 rounded-full">
-                {unreadNotifications.length}
+                {unreadCountNotif}
               </span>
             )}
           </li>

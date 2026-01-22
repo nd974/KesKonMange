@@ -16,6 +16,7 @@ import storageRoutes from "./routes/storage.js";
 import productRoutes from "./routes/product.js";
 import nutritionRoutes from "./routes/nutrition.js";
 import shopRoutes from "./routes/shops.js";
+import notificationRoutes from "./routes/notifications.js";
 
 import mailerRoutes from "./routes/mailer.js";
 
@@ -45,6 +46,7 @@ app.use("/storage", storageRoutes);
 app.use("/product", productRoutes);
 app.use("/nutrition", nutritionRoutes);
 app.use("/shops", shopRoutes);
+app.use("/notifications", notificationRoutes);
 
 app.use("/mailer", mailerRoutes);
 

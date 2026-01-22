@@ -24,15 +24,42 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
 
   const [selected, setSelected] = useState(null);
 
-  const markAsRead = (id) => {
+  const markAsRead = async(id) => {
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
     );
+    try {
+      const res = await fetch(`${API_URL}/notifications/read`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id })
+      });
+
+      if (!res.ok) throw new Error("Erreur serveur");
+    } catch (err) {
+      console.error("Erreur markAsRead:", err);
+      // rollback si besoin
+      setNotifications(prev =>
+        prev.map(n => n.id === id ? { ...n, read: false } : n)
+      );
+    }
   };
 
-  const deleteNotif = (id) => {
+  const deleteNotif = async(id) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
     setSelected(null);
+
+    try {
+        const res = await fetch(`${API_URL}/notifications/delete/${id}`, {
+          method: "DELETE"
+        });
+
+        if (!res.ok) throw new Error("Erreur serveur");
+      } catch (err) {
+        console.error("Erreur deleteNotif:", err);
+        // rollback si besoin
+        // re-fetch notifications si tu veux
+      }
   };
 
   return (
@@ -52,9 +79,9 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
         {notifications.map((notif) => (
           <div
             key={notif.id}
-            onClick={() => {
+            onClick={async() => {
               setSelected(notif);
-              markAsRead(notif.id);
+              await markAsRead(notif.id);
             }}
             className={`
               px-4 py-4 border-b cursor-pointer
@@ -158,7 +185,7 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
                 ))}
 
                 <button
-                  onClick={() => deleteNotif(selected.id)}
+                  onClick={async() => await deleteNotif(selected.id)}
                   className="md:ml-auto text-sm text-red-500 hover:underline text-center"
                 >
                   🗑 Supprimer

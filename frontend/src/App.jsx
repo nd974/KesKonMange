@@ -68,36 +68,37 @@ function AppRoutes() {
   const [error, setError] = useState(null);
   const [dbStatus, setDbStatus] = useState("checking");
   
-  const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};
-  const [notifications, setNotifications] = useState([
-      {
-        id: 1,
-        subject: `Nouveau menu – ${menu_add.datetime} [${menu_add.tag_id}]`,
-        date: "31/12/2025",
-        to_home: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
-        to_profile: {id:5, username:"nd974", name:"Nicolas"},
-        read: false,
-        body: `Bonjour,
+  // const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};//Table Menu
 
-  Un nouveau menu a été proposé pour le brunch du 31/01/2026.
+  // Table profiles_notifications(id, profile_id, subject, date_create, read, link, home_id)
+  // const [notifications, setNotifications] = useState([
+  //     {
+  //       id: 1,
+  //       subject: `Nouveau menu – ${menu_add.datetime} [${menu_add.tag_id}]`,
+  //       date: "31/12/2025",
+  //       to_home: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
+  //       to_profile: {id:5, username:"nd974", name:"Nicolas"},
+  //       read: false,
+  //       body: `Bonjour,
 
-  Merci de confirmer votre participation.`,
-        actions: [
-          { label: "✅ Accepter", type: "accept" },
-          { label: "❌ Refuser", type: "reject" }
-        ],
-        link: "/calendar/2025-12-31"
-      },
-      {
-        id: 2,
-        subject: `Inscription - ${menu_add.datetime} [${menu_add.tag_id}]`,
-        to: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
-        date: "30/12/2025",
-        read: true,
-        body: "Nicolas s'est inscrit à l'événement Brunch.",
-      },    
-    ]);
-  const unreadCountNotif = notifications.filter(n => !n.read).length;
+  // Un nouveau menu a été proposé pour le brunch du 31/01/2026.
+
+  // Merci de confirmer votre participation.`,
+  //       actions: [
+  //         { label: "✅ Accepter", type: "accept" },
+  //         { label: "❌ Refuser", type: "reject" }
+  //       ],
+  //       link: "/calendar/2025-12-31"
+  //     },
+  //     {
+  //       id: 2,
+  //       subject: `Inscription - ${menu_add.datetime} [${menu_add.tag_id}]`,
+  //       to: {id:6, name:"Andre Malraux", email:"admin@gmail.com"},
+  //       date: "30/12/2025",
+  //       read: true,
+  //       body: "Nicolas s'est inscrit à l'événement Brunch.",
+  //     },    
+  //   ]);
 
   // ✅ TEST DB
   useEffect(() => {
@@ -136,7 +137,33 @@ function AppRoutes() {
   }, [location.pathname, navigate]);
 
 
+  const [notifications, setNotifications] = useState([]);
 
+  useEffect(() => {
+    if (!home_id || !profile_id) return;
+
+    async function loadNotifications() {
+      try {
+        const res = await fetch(
+          `${API_URL}/notifications/get?home_id=${home_id}&profile_id=${profile_id}`
+        );
+
+        if (!res.ok) throw new Error("API error");
+
+        const data = await res.json();
+        setNotifications(data);
+      } catch (err) {
+        console.error("Erreur chargement notifications:", err);
+      }
+    }
+
+    loadNotifications();
+  }, [home_id, profile_id]);
+
+
+  console.log(notifications);
+
+  const unreadCountNotif = notifications.filter(n => !n.read).length;
 
 
 
