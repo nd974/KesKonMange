@@ -73,6 +73,7 @@ export default function CommentsSection({ comments, profileId, recipeId }) {
       alert("Erreur lors de la suppression");
     }
   }
+  
 
   return (
     <>

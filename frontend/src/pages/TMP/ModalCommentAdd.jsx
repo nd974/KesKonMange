@@ -37,7 +37,7 @@ export default function ModalCommentAdd({
       <div className="flex items-center gap-4 text-2xl">
         {/* Étoiles */}
         {voterActive && (
-          <div className="flex gap-2">
+          <div className="flex gap-3">
             {[1, 2, 3, 4, 5].map((n) => (
               <button
                 type="button"
