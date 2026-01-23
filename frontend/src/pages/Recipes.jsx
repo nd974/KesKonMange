@@ -55,7 +55,7 @@ export default function Recipes({ homeId, profileId }) {
           fetch(`${API_URL}/recipe/get-all`, {
             method: "POST", // ⚡ POST pour envoyer profileId
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ homeId, profileId, hideUsedRecipes: true }),
+            body: JSON.stringify({ homeId, profileId, hideUsedRecipes: false }),
           }).then((r) => r.json()),
 
           fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),
@@ -311,7 +311,7 @@ const filteredRecipes = useMemo(() => {
                   sm:grid-cols-2 
                   md:grid-cols-3 
                   lg:grid-cols-4 
-                  xl:grid-cols-6 
+                  xl:grid-cols-6
                   gap-4
                 ">
                   {paginatedRecipes.map((recipe) => (
