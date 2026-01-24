@@ -168,20 +168,30 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
       >
 
         {/* 🔹 Affichage des étoiles (note) */}
-        {finderConfig?.sortCriteria.some(criteria => criteria.field === 'note') && recipe?.note > -1 && recipe?.note !==null && (
-          <div className="flex items-center gap-2 mt-2">
-            <p>Ma note :</p>
-            <div className="flex">
-              {Array.from({ length: 5 }, (_, i) => {
-                const starNum = i + 1;
+        {/* {finderConfig?.sortCriteria.some(criteria => criteria.field === 'note') && recipe?.note > -1 && recipe?.note !==null && ( */}
+          <div
+            className={`flex items-center ${
+              finderConfig?.sortCriteria.some(criteria => criteria.field === 'note')
+                ? ''
+                : 'mb-5'
+            }`}
+          >
+            {finderConfig?.sortCriteria.some(criteria => criteria.field === 'note') && recipe?.note > -1 && recipe?.note !==null && (
+              <>
+                <p>Ma note :</p>
+                <div className="flex">
+                  {Array.from({ length: 5 }, (_, i) => {
+                    const starNum = i + 1;
 
-                if (starNum <= Math.floor(recipe?.note)) return <FullStar key={i} color="accentGreen" size={0.5}/>;
-                if (starNum - 1 < recipe?.note && recipe?.note < starNum) return <HalfStar key={i} color="accentGreen" size={0.5}/>;
-                return <EmptyStar key={i} color="accentGreen" size={1}/>;
-              })}
-            </div>
+                    if (starNum <= Math.floor(recipe?.note)) return <FullStar key={i} color="accentGreen" size={0.5}/>;
+                    if (starNum - 1 < recipe?.note && recipe?.note < starNum) return <HalfStar key={i} color="accentGreen" size={0.5}/>;
+                    return <EmptyStar key={i} color="accentGreen" size={1}/>;
+                  })}
+                </div>
+              </>
+            )}
           </div>
-        )}
+        {/* )} */}
       </div>
 
       {/* Modal Add to Menu */}

@@ -917,7 +917,12 @@ const StarRating = ({ value, onChange }) => {
 {/* Ingrédients */}
 <section className="mb-6">
 <h2 className="text-xl font-semibold mb-2 flex items-center gap-2">
-  🥕 Ingrédients nécessaires
+  <img
+    src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
+    alt="Menu Icon"
+    className="w-6 h-6 inline-block mr-2"
+  /> 
+  Ingrédients nécessaires
 
   {/* Bouton info */}
   <button

@@ -7,7 +7,7 @@ import StepsSection from "./StepsSection";
 
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND} from "../../config/constants";
+import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_ICONS} from "../../config/constants";
 import { FullStar, HalfStar, EmptyStar } from "../../components/Stars";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
@@ -289,7 +289,12 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
   <StepsSection steps={recipe.steps} />
     <div className="flex justify-center gap-4">
       <button onClick={() => setOpenIngredients(true)} className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm">
-        🥕 Ingrédients
+        <img
+          src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
+          alt="Menu Icon"
+          className="w-6 h-6 inline-block mr-2"
+        />
+        Ingrédients
       </button>
       <button onClick={() => setOpenUstensils(true)} className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm">
         🍳 Ustensiles
@@ -388,7 +393,12 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
             ℹ️ Infos
           </button>
           <button onClick={() => setOpenIngredients(true)} className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm">
-            🥕 Ingrédients
+            <img
+              src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
+              alt="Menu Icon"
+              className="w-6 h-6 inline-block mr-2"
+            />
+            Ingrédients
           </button>
           <button onClick={() => setOpenUstensils(true)} className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm">
             🍳 Ustensiles

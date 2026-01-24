@@ -19,7 +19,7 @@ export default function Recipes({ homeId, profileId }) {
 
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
-  const RECIPES_PER_PAGE = 12;
+  const RECIPES_PER_PAGE = 10;
 
   // FIND RECIPE
   const [showFinder, setShowFinder] = useState(false);
@@ -311,8 +311,8 @@ const filteredRecipes = useMemo(() => {
                   sm:grid-cols-2 
                   md:grid-cols-3 
                   lg:grid-cols-4 
-                  xl:grid-cols-6
-                  gap-4
+                  xl:grid-cols-5
+                  gap-6
                 ">
                   {paginatedRecipes.map((recipe) => (
                     <RecipeCard key={recipe.id} recipe={recipe} homeId={homeId} finderConfig={finderConfig}/>
