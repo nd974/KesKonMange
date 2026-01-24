@@ -7,12 +7,15 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [isAddressValid, setIsAddressValid] = useState(false);
   const [message, setMessage] = useState("");
 
   const [address, setAddress] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
 
   const createMutation = useCreateHome();
+
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -46,6 +49,58 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
     );
   };
 
+  const isFormValid = () => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    const passwordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+
+    return (
+      emailRegex.test(email) &&
+      passwordRegex.test(password) &&
+      name.length > 0 &&
+      name.length < 50 &&
+      isAddressValid
+    );
+  };
+
+
+  const emailIsValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const passwordIsValid =
+    /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(password);
+  const nameIsValid = name.length > 0 && name.length < 50;
+
+  const inputClass = (isValid, value) =>
+  `w-full rounded px-3 py-2 border-2 ${
+    value.length === 0
+      ? "border-gray-300"
+      : isValid
+      ? "border-accentGreen"
+      : "border-softPink"
+  }`;
+
+
+  const emailError =
+    email.length > 0 && !emailIsValid
+      ? "Email invalide (ex: nom@domaine.com)"
+      : "";
+
+  const passwordError =
+    password.length > 0 && !passwordIsValid
+      ? "8 caractères min, majuscule, minuscule, chiffre et caractère spécial"
+      : "";
+
+  const nameError =
+    name.length > 0 && !nameIsValid
+      ? "Le nom doit contenir entre 1 et 50 caractères"
+      : "";
+
+  const addressError =
+    address.length > 0 && !isAddressValid
+      ? "Veuillez sélectionner une adresse dans la liste"
+      : "";
+
+
+
   return (
     <ModalWrapper onClose={onClose}>
       <h2
@@ -62,22 +117,28 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
         <div className="flex flex-col gap-1">
           <label className="font-medium">Nom de la maison :</label>
           <input
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className={inputClass(nameIsValid, name)}
             placeholder="Nom de la maison"
             value={name}
             onChange={(e) => setName(e.target.value)}
           />
+          {nameError && (
+            <p className="text-sm text-red-500 mt-1">{nameError}</p>
+          )}
         </div>
 
         {/* Email */}
         <div className="flex flex-col gap-1">
           <label className="font-medium">Email :</label>
           <input
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className={inputClass(emailIsValid, email)}
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
           />
+          {emailError && (
+            <p className="text-sm text-red-500 mt-1">{emailError}</p>
+          )}
         </div>
 
         {/* Mot de passe */}
@@ -85,30 +146,41 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
           <label className="font-medium">Mot de passe :</label>
           <input
             type="password"
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className={inputClass(passwordIsValid, password)}
             placeholder="Mot de passe"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
+          {passwordError && (
+            <p className="text-sm text-red-500 mt-1">{passwordError}</p>
+          )}
         </div>
 
         {/* Adresse */}
         <div className="flex flex-col gap-1 relative">
           <label className="font-medium">Adresse :</label>
           <input
-            className="w-full border border-gray-300 rounded px-3 py-2"
+            className={inputClass(isAddressValid, address)}
             placeholder="Adresse"
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={(e) => {
+              setAddress(e.target.value);
+              setShowSuggestions(true);
+              setIsAddressValid(false);
+            }}
           />
+          {addressError && (
+            <p className="text-sm text-red-500 mt-1">{addressError}</p>
+          )}
 
+{/* 
           {isFetching && (
             <div className="text-sm text-gray-500 mt-1">
               Recherche de l’adresse…
             </div>
-          )}
+          )} */}
 
-          {suggestions.length > 0 && (
+          {showSuggestions && suggestions.length > 0 && (
             <div className="absolute z-10 top-full left-0 right-0 max-h-40 overflow-auto border border-gray-200 rounded bg-white text-black mt-1">
               {suggestions.map((item) => (
                 <div
@@ -116,6 +188,8 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
                   className="p-2 hover:bg-gray-100 cursor-pointer"
                   onClick={() => {
                     setAddress(item.display_name);
+                    setShowSuggestions(false);
+                    setIsAddressValid(true);
                   }}
                 >
                   {item.display_name}
@@ -129,15 +203,16 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
         <div className="flex justify-end mt-4">
           <button
             onClick={handleCreateHome}
-            disabled={createMutation.isLoading}
+            disabled={createMutation.isLoading || !isFormValid()}
             className={`px-4 py-2 rounded ${
-              !createMutation.isLoading
+              !createMutation.isLoading && isFormValid()
                 ? "bg-green-200 text-green-900 hover:bg-green-300"
                 : "bg-gray-300 text-gray-600 cursor-not-allowed"
             } transition`}
           >
             {createMutation.isLoading ? "Création..." : "Créer"}
           </button>
+
         </div>
       </div>
     </ModalWrapper>
