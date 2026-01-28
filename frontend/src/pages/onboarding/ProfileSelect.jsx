@@ -15,6 +15,8 @@ import {
 
 import { useGetProfiles } from "../../hooks/useProfile";
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
 export default function ProfileSelect({ homeId }) {
   const navigate = useNavigate();
 
@@ -33,9 +35,23 @@ export default function ProfileSelect({ homeId }) {
   refreshProfileId();
 
   const handleSelectProfile = async (profileId) => {
-    setProfileId(profileId);
-    navigate("/");
+    try {
+      await fetch(`${API_URL}/sessions/create`, {
+        method: "POST",
+        credentials: "include", // 🔥 IMPORTANT (cookie)
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ profileId })
+      });
+
+      setProfileId(profileId);
+      navigate("/");
+    } catch (err) {
+      console.error("Erreur création session:", err);
+    }
   };
+
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-[#6b926f] text-white font-nunito">

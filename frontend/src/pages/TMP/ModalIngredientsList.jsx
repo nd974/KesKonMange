@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../../config/constants";
 import ModalIngredientInfos from "../../components/modals/ModalIngredientInfos";
 
-export default function ModalIngredientsList({ ingredients, homeId, profileId }) {
+export default function ModalIngredientsList({ ingredients, homeId, profileId, compact=false }) {
   const navigate = useNavigate();
   const [selectedIngredientId, setSelectedIngredientId] = useState(null);
 
@@ -24,7 +24,7 @@ export default function ModalIngredientsList({ ingredients, homeId, profileId })
   return (
     <>
       {/* Liste des ingrédients */}
-      <div className="rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 max-h-[55vh] sm:max-h-none sm:h-full">
+      <div className={`rounded-3xl p-4 flex flex-col overflow-hidden shadow-lg bg-gray-100 max-h-[55vh] ${compact ? "" : "sm:max-h-none sm:h-full"}`}>
         <h2 className="font-bold text-lg mb-2">Ingrédients</h2>
 
         <div className="overflow-y-auto flex-1 thin-scrollbar">

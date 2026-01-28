@@ -430,7 +430,7 @@ export default function HomeZone({ homeId, homeName, onSelectStorage, onSelectZo
     <input
       value={homeNameEdit}
       onChange={(e) => setHomeNameEdit(e.target.value)}
-      className={`text-center border p-1 w-48 sm:w-64 md:w-80 lg:w-96 ${!isEditing ? "cursor-not-allowed" : "cursor-text"}`}
+      className={`text-center border p-1 w-full ${!isEditing ? "cursor-not-allowed" : "cursor-text"}`}//w-48 sm:w-64 md:w-80 lg:w-96
       disabled={!isEditing}
     />
     {inManage && !isEditing ? (

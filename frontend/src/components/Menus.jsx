@@ -64,7 +64,7 @@ export default function Menus({
           Menus enregistrés
         </h3>
 
-        <div className="mt-5 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 sm:h-[20vh] flex flex-col items-center justify-center gap-2">
+        <div className="mb-10 mt-5 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 sm:h-[20vh] flex flex-col items-center justify-center gap-2">
           <div>Chargement ...</div>
         </div>
       </>

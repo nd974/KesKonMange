@@ -55,7 +55,7 @@ export default function Recipes({ homeId, profileId }) {
           fetch(`${API_URL}/recipe/get-all`, {
             method: "POST", // ⚡ POST pour envoyer profileId
             headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ homeId, profileId, hideUsedRecipes: false }),
+            body: JSON.stringify({ homeId, profileId, hideUsedRecipes: true }),
           }).then((r) => r.json()),
 
           fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),

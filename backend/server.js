@@ -1,3 +1,5 @@
+import cookieParser from "cookie-parser";
+
 import dotenv from "dotenv";
 dotenv.config({ path: "./.env" });
 
@@ -17,6 +19,7 @@ import productRoutes from "./routes/product.js";
 import nutritionRoutes from "./routes/nutrition.js";
 import shopRoutes from "./routes/shops.js";
 import notificationRoutes from "./routes/notifications.js";
+import sessionRoutes from "./routes/sessions.js";
 
 import mailerRoutes from "./routes/mailer.js";
 
@@ -32,7 +35,7 @@ app.use(cors({
 }));
 
 app.use(express.json());
-
+app.use(cookieParser());
 
 app.use("/home", homeRoutes);
 app.use("/profile", profileRoutes);
@@ -49,6 +52,8 @@ app.use("/shops", shopRoutes);
 app.use("/notifications", notificationRoutes);
 
 app.use("/mailer", mailerRoutes);
+
+app.use("/sessions", sessionRoutes);
 
 const PORT = process.env.PORT || 3000;
 

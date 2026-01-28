@@ -2,7 +2,7 @@ import React, { useEffect, useState, useMemo, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import Header from "../components/Header";
 import TagTree from "../components/TagTree";
-import { CLOUDINARY_RES, CLOUDINARY_API, Unit_Item_List } from "../config/constants";
+import { CLOUDINARY_RES, CLOUDINARY_API, Unit_Item_List, CLOUDINARY_ICONS} from "../config/constants";
 import IngredientNameInput from "../components/IngredientNameInput";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";

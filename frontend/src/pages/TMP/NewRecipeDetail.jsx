@@ -249,7 +249,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
       onClick={() => navigate(`/recipe/${recipe.id}`)}
       alt={recipe.name}
-      className="w-40 h-32 sm:w-80 sm:h-64 rounded-2xl object-cover"
+      className="w-80 h-64 sm:w-80 sm:h-64 rounded-2xl object-cover"
     />
 
     <div className="w-[40vh]">
@@ -287,29 +287,23 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
   "
 >
   <StepsSection steps={recipe.steps} />
-    <div className="flex justify-center gap-4">
-      <button onClick={() => setOpenIngredients(true)} className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm">
-        <img
-          src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
-          alt="Menu Icon"
-          className="w-6 h-6 inline-block mr-2"
-        />
-        Ingrédients
-      </button>
-      <button onClick={() => setOpenUstensils(true)} className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm">
-        🍳 Ustensiles
-      </button>
+  <div className="flex justify-center gap-4">
+    <button onClick={() => setOpenIngredients(true)} className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm">
+      <img
+        src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
+        alt="Menu Icon"
+        className="w-6 h-6 inline-block mr-2"
+      />
+      Ingrédients
+    </button>
+    <button onClick={() => setOpenUstensils(true)} className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm">
+      🍳 Ustensiles
+    </button>
   </div>
 </div>
-
-      {openInfos && (
-      <ModalWrapper onClose={() => setOpenInfos(false)}>
-        <ModalRecipeInfo tags={recipe.tags} times={times} level={recipe.level} portion={recipe.portion} usage_count={usageCount} averageNote={averageNote} votesCount={votesCount} modal={true} compact={compact}/>
-      </ModalWrapper>
-    )}
     {openIngredients && (
       <ModalWrapper onClose={() => setOpenIngredients(false)}>
-        <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} />
+        <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} compact={compact}/>
       </ModalWrapper>
     )}
     {openUstensils && (
