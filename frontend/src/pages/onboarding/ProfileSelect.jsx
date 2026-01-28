@@ -36,21 +36,26 @@ export default function ProfileSelect({ homeId }) {
 
   const handleSelectProfile = async (profileId) => {
     try {
-      await fetch(`${API_URL}/sessions/create`, {
+      const res = await fetch(`${API_URL}/sessions/create`, {
         method: "POST",
-        credentials: "include", // 🔥 IMPORTANT (cookie)
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ profileId })
+        credentials: "include", // cookie HTTP-only
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ profileId }),
       });
 
+      if (!res.ok) throw new Error("Erreur création session");
+
+      // ✅ attend que la réponse soit OK avant de setter le profileId
       setProfileId(profileId);
+
+      // Navigue après que le cookie soit créé
       navigate("/");
+
     } catch (err) {
       console.error("Erreur création session:", err);
     }
   };
+
 
 
   return (

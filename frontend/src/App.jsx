@@ -87,10 +87,22 @@ function AppRoutes() {
   useEffect(() => {
     async function verifySession() {
       if (!home_id || !profile_id) return;
-      await fetchWithAuth(`${API_URL}/sessions/get/${profile_id}`);
+
+      // attend que le cookie soit réellement attaché
+      await new Promise(r => setTimeout(r, 200));
+
+      try {
+        const data = await fetchWithAuth(`${API_URL}/sessions/get/${profile_id}`);
+        if (!data) return; // 401 déjà géré dans fetchWithAuth
+      } catch (err) {
+        console.error("Session invalide:", err);
+      }
     }
     verifySession();
   }, [home_id, profile_id]);
+
+
+
 
   // const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};//Table Menu
 
