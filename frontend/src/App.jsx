@@ -172,6 +172,15 @@ function AppRoutes() {
     loadHome();
   }, [location.pathname, navigate]);
 
+  useEffect(() => {
+    const needReload = sessionStorage.getItem("firstLoginReload");
+
+    if (needReload) {
+      sessionStorage.removeItem("firstLoginReload");
+      window.location.reload();
+    }
+  }, []);
+
 
   const [notifications, setNotifications] = useState([]);
 
@@ -219,8 +228,6 @@ function AppRoutes() {
       </div>
     );
   }
-
-      
 
 return (
   <>

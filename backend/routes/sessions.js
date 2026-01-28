@@ -39,12 +39,44 @@ const getDeviceName = (userAgent) => {
   const parser = new UAParser.UAParser(userAgent);
   const result = parser.getResult();
 
-  const browser = result.browser.name || "Unknown Browser";
-  const browserVersion = result.browser.version || "";
-  const os = result.os.name || "Unknown OS";
+  const browser = result.browser.name || "Browser";
+  const browserVersion = result.browser.version
+    ? result.browser.version.split(".")[0]
+    : "";
+
+  const os = result.os.name || "OS";
   const osVersion = result.os.version || "";
 
-  return `${browser} ${browserVersion} / ${os} ${osVersion}`;
+  const deviceVendor = result.device.vendor;
+  const deviceModel = result.device.model;
+  const deviceType = result.device.type; // mobile | tablet | desktop | undefined
+
+  // 🧠 Device label
+  let deviceLabel = "";
+
+  if (deviceVendor && deviceModel) {
+    deviceLabel = `${deviceVendor} ${deviceModel}`;
+  } else if (os === "Android") {
+    deviceLabel = "Android device";
+  } else if (os === "Windows") {
+    deviceLabel = "Windows PC";
+  } else if (os === "Mac OS") {
+    deviceLabel = "Mac";
+  } else if (os === "iOS") {
+    deviceLabel = "iPhone / iPad";
+  } else {
+    deviceLabel = "Unknown device";
+  }
+
+  // 🚨 Heuristique émulateur (soft)
+  const isProbablyEmulator =
+    os === "Android" &&
+    parseInt(osVersion, 10) <= 7 &&
+    parseInt(browserVersion, 10) >= 120;
+
+  const emulatorSuffix = isProbablyEmulator ? " (simulated)" : "";
+
+  return `${deviceLabel} · ${os} ${osVersion}${emulatorSuffix}`;
 };
 
 /* ============================
@@ -55,26 +87,52 @@ const getDeviceName = (userAgent) => {
 router.post("/create", async (req, res) => {
   try {
     const { profileId } = req.body;
-    if (!profileId) return res.status(400).json({ error: "missing profileId" });
-
-    const token = jwt.sign({ profileId }, JWT_SECRET, { expiresIn: "10y" });
+    if (!profileId) {
+      return res.status(400).json({ error: "missing profileId" });
+    }
 
     const userAgent = req.headers["user-agent"] || "Unknown";
     const deviceName = getDeviceName(userAgent);
     const ipAddress = req.ip;
 
-    // Vérifie si ce token existe déjà pour ce profil + device
+    // 🔍 Vérifie si une session existe déjà pour ce device
     const { rows: existing } = await pool.query(`
-      SELECT id FROM "Sessions"
-      WHERE profile_id = $1 AND device_name = $2 AND ip_address = $3
-    `, [profileId, deviceName, ipAddress]);
+      SELECT id, token
+      FROM "Sessions"
+      WHERE profile_id = $1
+        AND user_agent = $2
+        AND ip_address = $3
+      LIMIT 1
+    `, [profileId, userAgent, ipAddress]);
 
+    // 🔁 SESSION EXISTANTE → reposer le cookie
     if (existing.length > 0) {
-      // Session déjà existante → on renvoie l’existante
-      return res.json({ success: true, sessionId: existing[0].id });
+      const existingToken = existing[0].token;
+
+      // Met à jour l'activité
+      await pool.query(`
+        UPDATE "Sessions"
+        SET last_activity = NOW()
+        WHERE id = $1
+      `, [existing[0].id]);
+
+      res.cookie("token", existingToken, {
+        httpOnly: true,
+        maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
+        sameSite: process.env.NODE_ENV !== "localhost" ? "none" : "lax",
+        secure: process.env.NODE_ENV !== "localhost",
+      });
+
+      return res.json({
+        success: true,
+        sessionId: existing[0].id,
+        reused: true,
+      });
     }
 
-    // Sinon créer la session
+    // 🆕 SINON → créer une nouvelle session
+    const token = jwt.sign({ profileId }, JWT_SECRET, { expiresIn: "10y" });
+
     const { rows } = await pool.query(`
       INSERT INTO "Sessions" (
         profile_id, device_name, user_agent, ip_address, token
@@ -86,17 +144,22 @@ router.post("/create", async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV !== "localhost" ? "none" : "lax",
-    secure: process.env.NODE_ENV !== "localhost"
+      sameSite: process.env.NODE_ENV !== "localhost" ? "none" : "lax",
+      secure: process.env.NODE_ENV !== "localhost",
     });
 
-    res.json({ success: true, session: rows[0] });
+    res.json({
+      success: true,
+      session: rows[0],
+      reused: false,
+    });
 
   } catch (err) {
     console.error("Erreur /sessions-create:", err.message);
     res.status(500).json({ error: err.message });
   }
 });
+
 
 
 
