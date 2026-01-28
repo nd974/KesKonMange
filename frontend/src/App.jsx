@@ -68,6 +68,30 @@ function AppRoutes() {
   const [error, setError] = useState(null);
   const [dbStatus, setDbStatus] = useState("checking");
   
+  async function fetchWithAuth(url, options = {}) {
+    const res = await fetch(url, {
+      ...options,
+      credentials: "include", // pour envoyer les cookies si JWT dans cookie
+    });
+
+    if (res.status === 401) {
+      // Session invalide → reset IndexedDB et redirection
+      await setProfileId(0);
+      navigate("/profiles");
+      return null;
+    }
+
+    return res.json();
+  }
+
+  useEffect(() => {
+    async function verifySession() {
+      if (!home_id || !profile_id) return;
+      await fetchWithAuth(`${API_URL}/sessions/get/${profile_id}`);
+    }
+    verifySession();
+  }, [home_id, profile_id]);
+
   // const menu_add = {id:1, datetime:"31/01/2026", tag_id:"Brunch"};//Table Menu
 
   // Table profiles_notifications(id, profile_id, subject, date_create, read, link, home_id)

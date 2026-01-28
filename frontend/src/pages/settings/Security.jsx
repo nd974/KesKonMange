@@ -4,6 +4,7 @@ import SettingsActionItem from "../../components/settings/SettingsActionItem";
 import { Account_links } from "../../config/constants";
 
 import ModalEditEmail from "../../components/modals/settings/ModalEditEmail.jsx";
+import ModalEditDevice from "../../components/modals/settings/ModalEditDevice.jsx";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
@@ -127,6 +128,7 @@ export default function Security({ homeId, profileId }) {
   console.log("profile = ", profile);
 
   const [showEmailModal, setShowEmailModal] = useState(false);
+  const [showDeviceModal, setShowDeviceModal] = useState(false);
 
   return (
     <div className="px-4 md:px-8 lg:px-16">
@@ -213,7 +215,12 @@ export default function Security({ homeId, profileId }) {
                 "Gérer les appareils autorisés",
               ]}
               href={null}
-              onClick={null}
+              onClick={() => setShowDeviceModal(true)}
+            />
+            <ModalEditDevice
+              isOpen={showDeviceModal}
+              onClose={() => setShowDeviceModal(false)}
+              profileId={profileId}
             />
           </div>
 

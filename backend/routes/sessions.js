@@ -10,6 +10,30 @@ const JWT_SECRET = process.env.JWT_SECRET;
 /* ============================
    Utils
 ============================ */
+export const authMiddleware = async (req, res, next) => {
+  try {
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+    if (!token) return res.status(401).json({ error: "Unauthorized" });
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    
+    // Vérifie que la session existe encore
+    const { rows } = await pool.query(`
+      SELECT id FROM "Sessions"
+      WHERE profile_id = $1 AND token = $2
+    `, [decoded.profileId, token]);
+
+    if (rows.length === 0) {
+      return res.status(401).json({ error: "Session expired" });
+    }
+
+    req.profileId = decoded.profileId;
+    next();
+  } catch (err) {
+    return res.status(401).json({ error: "Unauthorized" });
+  }
+};
+
 
 const getDeviceName = (userAgent) => {
   const parser = new UAParser.UAParser(userAgent);
@@ -27,52 +51,46 @@ const getDeviceName = (userAgent) => {
    POST → créer une session
    (appelé au login)
 ============================ */
+
 router.post("/create", async (req, res) => {
   try {
     const { profileId } = req.body;
     if (!profileId) return res.status(400).json({ error: "missing profileId" });
 
+    const token = jwt.sign({ profileId }, JWT_SECRET, { expiresIn: "10y" });
+
     const userAgent = req.headers["user-agent"] || "Unknown";
     const deviceName = getDeviceName(userAgent);
     const ipAddress = req.ip;
 
-    // 🔹 Vérifier si une session existe déjà pour ce profil + device + userAgent
-    const { rows: existingSessions } = await pool.query(
-    `SELECT id, token FROM "Sessions" 
-    WHERE profile_id = $1 AND ip_address = $2 AND user_agent = $3`,
-    [profileId, ipAddress, userAgent]
-    );
+    // Vérifie si ce token existe déjà pour ce profil + device
+    const { rows: existing } = await pool.query(`
+      SELECT id FROM "Sessions"
+      WHERE profile_id = $1 AND device_name = $2 AND ip_address = $3
+    `, [profileId, deviceName, ipAddress]);
 
-    let token;
-    if (existingSessions.length > 0) {
-      // Utiliser le token existant
-      token = existingSessions[0].token;
-    } else {
-      // 🔐 créer un token JWT durable (par ex. 10 ans)
-      token = jwt.sign({ profileId }, JWT_SECRET, { expiresIn: '10y' });
-
-      // Créer la session
-      await pool.query(`
-        INSERT INTO "Sessions" (
-          profile_id,
-          device_name,
-          user_agent,
-          ip_address,
-          token
-        )
-        VALUES ($1, $2, $3, $4, $5)
-      `, [profileId, deviceName, userAgent, ipAddress, token]);
+    if (existing.length > 0) {
+      // Session déjà existante → on renvoie l’existante
+      return res.json({ success: true, sessionId: existing[0].id });
     }
 
-    // 🔐 envoyer le token au client dans un cookie httpOnly
+    // Sinon créer la session
+    const { rows } = await pool.query(`
+      INSERT INTO "Sessions" (
+        profile_id, device_name, user_agent, ip_address, token
+      )
+      VALUES ($1, $2, $3, $4, $5)
+      RETURNING id, device_name, created_at
+    `, [profileId, deviceName, userAgent, ipAddress, token]);
+
     res.cookie("token", token, {
       httpOnly: true,
-      maxAge: 10 * 365 * 24 * 60 * 60 * 1000, // 10 ans
+      maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production"
     });
 
-    res.json({ success: true });
+    res.json({ success: true, session: rows[0] });
 
   } catch (err) {
     console.error("Erreur /sessions-create:", err.message);
@@ -83,15 +101,26 @@ router.post("/create", async (req, res) => {
 
 
 
+
 /* ============================
    GET → sessions d’un profile
 ============================ */
 
-router.get("/get/:profileId", async (req, res) => {
+router.get("/get/:profileId", authMiddleware, async (req, res) => {
   try {
     const { profileId } = req.params;
-    if (!profileId) {
-      return res.status(400).json({ error: "missing profileId" });
+    const token = req.cookies.token || req.headers.authorization?.split(" ")[1];
+
+    if (!profileId) return res.status(400).json({ error: "missing profileId" });
+
+    // Vérifie que la session du token existe encore
+    const { rows: tokenRows } = await pool.query(`
+      SELECT id FROM "Sessions"
+      WHERE profile_id = $1 AND token = $2
+    `, [profileId, token]);
+
+    if (tokenRows.length === 0) {
+      return res.status(401).json({ error: "Session expired" });
     }
 
     const { rows } = await pool.query(`
@@ -113,6 +142,7 @@ router.get("/get/:profileId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
 
 /* ============================
    DELETE → supprimer une session
@@ -138,5 +168,37 @@ router.delete("/delete/:sessionId", async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+
+/* ============================
+   PUT → modifier une session
+============================ */
+
+router.put("/update/:sessionId", async (req, res) => {
+  try {
+    const { sessionId } = req.params;
+    const { deviceName } = req.body; // tu peux ajouter d'autres champs si besoin
+
+    if (!sessionId) return res.status(400).json({ error: "missing sessionId" });
+    if (!deviceName) return res.status(400).json({ error: "missing deviceName" });
+
+    const { rows } = await pool.query(`
+      UPDATE "Sessions"
+      SET device_name = $1
+      WHERE id = $2
+      RETURNING id, device_name, ip_address, last_activity, created_at
+    `, [deviceName, sessionId]);
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: "Session not found" });
+    }
+
+    res.json({ success: true, session: rows[0] });
+
+  } catch (err) {
+    console.error("Erreur /sessions-update:", err.message);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 
 export default router;
