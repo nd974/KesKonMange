@@ -76,7 +76,7 @@ const getDeviceName = (userAgent) => {
 
   const emulatorSuffix = isProbablyEmulator ? " (simulated)" : "";
 
-  return `${deviceLabel} · ${os} ${osVersion}${emulatorSuffix}`;
+  return `· ${deviceLabel} · ${os} ${osVersion}${emulatorSuffix}`;
 };
 
 /* ============================
