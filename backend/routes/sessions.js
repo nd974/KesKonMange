@@ -86,8 +86,8 @@ router.post("/create", async (req, res) => {
     res.cookie("token", token, {
       httpOnly: true,
       maxAge: 10 * 365 * 24 * 60 * 60 * 1000,
-    sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
-    secure: process.env.NODE_ENV === "production"
+    sameSite: process.env.NODE_ENV !== "localhost" ? "none" : "lax",
+    secure: process.env.NODE_ENV !== "localhost"
     });
 
     res.json({ success: true, session: rows[0] });
