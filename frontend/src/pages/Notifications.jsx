@@ -9,6 +9,17 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
   const navigate = useNavigate();
   const [selected, setSelected] = useState(null);
 
+  const formatDateCreate = (date) => {
+    const d = dayjs(date);
+    const today = dayjs();
+
+    if (d.isSame(today, "day")) {
+      return d.format("HH:mm");
+    }
+
+    return d.format("DD MMM");
+  };
+
   const markAsRead = async(id) => {
     setNotifications(prev =>
       prev.map(n => n.id === id ? { ...n, read: true } : n)
@@ -74,20 +85,34 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
               ${!notif.read ? "bg-softPink/20" : "bg-white  text-gray-400"}
             `}
           >
-            <div className="flex items-center justify-between">
-              <span className="font-medium leading-tight">
-                {notif.multiple_home && (
-                  <>
-                    {notif.home_name}
-                    <br />
-                  </>
-                )}
-                {notif.subject} - {dayjs(notif.date_event).format("DD/MM/YYYY")} [{notif.tag_name}]
-              </span>
-              {!notif.read && (
-                <span className="w-2 h-2 bg-red-500 rounded-full" />
-              )}
+            <div className="flex items-start justify-between">
+              <div className="flex-1 min-w-0">
+                {/* Ligne 1 : home + date */}
+                <div className="flex items-center mb-1">
+                  <span className="font-medium truncate">
+                    {notif.multiple_home ? notif.home_name : ""}
+                  </span>
+
+                  <span className="ml-auto whitespace-nowrap text-xs text-gray-500">
+                    {formatDateCreate(notif.date_create)}
+                  </span>
+                </div>
+
+                {/* Ligne 2 : sujet */}
+                <div className="font-medium leading-tight">
+                  {notif.subject} - {dayjs(notif.date_event).format("DD/MM/YYYY")} [{notif.tag_name}]
+                </div>
+              </div>
+
+              <span
+                className={`
+                  ml-2 -mt-1 w-2 h-2 rounded-full flex-shrink-0
+                  ${notif.read ? "invisible" : "bg-red-500"}
+                `}
+              />
             </div>
+
+
             <div className="text-xs text-gray-400 mt-1">
               {notif.date}
             </div>

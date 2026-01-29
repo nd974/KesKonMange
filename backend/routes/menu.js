@@ -255,7 +255,8 @@ router.post("/subscribe", async (req, res) => {
       [menuId, profileId]
     );
 
-    res.json({ ok: true, notified: tokens.length });
+    // res.json({ ok: true, notified: tokens.length });
+    res.json({ ok: true });
   } catch (err) {
     console.error("❌ Erreur /subscribe:", err.stack);
     res.status(500).json({ error: "Erreur serveur lors de l'inscription" });
@@ -278,7 +279,8 @@ router.post("/unsubscribe", async (req, res) => {
       [menuId, profileId]
     );
 
-    res.json({ success: true, message: "Désinscription réussie", notified: tokens.length });
+    // res.json({ success: true, message: "Désinscription réussie", notified: tokens.length });
+    res.json({ success: true });
   } catch (err) {
     console.error("❌ Erreur /unsubscribe:", err.stack);
     res.status(500).json({ error: "Erreur serveur lors de la désinscription" });
