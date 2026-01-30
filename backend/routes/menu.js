@@ -99,12 +99,16 @@ router.post("/update-menu", async (req, res) => {
 
     // 3️⃣ Insère toutes les recettes uniques avec ON CONFLICT
     if (uniqueRecipeIds.length > 0) {
-      const values = uniqueRecipeIds.map((rid) => `(${menuId}, ${rid})`).join(",");
-      await pool.query(`
-        INSERT INTO "menus_recipes" (menu_id, recipe_id)
-        VALUES ${values}
+      await pool.query(
+        `
+        INSERT INTO "menus_recipes" (menu_id, recipe_id, portion)
+        SELECT $1, r.id, r.portion
+        FROM "Recipe" r
+        WHERE r.id = ANY($2::int[])
         ON CONFLICT (menu_id, recipe_id) DO NOTHING
-      `);
+        `,
+        [menuId, uniqueRecipeIds]
+      );
     }
 
     await createMenuNotifications({pool,home_id:homeId,date,menuTagId:tagId});
@@ -148,9 +152,13 @@ router.post("/add-recipe", async (req, res) => {
 
   try {
     await pool.query(
-      `INSERT INTO "menus_recipes" (menu_id, recipe_id)
-       VALUES ($1, $2)
-       ON CONFLICT (menu_id, recipe_id) DO NOTHING`,
+      `
+      INSERT INTO "menus_recipes" (menu_id, recipe_id, portion)
+      SELECT $1, r.id, r.portion
+      FROM "Recipe" r
+      WHERE r.id = $2
+      ON CONFLICT (menu_id, recipe_id) DO NOTHING
+      `,
       [menu_id, recipe_id]
     );
 
@@ -186,9 +194,13 @@ router.post("/create", async (req, res) => {
 
     // 2️⃣ Ajout recette
     await pool.query(
-      `INSERT INTO "menus_recipes" (menu_id, recipe_id)
-       VALUES ($1, $2)
-       ON CONFLICT (menu_id, recipe_id) DO NOTHING`,
+      `
+      INSERT INTO "menus_recipes" (menu_id, recipe_id, portion)
+      SELECT $1, r.id, r.portion
+      FROM "Recipe" r
+      WHERE r.id = $2
+      ON CONFLICT (menu_id, recipe_id) DO NOTHING
+      `,
       [menuId, recipe_id]
     );
 

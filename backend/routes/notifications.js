@@ -98,8 +98,6 @@ export async function createMenuNotifications({ pool, home_id, date, menuTagId }
     [home_id]
   );
 
-  console.log("sssssssssssssssssssssssssssssssss=", profilesResult);
-
   const subject = `Nouveau menu`;
   const body = `Bonjour,
 
