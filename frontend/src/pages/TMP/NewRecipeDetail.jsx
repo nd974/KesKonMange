@@ -349,7 +349,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     }}
   >
     <h1
-      className="text-2xl sm:text-6xl font-bold leading-tight text-softPink font-display break-words px-2 sm:px-2 sm:py-2"
+      className="text-2xl sm:text-5xl font-bold leading-tight text-softPink font-display break-words px-2 sm:px-2 sm:py-2"
       style={{
         WebkitTextStroke: "8px white",
         paintOrder: "stroke fill",

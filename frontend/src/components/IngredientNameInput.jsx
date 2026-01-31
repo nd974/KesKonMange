@@ -74,9 +74,17 @@ export default function IngredientNameInput({
 
     const merged = [...recMatches, ...ingMatches];
 
-    cacheRef.current[name] = merged;
-    setSuggestions(merged);
-    setWarning(merged.length === 0);
+    const seenNames = new Set();
+    const unique = merged.filter(item => {
+      const key = item.name.toLowerCase();
+      if (seenNames.has(key)) return false;
+      seenNames.add(key);
+      return true;
+    });
+
+    cacheRef.current[name] = unique;
+    setSuggestions(unique);
+    setWarning(unique.length === 0);
   };
 
   const handleChange = (v) => {

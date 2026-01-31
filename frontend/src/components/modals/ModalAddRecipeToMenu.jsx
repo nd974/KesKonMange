@@ -4,6 +4,8 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../../config/constants";
 
+import dayjs from "dayjs";
+
 export default function ModalAddRecipeToMenu({
   show,
   onClose,
@@ -102,8 +104,7 @@ export default function ModalAddRecipeToMenu({
               <option value="">-- Nouveau menu --</option>
               {menus.map(m => (
                 <option key={m.id} value={m.id}>
-                  {m.date.slice(0, 10).split("-").reverse().join("/")} —{" "}
-                  {m.tag.name}
+                  {dayjs(m.date).format("DD/MM/YYYY")} — {m.tag.name}
                 </option>
               ))}
             </select>
