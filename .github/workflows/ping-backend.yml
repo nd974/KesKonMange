@@ -1,8 +1,8 @@
 name: Ping Backend
 
 on:
-  schedule:
-    - cron: '*/1 * * * *'
+  #schedule:
+    #- cron: '*/1 * * * *'
   workflow_dispatch:
 
 concurrency:
