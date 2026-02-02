@@ -1036,6 +1036,7 @@ const StarRating = ({ value, onChange }) => {
         }}
         allowRemove={true}
         onRemove={() => removeIngredient(i)}
+        recipeName={recipeName}
       />
     </div>
   );

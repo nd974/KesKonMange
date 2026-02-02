@@ -15,6 +15,7 @@ export default function IngredientNameInput({
   disabled = false,
 
   onSuggestionsChange,
+  recipeName="",
 }) {
   const [suggestions, setSuggestions] = useState([]);
   const [warning, setWarning] = useState(false);
@@ -70,6 +71,7 @@ export default function IngredientNameInput({
 
     const recMatches = localRecipes
       .filter((r) => normalizeStr(r.name.toLowerCase()).includes(name))
+      .filter((r) => normalizeStr(r.name.toLowerCase()) !== normalizeStr(recipeName))
       .map((r) => ({ name: r.name, isRec: true }));
 
     const merged = [...recMatches, ...ingMatches];
@@ -99,6 +101,8 @@ export default function IngredientNameInput({
   useEffect(() => {
     onSuggestionsChange?.(suggestions);
   }, [suggestions]);
+
+  console.log("recipeName == ", recipeName);
 
   return (
     <div className="relative flex items-center gap-2 flex-1">

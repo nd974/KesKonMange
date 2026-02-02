@@ -311,8 +311,14 @@ const menuStatus = useMemo(() => {
 const expandIngredientAsync = async (
   ingredient,
   multiplier = 1,
-  visited = new Set()
+  visited = new Set(),
+  recipesCoveredByStock = new Set()
 ) => {
+  // ⚠️ si la recette est couverte par le stock, on ne retourne rien
+  if (ingredient.recipe_id && recipesCoveredByStock.has(ingredient.recipe_id)) {
+    return [];
+  }
+
   // ingrédient simple
   if (!ingredient.recipe_id) {
     return [{
@@ -371,7 +377,8 @@ const expandIngredientAsync = async (
           parent_portions: currentPortions, // 🔥 indispensable
         },
         multiplier * portionFactor,
-        visited
+        visited,
+        recipesCoveredByStock 
       ))
     );
   }
@@ -416,11 +423,27 @@ const mergeIngredients = (ingredients) => {
 
 
 const generateShoppingList = async () => {
+
+
+  // 🔥 RECETTES COUVERTES PAR LE STOCK (ex: samoussas crus)
+  const recipesCoveredByStock = new Set();
+
+  products.forEach(p => {
+    if (p.recipe_id && Number(p.amount || 0) > 0) {
+      recipesCoveredByStock.add(p.recipe_id);
+    }
+  });
+
+  console.log("recipesCoveredByStock = ", [...recipesCoveredByStock]);
+
   const allIngredients = [];
 
   // Boucle pour parcourir tous les menus et leurs recettes
   for (const menu of selectedMenus) {
     for (const recipe of menu.recipes || []) {
+      if (recipesCoveredByStock.has(recipe.id)) {
+        continue;
+      }
       for (const ing of recipe.ingredients || []) {
         const baseIngredient = {
           name: ing.name,
@@ -456,7 +479,9 @@ const generateShoppingList = async () => {
             ...baseIngredient,
             parent_portions: recipePortions
           },
-          portionRatio
+          portionRatio,
+          new Set(),
+          recipesCoveredByStock
         );
         allIngredients.push(...expanded);
       }

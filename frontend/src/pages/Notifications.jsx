@@ -88,12 +88,14 @@ export default function NotificationsPage({ homeId, notifications, setNotificati
             <div className="flex items-start justify-between">
               <div className="flex-1 min-w-0">
                 {/* Ligne 1 : home + date */}
-                <div className="flex items-center mb-1">
-                  <span className="font-medium truncate">
-                    {notif.multiple_home ? notif.home_name : ""}
-                  </span>
+                <div className={`flex items-center ${notif.multiple_home ? "" : "-mb-5"}`}>
+                  {notif.multiple_home && (
+                    <span className="font-medium truncate">
+                      {notif.home_name}
+                    </span>
+                  )}
 
-                  <span className="ml-auto whitespace-nowrap text-xs text-gray-500">
+                  <span className="ml-auto whitespace-nowrap text-xs text-gray-500 mt-1">
                     {formatDateCreate(notif.date_create)}
                   </span>
                 </div>

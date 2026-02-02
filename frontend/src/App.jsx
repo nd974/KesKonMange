@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const MAINT = import.meta.env.VITE_MAINT === "true";
 
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from "react-router-dom";
 
@@ -210,8 +211,14 @@ function AppRoutes() {
 
   const unreadCountNotif = notifications.filter(n => !n.read).length;
 
-
-
+  console.log("MAINT = ", MAINT);
+  if (MAINT) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <p>MAINTENANCE</p>
+      </div>
+    );
+  }
 
   if (dbStatus === "error") {
     return (
@@ -228,6 +235,7 @@ function AppRoutes() {
       </div>
     );
   }
+
 
 return (
   <>
