@@ -264,6 +264,10 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       compact={compact}
     />
     </div>
+    <div>
+      <span>Nutrition 🧬</span>
+      <span>Recette Similaire➡️/🔗</span>
+    </div>
   </div>
 
   {/* --- Préparation --- */}
