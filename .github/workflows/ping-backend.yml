@@ -2,8 +2,12 @@ name: Ping Backend
 
 on:
   schedule:
-    - cron: '*/5 * * * *'   # toutes les 5 minutes (UTC)
-  workflow_dispatch:        # lancement manuel
+    - cron: '*/1 * * * *'
+  workflow_dispatch:
+
+concurrency:
+  group: ping-backend
+  cancel-in-progress: true
 
 jobs:
   ping:
@@ -17,6 +21,4 @@ jobs:
                --silent \
                --show-error \
                --max-time 20 \
-               --retry 3 \
-               --retry-delay 5 \
                "${{ secrets.RENDER_URL }}"
