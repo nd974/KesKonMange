@@ -59,15 +59,6 @@ export default function ModalRecipeInfo({ tags, times, level, portion, usage_cou
             </div>
           )}
         </div>
-
-        {/* Flèche à droite */}
-        <div>
-          {/* <span className="text-xl">🧬</span>
-
-          <span className="text-xl">🔗</span> */}
-          <span className="text-xl">➡️</span>
-        </div>
-
       </div>
 
 

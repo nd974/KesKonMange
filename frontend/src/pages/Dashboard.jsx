@@ -204,7 +204,7 @@ export default function Dashboard({ homeId, profileId }) {
                       <button
                         key={m.id || `${m.menuId}-${m.tagId}-${i}`}
                         onClick={() => setActiveMenuIndex(i)}
-                        className={`px-3 py-1 sm:px-5 sm:py-2 rounded-tl-2xl rounded-tr-lg 
+                        className={`px-3 py-1 sm:px-5 rounded-tl-2xl rounded-tr-lg 
                           text-sm sm:text-base font-medium -mb-1 transition-all ${
                             i === activeMenuIndex
                               ? "bg-accentGreen text-white shadow-soft"

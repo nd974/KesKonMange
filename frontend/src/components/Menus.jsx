@@ -90,7 +90,7 @@ export default function Menus({
           </div>
         </div>
       ) : (
-        <div className="flex gap-0 overflow-x-auto scroll-smooth mt-3 relative px-5">
+        <div className="flex gap-0 overflow-x-auto scroll-smooth mt-5 relative px-5">
           {groups.map((g, index) => {
             const isSelected =
               selectedDay?.format("YYYY-MM-DD") === g.date;

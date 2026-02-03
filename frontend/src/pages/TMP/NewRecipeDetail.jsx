@@ -10,6 +10,8 @@ import { useNavigate, useParams } from "react-router-dom";
 import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_ICONS} from "../../config/constants";
 import { FullStar, HalfStar, EmptyStar } from "../../components/Stars";
 
+import ActionButton from "../../components/ActionButton";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact = false }) {
@@ -241,7 +243,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
   // === LAYOUT COMPACT ===
   if (compact) {
     return (
-<div className="flex flex-col lg:flex-row gap-6 items-start mb-5">
+<div className="flex flex-col lg:flex-row gap-6 items-start mb-4">
   {/* --- Colonne gauche --- */}
   <div className="flex flex-col items-center gap-4 lg:w-auto w-full">
     {/* Image */}
@@ -249,10 +251,10 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       src={`${CLOUDINARY_RES}${recipe.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
       onClick={() => navigate(`/recipe/${recipe.id}`)}
       alt={recipe.name}
-      className="w-80 h-64 sm:w-80 sm:h-64 rounded-2xl object-cover"
+      className="w-80 h-64 sm:w-[40vh] sm:h-70 rounded-2xl object-cover"
     />
 
-    <div className="w-[40vh]">
+    <div className="w-[40vh] mt-3">
         <ModalRecipeInfo
       tags={recipe.tags}
       times={times}
@@ -264,57 +266,85 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       compact={compact}
     />
     </div>
-    <div>
-      <span>Nutrition 🧬</span>
-      <span>Recette Similaire➡️/🔗</span>
+    <div className="flex gap-3 -mt-1">
+      <ActionButton
+        icon="🧬"
+        label="Nutrition"
+        color="accentGreen"
+        onClick={() => setShowModalNutrition(true)}
+      />
+
+      <ActionButton
+        icon="🔗"
+        label="Recettes similaires"
+        color="softBeige"
+        onClick={() => setShowModalNutrition(true)}
+      />
+    </div>
+
+  </div>
+
+  <div className="w-full lg:flex-1 flex flex-col">
+    <div
+      className="
+        w-full
+        max-w-[45vh]
+        lg:flex-1
+        rounded-3xl
+        bg-softBeige
+        px-5 py-3
+        flex
+        flex-col
+        gap-4
+        mx-auto
+        border-2
+        border-gray-300
+      "
+    >
+      <StepsSection steps={recipe.steps} />
+
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={() => setOpenIngredients(true)}
+          className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm"
+        >
+          <img
+            src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
+            alt="Menu Icon"
+            className="w-6 h-6 inline-block mr-2"
+          />
+          Ingrédients
+        </button>
+
+        <button
+          onClick={() => setOpenUstensils(true)}
+          className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm"
+        >
+          🍳 Ustensiles
+        </button>
+      </div>
+    </div>
+    <div className="w-full flex flex-col mt-3">
+      <ActionButton
+        icon="💬"
+        label="Voir les commentaires"
+        color="danger"
+        onClick={() => setShowModalNutrition(true)}
+      />
     </div>
   </div>
 
-  {/* --- Préparation --- */}
-<div
-  className="
-    w-full
-    max-w-[45vh]
-    lg:flex-1
-    rounded-3xl
-    bg-softBeige
-    px-5 py-4
-    flex
-    flex-col
-    gap-4
-    p-4
-    mx-auto
-    items-center
-    justify-center
-    border-2
-    border-gray-300
-  "
->
-  <StepsSection steps={recipe.steps} />
-  <div className="flex justify-center gap-4">
-    <button onClick={() => setOpenIngredients(true)} className="bg-pink-100 text-black px-4 py-2 rounded-full shadow text-sm">
-      <img
-        src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Ing"]}`}
-        alt="Menu Icon"
-        className="w-6 h-6 inline-block mr-2"
-      />
-      Ingrédients
-    </button>
-    <button onClick={() => setOpenUstensils(true)} className="bg-amber-100 text-black px-4 py-2 rounded-full shadow text-sm">
-      🍳 Ustensiles
-    </button>
-  </div>
-</div>
-    {openIngredients && (
-      <ModalWrapper onClose={() => setOpenIngredients(false)}>
-        <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} compact={compact}/>
-      </ModalWrapper>
-    )}
-    {openUstensils && (
-      <ModalWrapper onClose={() => setOpenUstensils(false)}>
-        <ModalUstensilesList utensils={recipe.utensils} />
-      </ModalWrapper>
-    )}
+
+{openIngredients && (
+  <ModalWrapper onClose={() => setOpenIngredients(false)}>
+    <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} compact={compact}/>
+  </ModalWrapper>
+)}
+{openUstensils && (
+  <ModalWrapper onClose={() => setOpenUstensils(false)}>
+    <ModalUstensilesList utensils={recipe.utensils} />
+  </ModalWrapper>
+)}
 </div>
 
     );
