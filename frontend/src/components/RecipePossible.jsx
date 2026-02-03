@@ -145,13 +145,13 @@ export default function RecipePossible({ homeId, profileId }) {
 
       {recipesOk.length > 0 ? (
         <>
-        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
+        <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
             Faisables à partir du <GardeMangerLink />
         </p>
         {renderRow(recipesOk)}
         </>
       ):(
-        <p className="mt-4 ml-5 text-xs font-semibold text-gray-700">
+        <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
             Aucune recettes faisables à partir du <GardeMangerLink />
         </p>
       )}

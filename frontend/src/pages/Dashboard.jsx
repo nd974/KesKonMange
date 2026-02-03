@@ -199,12 +199,12 @@ export default function Dashboard({ homeId, profileId }) {
               {selectedDay && (
                 <>
                   {/* tags desktop */}
-                  <div   className={`hidden sm:flex ml-5 ${selectedMenusForDay?.length === 1 ? "mb-9" : ""}`}>
+                  <div   className={`hidden sm:flex ml-5 ${selectedMenusForDay?.length === 1 ? "mb-5" : ""}`}>
                     {selectedMenusForDay.length > 1 && selectedMenusForDay?.map((m, i) => (
                       <button
                         key={m.id || `${m.menuId}-${m.tagId}-${i}`}
                         onClick={() => setActiveMenuIndex(i)}
-                        className={`px-3 py-1 sm:px-5 rounded-tl-2xl rounded-tr-lg 
+                        className={`px-3 py-1 sm:px-5 rounded-tl-2xl rounded-tr-lg -mt-2
                           text-sm sm:text-base font-medium -mb-1 transition-all ${
                             i === activeMenuIndex
                               ? "bg-accentGreen text-white shadow-soft"
@@ -222,7 +222,7 @@ export default function Dashboard({ homeId, profileId }) {
                   </div>
 
                   {/* mobile */}
-                  <div className="flex sm:hidden w-full items-center justify-between px-4 -mb-0.5">
+                  <div className="flex sm:hidden w-full items-center justify-between px-4">
                     {/* liste déroulante à gauche */}
                     <select
                       onChange={(e) => setActiveMenuIndex(Number(e.target.value))}
@@ -383,7 +383,7 @@ export default function Dashboard({ homeId, profileId }) {
             </div>
                 </div>
               ) : (
-                <p className="text-gray-500 text-center py-10">
+                <p className="text-gray-500 text-center py-10 mt-5">
                   Choisir un jour avec menu(s) enregistré(s).
                 </p>
               )}
@@ -397,7 +397,7 @@ export default function Dashboard({ homeId, profileId }) {
           </section>
 
           {/* RIGHT — regroupement de Menu A + Menu B */}
-          <div className="order-1 lg:order-2 flex flex-col mt-1">
+          <div className="order-1 lg:order-2 flex flex-col">
 
             {/* MENU A (toujours visible) */}
             <section>
