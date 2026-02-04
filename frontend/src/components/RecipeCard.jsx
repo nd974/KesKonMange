@@ -63,10 +63,14 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
   }, [recipe.id]); // Add recipe.id to dependency array for rerun on recipe change
   
   return (
-    <div
-      className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-gray-100"
-      onClick={() => {
-        if (!showAddToMenuModal) navigate(`/recipe/${recipe.id}`);
+    <a
+      href={`/recipe/${recipe.id}`}
+      className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-gray-100 relative block"
+      onClick={(e) => {
+        if (showAddToMenuModal) {
+          e.preventDefault(); // ❌ modal ouverte → bloque navigation
+          return;
+        }
       }}
     >
     <div className="relative">
@@ -97,6 +101,7 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
         className="absolute top-2 right-2 text-blue-600 hover:text-blue-800 bg-white/80 rounded-full p-1 shadow"
         title="Ajouter au menu"
         onClick={(e) => {
+          e.preventDefault();
           e.stopPropagation();
           setSelectedRecipe(recipe);
           setShowAddToMenuModal(true);
@@ -213,6 +218,6 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
           setSelectedMealTagId={setSelectedMealTagId}
         />
       )}
-    </div>
+    </a>
   );
 }
