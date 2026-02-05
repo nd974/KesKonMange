@@ -9,7 +9,6 @@ export default function Footer() {
             
             <a href="/utils/unusedIngredients" className="hover:underline">⏳ UnusedIngredients</a>
             <a href="/old_recipe_details" className="hover:underline">⏳ OLD RECIPE</a>
-            <a href="/shops" className="hover:underline">⏳ TMP STORE</a>
             
             <a href="#" className="hover:underline">Centre d’aide</a>
             <a href="/settings/termsofuse" className="hover:underline">Conditions d’utilisation</a>

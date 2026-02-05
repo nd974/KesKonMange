@@ -100,6 +100,42 @@ router.post("/transfer", async (req, res) => {
   }
 });
 
+// ------------------- UPDATE PROFILE -------------------
+router.post("/update", async (req, res) => {
+  try {
+    const { profileId, name, username, avatar } = req.body;
+
+    if (!profileId) {
+      return res.status(400).json({ error: "missing profileId" });
+    }
+
+    const query = `
+      UPDATE "Profile"
+      SET
+        name = COALESCE($2, name),
+        username = COALESCE($3, username),
+        avatar = COALESCE($4, avatar)
+      WHERE id = $1
+      RETURNING id, username, name, avatar
+    `;
+
+    const { rows } = await pool.query(query, [
+      profileId,
+      name || null,
+      username || null,
+      avatar || null,
+    ]);
+
+    if (!rows.length) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    res.json({ ok: true, profile: rows[0] });
+  } catch (e) {
+    console.error(e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 
 

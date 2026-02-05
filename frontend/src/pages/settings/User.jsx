@@ -5,7 +5,7 @@ import { Account_links } from "../../config/constants";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { setHomeId, getHomeId, getProfileId } from "../../../session";
-import { CLOUDINARY_RES, CLOUDINARY_AVATARS_SETTINGS, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../../config/constants";
+import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_AVATARS_SETTINGS, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../../config/constants";
 
 import ModalPickAvatar from "../../components/modals/ModalPickAvatar";
 
@@ -15,6 +15,8 @@ export default function User({ homeId, profileId }) {
   const [profile, setProfile] = useState(null);
   const [home, setHome] = useState(null);
 
+  const [name, setName] = useState("");
+  const [username, setUsername] = useState("");
   const [isAvatarModalOpen, setIsAvatarModalOpen] = useState(false);
   const [selectedAvatar, setSelectedAvatar] = useState(null);
 
@@ -40,15 +42,53 @@ export default function User({ homeId, profileId }) {
     const fetchDataHome = async () => {
       if (profile) {
         console.log(profile.home_id);
-          await fetch(`${API_URL}/home/get/${profile.home_id}`)
-              .then((res) => res.json())
-              .then((data) => setHome(data))
-              .catch((err) => console.error("Erreur profil:", err));
+        await fetch(`${API_URL}/home/get/${profile.home_id}`)
+            .then((res) => res.json())
+            .then((data) => setHome(data))
+            .catch((err) => console.error("Erreur profil:", err));
       }
     };
 
     fetchDataHome();
   }, [profile]);
+
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name || "");
+      setUsername(profile.username || "");
+      setSelectedAvatar(profile.avatar || null);
+    }
+  }, [profile]);
+
+
+  const handleSave = async () => {
+    try {
+      const res = await fetch(`${API_URL}/profile/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          profileId: profile.id,
+          name,
+          username,
+          avatar: selectedAvatar,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (data.ok) {
+        setProfile(data.profile); // synchro UI
+        alert("Profil mis à jour ✅");
+        window.location.reload();
+      } else {
+        alert(data.error || "Erreur lors de la mise à jour");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Erreur serveur");
+    }
+  };
+
 
 
   return (
@@ -73,15 +113,18 @@ export default function User({ homeId, profileId }) {
               {/* Avatar + Nom */}
               <div className="flex items-center gap-6 mb-8">
                 <div className="relative w-24 h-24 rounded overflow-hidden">
-                    {profile?.avatar ? (
+                    {/* {profile?.avatar && (
                       <img
-                        src={`${CLOUDINARY_RES}${selectedAvatar || profile.avatar}`}
+                        src={`${CLOUDINARY_RES}${selectedAvatar || profile.avatar || CLOUDINARY_RECETTE_NOTFOUND}`}
                         alt="Profil"
                         className="object-cover w-full h-full"
                       />
-                    ) : (
-                        <span>{profile?.username?.[0]?.toUpperCase() || ""}</span>
-                    )}
+                    )} */}
+                    <img
+                      src={`${CLOUDINARY_RES}${selectedAvatar || profile?.avatar || CLOUDINARY_RECETTE_NOTFOUND}`}
+                      alt="Profil"
+                      className="object-cover w-full h-full"
+                    />
                     <button
                       onClick={() => setIsAvatarModalOpen(true)}
                       className="absolute inset-0 bg-black/30 flex items-center justify-center text-white text-xl"
@@ -93,9 +136,10 @@ export default function User({ homeId, profileId }) {
                 <div className="flex-1">
                     <label className="block text-sm font-medium mb-1">Nom</label>
                     <input
-                    type="text"
-                    defaultValue={profile?.name || ""}
-                    className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                      type="text"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      className="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
                     />
                 </div>
               </div>
@@ -111,9 +155,10 @@ export default function User({ homeId, profileId }) {
                 <div className="relative">
                     <span className="absolute left-3 top-1/2 -translate-y-1/2">🆔</span>
                     <input
-                    type="text"
-                    defaultValue={profile?.username || ""}
-                    className="w-full pl-10 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
+                      type="text"
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      className="w-full pl-10 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-black"
                     />
                 </div>
               </div>
@@ -142,8 +187,11 @@ export default function User({ homeId, profileId }) {
 
               {/* Actions */}
               <div className="flex gap-4">
-                <button className="bg-accentGreen text-white px-6 py-2 rounded font-medium">
-                    Enregistrer
+                <button
+                  onClick={handleSave}
+                  className="bg-accentGreen text-white px-6 py-2 rounded font-medium"
+                >
+                  Enregistrer
                 </button>
               </div>
             </div>

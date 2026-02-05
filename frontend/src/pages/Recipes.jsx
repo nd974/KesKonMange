@@ -358,8 +358,8 @@ const filteredRecipes = useMemo(() => {
           onApply={(config) => {
             setFinderConfig(config); // pour filtrer les recettes
             setFilters(config);      // pour que le modal reprenne le même état
+            setCurrentPage(1);
           }}
-
         />
       )}
 

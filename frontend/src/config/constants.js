@@ -31,7 +31,7 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
     "v1764321145/avatar4_czjb1t_rxnryd.png",
   ],
 
-  "Stranger Things": [
+  "Ingrédient": [
     "v1764321300/eleven.png",
     "v1764321301/mike.png",
     "v1764321302/dustin.png",
