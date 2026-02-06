@@ -3,7 +3,7 @@ import sgMail from "@sendgrid/mail";
 
 sgMail.setApiKey(process.env.SENDGRID_API_KEY);
 
-const NODE_API_URL = process.env.NODE_ENV === "PROD"
+const NODE_API_URL = process.env.NODE_ENV !== "localhost"
   ? process.env.NODE_API_URL
   : "http://localhost:3000";
 
