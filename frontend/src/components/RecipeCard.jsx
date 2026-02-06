@@ -63,6 +63,7 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
   }, [recipe.id]); // Add recipe.id to dependency array for rerun on recipe change
   
   return (
+    <>
     <a
       href={`/recipe/${recipe.id}`}
       className="recipe-card border p-4 rounded-lg shadow hover:shadow-md transition bg-gray-100 relative block"
@@ -198,26 +199,26 @@ export default function RecipeCard({ recipe , homeId, finderConfig}) {
           </div>
         {/* )} */}
       </div>
-
-      {/* Modal Add to Menu */}
-      {showAddToMenuModal && (
-        <ModalAddRecipeToMenu
-          show={showAddToMenuModal}
-          onClose={() => setShowAddToMenuModal(false)}
-          recipe={selectedRecipe}
-          homeId={homeId}
-          menus={menus}
-          setMenus={setMenus}
-          repasTags={repasTags}
-          setRepasTags={setRepasTags}
-          selectedMenuId={selectedMenuId}
-          setSelectedMenuId={setSelectedMenuId}
-          menuDate={menuDate}
-          setMenuDate={setMenuDate}
-          selectedMealTagId={selectedMealTagId}
-          setSelectedMealTagId={setSelectedMealTagId}
-        />
-      )}
     </a>
+        {/* Modal Add to Menu */}
+        {showAddToMenuModal && (
+          <ModalAddRecipeToMenu
+            show={showAddToMenuModal}
+            onClose={() => setShowAddToMenuModal(false)}
+            recipe={selectedRecipe}
+            homeId={homeId}
+            menus={menus}
+            setMenus={setMenus}
+            repasTags={repasTags}
+            setRepasTags={setRepasTags}
+            selectedMenuId={selectedMenuId}
+            setSelectedMenuId={setSelectedMenuId}
+            menuDate={menuDate}
+            setMenuDate={setMenuDate}
+            selectedMealTagId={selectedMealTagId}
+            setSelectedMealTagId={setSelectedMealTagId}
+          />
+        )}
+    </>
   );
 }

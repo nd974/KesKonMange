@@ -453,16 +453,16 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 
     {/* ING / UST : prennent l'espace restant */}
     <div className="flex flex-col lg:flex-row gap-6 w-full min-h-[40vh] flex-1 overflow-hidden">
-      <div className="lg:flex-[55%] flex-1 overflow-y-auto">
+      <div className="lg:flex-[60%] flex-1 overflow-y-auto">
         <ModalIngredientsList ingredients={recipe.ingredients} homeId={homeId} />
       </div>
-      <div className="lg:flex-[45%] flex-1 overflow-y-auto">
+      <div className="lg:flex-[40%] flex-1 overflow-y-auto">
         <ModalUstensilesList utensils={recipe.utensils} />
       </div>
     </div>
 
     {/* COMMENTAIRES : hauteur naturelle */}
-    <div className="shrink-0 max-h-[35vh]">
+    <div className="shrink-0 max-h-[25vh]">
       <CommentsSection
         comments={comments}
         profileId={profileId}
@@ -470,6 +470,20 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
       />
     </div>
 
+    <div className="flex w-full shrink-0 max-h-[10vh] justify-center text-center gap-5 -mt-2">
+      <ActionButton
+        icon="🧬"
+        label="Nutrition"
+        color="accentGreen"
+        onClick={() => setShowModalNutrition(true)}
+      />
+      <ActionButton
+        icon="🔗"
+        label="Recettes similaires"
+        color="softBeige"
+        onClick={() => setShowModalNutrition(true)}
+      />
+    </div>
   </div>
 </div>
 
@@ -478,6 +492,21 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
 
     <div className="w-full lg:hidden">
       <CommentsSection comments={comments} profileId={profileId} recipeId={recipe.id}/>
+    </div>
+
+    <div className="flex w-full shrink-0 max-h-[10vh] justify-center text-center gap-5 -mt-2 lg:hidden">
+      <ActionButton
+        icon="🧬"
+        label="Nutrition"
+        color="accentGreen"
+        onClick={() => setShowModalNutrition(true)}
+      />
+      <ActionButton
+        icon="🔗"
+        label="Recettes similaires"
+        color="softBeige"
+        onClick={() => setShowModalNutrition(true)}
+      />
     </div>
 
     {/* --- MODALES MOBILE --- */}

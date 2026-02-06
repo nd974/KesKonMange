@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { createProfileApi, transferProfileApi, getProfilesByHome } from "../api/profile.api";
+import { createProfileApi, transferProfileApi, getProfilesByHome, updateProfilePinApi } from "../api/profile.api";
 
 export function useGetProfiles(homeId) {
   return useQuery({
@@ -26,6 +26,18 @@ export function useTransferProfile(homeId) {
   return useMutation({
     mutationFn: transferProfileApi,
     onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profiles", homeId] });
+    },
+  });
+}
+
+export function useUpdateProfilePin(homeId) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: updateProfilePinApi,
+    onSuccess: () => {
+      // 🔄 refresh profils (PIN changé)
       queryClient.invalidateQueries({ queryKey: ["profiles", homeId] });
     },
   });

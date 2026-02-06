@@ -137,6 +137,55 @@ router.post("/update", async (req, res) => {
   }
 });
 
+// ------------------- UPDATE PROFILE PIN -------------------
+router.post("/update-pin", async (req, res) => {
+  try {
+    const { profileId, pin } = req.body;
+
+    if (!profileId) {
+      return res.status(400).json({ error: "missing profileId" });
+    }
+
+    // 🔐 Autoriser suppression du PIN
+    if (pin === null || pin === "") {
+      await pool.query(
+        `UPDATE "Profile" SET pin = NULL WHERE id = $1`,
+        [profileId]
+      );
+
+      return res.json({ ok: true, pin: null });
+    }
+
+    // 🔒 Validation PIN (6 chiffres)
+    if (!/^\d{6}$/.test(pin)) {
+      return res.status(400).json({
+        error: "PIN must be exactly 6 digits",
+      });
+    }
+
+    const query = `
+      UPDATE "Profile"
+      SET pin = $2
+      WHERE id = $1
+      RETURNING id, pin
+    `;
+
+    const { rows } = await pool.query(query, [profileId, pin]);
+
+    if (!rows.length) {
+      return res.status(404).json({ error: "Profile not found" });
+    }
+
+    res.json({
+      ok: true,
+      profileId: rows[0].id,
+      pin: rows[0].pin,
+    });
+  } catch (e) {
+    console.error("UPDATE PIN ERROR:", e);
+    res.status(500).json({ error: e.message });
+  }
+});
 
 
 

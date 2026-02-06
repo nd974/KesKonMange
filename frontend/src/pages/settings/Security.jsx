@@ -6,6 +6,8 @@ import { Account_links } from "../../config/constants";
 import ModalEditEmail from "../../components/modals/settings/ModalEditEmail.jsx";
 import ModalEditDevice from "../../components/modals/settings/ModalEditDevice.jsx";
 
+import ModalProfilePin from "../../components/modals/ModalProfilePin";
+
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 import React, { useState, useEffect, useRef} from "react";
@@ -124,11 +126,9 @@ export default function Security({ homeId, profileId }) {
     fetchDataHome();
   }, [profile]);
 
-  console.log("home = ", home);
-  console.log("profile = ", profile);
-
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [showDeviceModal, setShowDeviceModal] = useState(false);
+  const [showPinModal, setShowPinModal] = useState(false);
 
   return (
     <div className="px-4 md:px-8 lg:px-16">
@@ -187,11 +187,18 @@ export default function Security({ homeId, profileId }) {
               icon="🔢"
               title="Code PIN"
               descriptions={[
-                maskPin(profile?.pin),
+                profile?.pin ? maskPin(profile.pin) : "Aucun code PIN défini",
               ]}
               href={null}
-              onClick={null}
+              onClick={() => setShowPinModal(true)}
             />
+            {showPinModal && profile && (
+              <ModalProfilePin
+                profile={profile}
+                onClose={() => setShowPinModal(false)}
+              />
+            )}
+
 
             <SettingsActionItem
               icon="📱"

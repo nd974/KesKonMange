@@ -27,3 +27,19 @@ export async function transferProfileApi({ homeId, username, password }) {
   if (!data.ok) throw new Error(data.error || "Erreur transfert profil");
   return data;
 }
+
+export async function updateProfilePinApi({ profileId, pin }) {
+  const res = await fetch(`${API_URL}/profile/update-pin`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      profileId,
+      pin, // string "000974" ou null pour suppression
+    }),
+  });
+  const data = await res.json();
+  if (!res.ok || !data.ok) {
+    throw new Error(data.error || "Erreur mise à jour du code PIN");
+  }
+  return data;
+}

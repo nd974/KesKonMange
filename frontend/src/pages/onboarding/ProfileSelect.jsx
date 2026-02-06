@@ -4,6 +4,7 @@ import { Repeat } from "lucide-react";
 
 import ModalCreateProfile from "../../components/modals/ModalProfileCreate";
 import ModalTransferProfile from "../../components/modals/ModalProfileTransfer";
+import ModalProfilePin from "../../components/modals/ModalProfilePin";
 
 import { CLOUDINARY_RES, CLOUDINARY_LOGO_HOME } from "../../config/constants";
 import {
@@ -24,6 +25,9 @@ export default function ProfileSelect({ homeId }) {
   const [showTransfer, setShowTransfer] = useState(false);
 
   const { data: profiles = [], isLoading } = useGetProfiles(homeId);
+
+  const [showPinModal, setShowPinModal] = useState(false);
+  const [selectedProfile, setSelectedProfile] = useState(null);
 
   // nettoyage session profil
   const currentProfileId = getProfileId();
@@ -77,7 +81,14 @@ export default function ProfileSelect({ homeId }) {
         {profiles.map((p) => (
           <div
             key={p.id}
-            onClick={() => handleSelectProfile(p.id)}
+            onClick={() => {
+              if (p.pin) {
+                setSelectedProfile(p);
+                setShowPinModal(true);
+              } else {
+                handleSelectProfile(p.id);
+              }
+            }}
             className="cursor-pointer flex flex-col items-center group"
           >
             <div className="w-28 h-28 bg-white text-black rounded-xl overflow-hidden flex items-center justify-center text-3xl font-bold group-hover:opacity-80 transition">
@@ -137,6 +148,17 @@ export default function ProfileSelect({ homeId }) {
         <ModalTransferProfile
           onClose={() => setShowTransfer(false)}
           onTransferred={() => setShowTransfer(false)}
+        />
+      )}
+
+      {showPinModal && selectedProfile && (
+        <ModalProfilePin
+          profile={selectedProfile}
+          onClose={() => {
+            setShowPinModal(false);
+            setSelectedProfile(null);
+          }}
+          handleSelectProfile={handleSelectProfile}
         />
       )}
     </div>
