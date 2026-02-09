@@ -19,6 +19,8 @@ import {
 
 dayjs.locale("fr");
 
+import { CLOUDINARY_RES, CLOUDINARY_ICONS } from "../config/constants";
+
 export default function Dashboard({ homeId, profileId }) {
   const navigate = useNavigate();
 
@@ -325,7 +327,7 @@ export default function Dashboard({ homeId, profileId }) {
         disabled={recipeIndex <= 0}
         className={`px-3 py-1 rounded-md ${
           recipeIndex > 0
-            ? "hover:shadow cursor-pointer"
+            ? "cursor-pointer"
             : "bg-white/60 opacity-50 cursor-not-allowed"
         }`}
       >
@@ -361,6 +363,11 @@ export default function Dashboard({ homeId, profileId }) {
         }`}
       >
         ▶
+      {/* <img
+        src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
+        alt="Menu Icon"
+        className="w-5 h-5 inline-block"
+      /> */}
       </button>
     )}
   </div>

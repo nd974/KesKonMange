@@ -120,7 +120,7 @@ export default function ModalIngredientInfos({ ingredientId, homeId, profileId, 
 
       {shops.length === 0 ? (
         <div className="p-4 bg-yellow-100 text-yellow-800 rounded mb-4">
-          Aucun shop trouvé pour ce home.
+          Aucun shop enregistré trouvé pour cette maison.
         </div>
       ) : (
         <div className="space-y-3 mb-4">
