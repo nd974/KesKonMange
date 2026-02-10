@@ -18,6 +18,8 @@ import { useGetProfiles } from "../../hooks/useProfile";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { setAuthToken, clearAuthToken } from "../../utils/authToken";
+
 export default function ProfileSelect({ homeId }) {
   const navigate = useNavigate();
 
@@ -32,6 +34,7 @@ export default function ProfileSelect({ homeId }) {
   // nettoyage session profil
   const currentProfileId = getProfileId();
   if (currentProfileId) {
+    clearAuthToken();
     setProfileId(0);
   }
 
@@ -48,6 +51,12 @@ export default function ProfileSelect({ homeId }) {
       });
 
       if (!res.ok) throw new Error("Erreur création session");
+
+      const data = await res.json();
+
+      if (data.token) {
+        setAuthToken(data.token);
+      }
 
       // ✅ attend que la réponse soit OK avant de setter le profileId
       setProfileId(profileId);

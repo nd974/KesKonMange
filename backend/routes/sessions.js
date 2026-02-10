@@ -95,7 +95,6 @@ router.post("/create", async (req, res) => {
     const deviceName = getDeviceName(userAgent);
     const ipAddress = req.ip;
 
-    // 🔍 Vérifie si une session existe déjà pour ce device
     const { rows: existing } = await pool.query(`
       SELECT id, token
       FROM "Sessions"
@@ -105,11 +104,10 @@ router.post("/create", async (req, res) => {
       LIMIT 1
     `, [profileId, userAgent, ipAddress]);
 
-    // 🔁 SESSION EXISTANTE → reposer le cookie
+    // 🔁 SESSION EXISTANTE
     if (existing.length > 0) {
       const existingToken = existing[0].token;
 
-      // Met à jour l'activité
       await pool.query(`
         UPDATE "Sessions"
         SET last_activity = NOW()
@@ -127,10 +125,11 @@ router.post("/create", async (req, res) => {
         success: true,
         sessionId: existing[0].id,
         reused: true,
+        token: existingToken,
       });
     }
 
-    // 🆕 SINON → créer une nouvelle session
+    // 🆕 NOUVELLE SESSION
     const token = jwt.sign({ profileId }, JWT_SECRET, { expiresIn: "10y" });
 
     const { rows } = await pool.query(`
@@ -148,17 +147,19 @@ router.post("/create", async (req, res) => {
       secure: process.env.NODE_ENV !== "localhost",
     });
 
-    res.json({
+    return res.json({
       success: true,
       session: rows[0],
       reused: false,
+      token,
     });
 
   } catch (err) {
     console.error("Erreur /sessions-create:", err.message);
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 });
+
 
 
 

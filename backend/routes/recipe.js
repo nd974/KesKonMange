@@ -533,16 +533,22 @@ router.post("/get-all", async (req, res) => {
       ORDER BY r.name ASC
     `, [profileId]);
 
+    // =========================
+    // RECETTES UTILISÉES COMME INGRÉDIENT
+    // =========================
+    const { rows: usedRecipeRows } = await pool.query(`
+      SELECT DISTINCT recipe_id
+      FROM "Ingredient"
+      WHERE recipe_id IS NOT NULL
+    `);
+
+    const usedRecipeIds = new Set(usedRecipeRows.map(r => r.recipe_id));
+
+
     // 🚀 FILTRE OPTIONNEL : cacher les recettes utilisées comme ingrédient
     let filteredRecipes = recipes;
-    if (hideUsedRecipes) {
-      const { rows: usedRecipeRows } = await pool.query(`
-        SELECT DISTINCT recipe_id
-        FROM "Ingredient"
-        WHERE recipe_id IS NOT NULL
-      `);
 
-      const usedRecipeIds = new Set(usedRecipeRows.map(r => r.recipe_id));
+    if (hideUsedRecipes) {
       filteredRecipes = recipes.filter(r => !usedRecipeIds.has(r.id));
     }
 
@@ -698,8 +704,9 @@ router.post("/get-all", async (req, res) => {
 
       return {
         ...r,
+        is_used: usedRecipeIds.has(r.id), // 👈 🔥 FLAG CLÉ
         ingredients: ingredientRes.filter(i => i.recipe_id === r.id),
-        portion: 1, // toujours 1 pour cohérence
+        portion: 1,
         tags: tagsByRecipe[r.id] || [],
         price: pricePerPortion.toFixed(2),
         cheaper: cheaperPerPortion.toFixed(2),

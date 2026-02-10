@@ -47,6 +47,8 @@ import { Toaster } from "react-hot-toast";
 
 import "./lib/dayjs";
 
+import { getAuthToken, clearAuthToken } from "./utils/authToken";
+
 function AppRoutes() {
 
   const location = useLocation();
@@ -70,14 +72,20 @@ function AppRoutes() {
   const [dbStatus, setDbStatus] = useState("checking");
   
   async function fetchWithAuth(url, options = {}) {
+    const token = getAuthToken();
+
     const res = await fetch(url, {
       ...options,
-      credentials: "include", // pour envoyer les cookies si JWT dans cookie
+      credentials: "include",
+      headers: {
+        ...(options.headers || {}),
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
     });
 
     if (res.status === 401) {
-      // Session invalide → reset IndexedDB et redirection
-      await setProfileId(0);
+      clearAuthToken();
+      setProfileId(0);
       navigate("/profiles");
       return null;
     }

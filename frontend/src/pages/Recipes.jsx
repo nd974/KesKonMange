@@ -10,6 +10,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 export default function Recipes({ homeId, profileId }) {
   const navigate = useNavigate();
 
+  const [allRecipes, setAllRecipes] = useState([]);
   const [recipes, setRecipes] = useState([]);
   const [tagsFlat, setTagsFlat] = useState([]);
   const [search, setSearch] = useState("");
@@ -46,35 +47,42 @@ export default function Recipes({ homeId, profileId }) {
 
 
   // ⚡ Charger les recettes et tags
-  useEffect(() => {
-    let mounted = true;
-    async function fetchData() {
-      setLoading(true);
-      try {
-        const [recipesRes, tagsRes] = await Promise.all([
-          fetch(`${API_URL}/recipe/get-all`, {
-            method: "POST", // ⚡ POST pour envoyer profileId
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ homeId, profileId, hideUsedRecipes: true }),
-          }).then((r) => r.json()),
+useEffect(() => {
+  let mounted = true;
 
-          fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),
-        ]);
+  async function fetchData() {
+    setLoading(true);
+    try {
+      const [recipesRes, tagsRes] = await Promise.all([
+        fetch(`${API_URL}/recipe/get-all`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            homeId,
+            profileId,
+            hideUsedRecipes: false, // 👈 on récupère TOUT
+          }),
+        }).then((r) => r.json()),
 
-        if (!mounted) return;
+        fetch(`${API_URL}/tag/get-all`).then((r) => r.json()),
+      ]);
 
-        setRecipes(recipesRes || []);
-        setTagsFlat(tagsRes || []);
+      if (!mounted) return;
 
-      } catch (err) {
-        console.error("Erreur chargement données:", err);
-      } finally {
-        setLoading(false);
-      }
+      setRecipes(recipesRes || []);   // contient TOUT
+      setTagsFlat(tagsRes || []);
+    } catch (err) {
+      console.error("Erreur chargement données:", err);
+    } finally {
+      setLoading(false);
     }
-    fetchData();
-    return () => { mounted = false; };
-  }, []);
+  }
+
+  fetchData();
+  return () => { mounted = false; };
+}, []);
+
+
 
   // Réinitialiser la page quand recherche ou filtre change
   useEffect(() => {
@@ -122,6 +130,14 @@ export default function Recipes({ homeId, profileId }) {
 const filteredRecipes = useMemo(() => {
   let temp = recipes;
 
+  const hasSearch = search.trim().length > 0;
+
+  // 🧠 PAR DÉFAUT → on cache les recettes "used"
+  if (!hasSearch) {
+    temp = temp.filter(r => !r.is_used); 
+    // ⬆️ adapte le champ exact (used, is_used, used_by_recipe, etc.)
+  }
+
   // ---------------- SEARCH BAR + TAGS ----------------
   const s = search.trim().toLowerCase();
   const selectedDescendants =
@@ -133,50 +149,49 @@ const filteredRecipes = useMemo(() => {
     const matchSearch = !s || r.name.toLowerCase().includes(s);
     const matchTag =
       selectedDescendants.length === 0 ||
-      (r.tags || []).some((t) => t.id && selectedDescendants.includes(t.id));
+      (r.tags || []).some((t) => selectedDescendants.includes(t.id));
     return matchSearch && matchTag;
   });
 
-  console.log("temp", temp);
-
-  // ---------------- FINDER CONFIG ----------------
+  // ---------------- FINDER ----------------
   if (finderConfig) {
     const { ingredients, sortCriteria } = finderConfig;
-    console.log(ingredients);
-    const searchIngredients = ingredients.map(i => i.trim().toLowerCase());
-    // Filtre ingrédients
+
     if (ingredients.length > 0) {
       temp = temp.filter(r =>
-        searchIngredients.every(ing =>
+        ingredients.every(ing =>
           (r.ingredients || []).some(ri =>
-            ri.name.toLowerCase().includes(ing)
+            ri.name.toLowerCase().includes(ing.toLowerCase())
           )
         )
       );
     }
 
-    // Tri multiple
-    if (sortCriteria.length > 0) {
+    if (sortCriteria?.length > 0) {
       temp = [...temp].sort((a, b) => {
         for (const c of sortCriteria) {
-          let aValue = a[c.field];
-          let bValue = b[c.field];
-
-          // Si la valeur est undefined ou null, on considère 0
-          if (aValue == null) aValue = 0;
-          if (bValue == null) bValue = 0;
-
+          let aValue = a[c.field] ?? 0;
+          let bValue = b[c.field] ?? 0;
           if (aValue !== bValue) {
-            return c.order === "asc" ? aValue - bValue : bValue - aValue;
+            return c.order === "asc"
+              ? aValue - bValue
+              : bValue - aValue;
           }
         }
-        return 0; // égalité
+        return 0;
       });
     }
   }
 
   return temp;
-}, [recipes, search, selectedTagIds, tagsFlat, finderConfig]);
+}, [
+  recipes,
+  search,
+  selectedTagIds,
+  finderConfig,
+]);
+
+
 
 
 
