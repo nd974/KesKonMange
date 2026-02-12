@@ -31,6 +31,15 @@ export default function RecipePossible({ homeId, profileId }) {
   </a>
   );
 
+  const ShoppingListLink = () => (
+  <a
+    href="/shopping_list"
+    className="text-green-600 underline hover:text-green-800"
+  >
+    Listes de courses
+  </a>
+  );
+
   useEffect(() => {
     if (!homeId) return;
 
@@ -151,9 +160,14 @@ export default function RecipePossible({ homeId, profileId }) {
         {renderRow(recipesOk)}
         </>
       ):(
-        <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
-            Aucune recettes faisables à partir du <GardeMangerLink />
-        </p>
+        <>
+          <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
+              Aucune recettes faisables à partir du <GardeMangerLink />
+          </p>
+          <p className="ml-5 mb-5 mt-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[17vh] flex flex-col items-center justify-center gap-2">
+            <div> Ajouter des produits dans <GardeMangerLink /> ou <ShoppingListLink /></div>
+          </p>
+        </>
       )}
 
       {recipesPossible.length > 0 && (

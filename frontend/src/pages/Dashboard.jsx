@@ -251,7 +251,7 @@ export default function Dashboard({ homeId, profileId }) {
             </div>
 
 
-            <div className="bg-gray-100 soft-card rounded-3xl shadow-soft relative">
+            <div className={`bg-gray-100 soft-card rounded-3xl shadow-soft relative ${selectedRecipe ? "" : "-mt-5 md:mt-0 ml-5 md:ml-0"}`}> 
               {selectedRecipe ? (
                 <div className="flex flex-col items-center relative">
                                                           {/* TRASH À DROITE */}

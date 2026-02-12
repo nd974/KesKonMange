@@ -10,14 +10,6 @@ export default function ShoppingList({ homeId }) {
   const [scannedCode, setScannedCode] = useState("");
   const [product, setProduct] = useState(null);
 
-  const TOTAL_LENGTH_SEPARATOR = 32;
-  function formatHeader(text) {
-    const remaining = TOTAL_LENGTH_SEPARATOR - text.length;
-    const side = Math.floor(remaining / 2);
-    const extra = remaining % 2;
-
-    return "-".repeat(side) + text + "-".repeat(side + extra);
-  }
   // --- Nouveau wizard multi-step (remplace les 3 anciennes popins)
   const [wizardStep, setWizardStep] = useState(null);
 
@@ -328,14 +320,12 @@ const expandIngredientAsync = async (
   }
 
   // ingrédient simple
-    if (!ingredient.recipe_id) {
-      return [{
-        ...ingredient,
-        amount: ingredient.amount * multiplier,
-        recipe_origin: ingredient.recipe_origin || null
-      }];
-    }
-
+  if (!ingredient.recipe_id) {
+    return [{
+      ...ingredient,
+      amount: ingredient.amount * multiplier,
+    }];
+  }
 
   // protection boucle
   if (visited.has(ingredient.recipe_id)) {
@@ -357,20 +347,17 @@ const expandIngredientAsync = async (
   }
 
   const recipe = recipeCacheRef.current[ingredient.recipe_id];
-  const recipeName = recipe.name;
   const currentPortions = recipe.portion || 1;
 
   const parentPortions = ingredient.parent_portions ?? null;
 
   // ⭐ RÈGLE CLÉ
   const portionFactor =
-    ingredient.unit_id 
-      ? 1 
-      : ingredient.use_as_whole
+    ingredient.use_as_whole
+      ? ingredient.amount
+      : parentPortions && parentPortions === currentPortions
         ? ingredient.amount
-        : parentPortions && parentPortions === currentPortions
-          ? ingredient.amount
-          : ingredient.amount / currentPortions;
+        : ingredient.amount / currentPortions;
 
   let expanded = [];
 
@@ -387,15 +374,13 @@ const expandIngredientAsync = async (
           amount_item: Number(subIng.amount_item || 0),
           unit_item: subIng.unit_item,
           unit_item_id: subIng.unit_item_id,
-          parent_portions: currentPortions,
-          recipe_origin: recipeName   // 🔥 ICI
+          parent_portions: currentPortions, // 🔥 indispensable
         },
-        ingredient.unit_id ? portionFactor : multiplier * portionFactor,
+        multiplier * portionFactor,
         visited,
         recipesCoveredByStock 
       ))
     );
-
   }
 
   return expanded;
@@ -492,8 +477,7 @@ const generateShoppingList = async () => {
         const expanded = await expandIngredientAsync(
           {
             ...baseIngredient,
-            parent_portions: recipePortions,
-            parent_recipe_name: recipe.name   // 👈 AJOUT
+            parent_portions: recipePortions
           },
           portionRatio,
           new Set(),
@@ -509,69 +493,43 @@ const generateShoppingList = async () => {
   const mergedIngredients = mergeIngredients(allIngredients);
 
   // Calcul de la liste de courses en fonction des quantités disponibles en stock
-  const structuredList = [];
-  const groupedByRecipe = {};
+  const shoppingList = [];
 
   mergedIngredients.forEach((ingredient) => {
-
-    const matchingProducts = products.filter(
-      (p) => String(p.ing_id) === String(ingredient.ing_id)
-    );
-
-    const totalStock = matchingProducts.reduce(
-      (sum, p) => sum + Number(p.amount || 0),
-      0
+    const productInStock = products.find(
+      (p) => p.ing_id === ingredient.ing_id
     );
 
     const isBuyable = Unit_hasBuy.includes(ingredient.unit_id);
 
+    if (!isBuyable) {
+      if (!productInStock) {
+        shoppingList.push({
+          name: ingredient.name,
+          ing_id: ingredient.ing_id,
+          amount: 1,
+          unit: null,
+          unit_id: 0,
+        });
+      }
+      return;
+    }
+
     let remainingAmount = ingredient.amount;
 
-    // 🔹 CAS 1 : unité achetable → comparer les quantités cumulées
-    if (isBuyable) {
-      remainingAmount -= totalStock;
-    } 
-    // 🔹 CAS 2 : unité non achetable → juste vérifier présence
-    else {
-      if (totalStock > 0) return;
+    if (productInStock && productInStock.unit_id === ingredient.unit_id) {
+      remainingAmount -= Number(productInStock.amount || 0);
     }
 
-    // Si plus rien à acheter → on ignore
-    if (remainingAmount <= 0) return;
-
-    const item = {
-      ...ingredient,
-      amount: Number(remainingAmount.toFixed(2)),
-    };
-
-    if (ingredient.recipe_origin) {
-      if (!groupedByRecipe[ingredient.recipe_origin]) {
-        groupedByRecipe[ingredient.recipe_origin] = [];
-      }
-      groupedByRecipe[ingredient.recipe_origin].push(item);
-    } else {
-      structuredList.push(item);
+    if (remainingAmount > 0) {
+      shoppingList.push({
+        ...ingredient,
+        amount: Number(remainingAmount.toFixed(2)),
+      });
     }
-
   });
 
-
-  // 🔥 Injecter les blocs recettes
-  Object.entries(groupedByRecipe).forEach(([recipeName, items]) => {
-    structuredList.push({
-      type: "recipeHeader",
-      name: recipeName,
-    });
-
-    structuredList.push(...items);
-
-    structuredList.push({
-      type: "separator",
-    });
-  });
-
-  return structuredList;
-
+  return shoppingList;
 };
 
 
@@ -726,30 +684,8 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
 ) : (
   <ul className="list-disc list-inside space-y-1">
     {shoppingList.map((item, idx) => {
-      // HEADER
-      if (item.type === "recipeHeader") {
-        return (
-          <li key={idx} className="font-bold mt-4 text-gray-700 font-mono">
-            {formatHeader(item.name)}
-          </li>
-        );
-      }
-
-      // SEPARATOR → affiché UNIQUEMENT si c'est le dernier élément
-      if (item.type === "separator") {
-        if (idx === shoppingList.length - 1) {
-          return (
-            <li key={idx} className="font-bold mt-4 text-gray-700 font-mono">
-              {"-".repeat(TOTAL_LENGTH_SEPARATOR)}
-            </li>
-          );
-        }
-        return null; // on ignore les separators intermédiaires
-      }
-
       const isBuyable = Unit_hasBuy.includes(item.unit_id);
-
-      if (item.name === "Origan") {
+      if (item.name=="Origan"){
         console.log("origan:", item.unit_id, Unit_hasBuy.includes(item.unit_id));
       }
 
@@ -761,7 +697,6 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
 
       if (isBuyable) {
         const unit = item.unit;
-
         const displayQty = unit
           ? displayAmount + (unit.length <= 2 ? unit : ` ${unit}`)
           : displayAmount;
@@ -793,8 +728,7 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
               )
             }
           >
-            {displayQty} {itemQty} {deWord}
-            {name}
+            {displayQty} {itemQty} {deWord}{name}
           </li>
         );
       }
