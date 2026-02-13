@@ -100,7 +100,7 @@ export default function ProfileSelect({ homeId }) {
             }}
             className="cursor-pointer flex flex-col items-center group"
           >
-            <div className="w-28 h-28 bg-white text-black rounded-xl overflow-hidden flex items-center justify-center text-3xl font-bold group-hover:opacity-80 transition">
+            <div className={`w-28 h-28 rounded-xl overflow-hidden flex items-center justify-center text-3xl font-bold group-hover:opacity-80 transition ${p.avatar ? "" : "bg-white text-black"}`}>
               {p.avatar ? (
                 <img
                   src={`${CLOUDINARY_RES}${p.avatar}`}

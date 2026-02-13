@@ -31,10 +31,11 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
     "v1764321145/avatar4_czjb1t_rxnryd.png",
   ],
 
-  "Ingrédient": [
-    "v1764321300/eleven.png",
-    "v1764321301/mike.png",
-    "v1764321302/dustin.png",
+  "Fruits": [
+    "v1770988112/abricot_urmvkl.webp",
+    "v1770988215/banane_tm24e1.webp",
+    "v1770988469/fraise_r9nwtu.webp",
+    "v1770988586/framboise_on22c2.webp",
   ],
 };
 

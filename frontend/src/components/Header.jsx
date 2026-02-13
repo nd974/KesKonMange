@@ -187,7 +187,7 @@ export default function Header({homeId, unreadCountNotif, inAccount=false}) {
   <div className="relative" ref={profileMenuRef}>
     {/* Avatar */}
     <div
-      className="relative w-10 h-10 rounded-md bg-accentGreen text-white flex items-center justify-center overflow-hidden cursor-pointer
+      className="relative w-10 h-10 rounded-md text-white flex items-center justify-center overflow-hidden cursor-pointer
                 hover:ring-2 hover:ring-white hover:ring-offset-2 hover:ring-offset-accentGreen transition-all"
       onClick={() => setIsProfileMenuOpen((prev) => !prev)}
     >
