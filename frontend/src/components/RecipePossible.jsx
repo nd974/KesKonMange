@@ -19,6 +19,8 @@ export default function RecipePossible({ homeId, profileId }) {
   const [menuDate, setMenuDate] = useState("");
   const [selectedMealTagId, setSelectedMealTagId] = useState(null);
 
+  const [loading, setLoading] = useState(true);
+
   const GAP_CARD = 20;
   const MAX_DISPLAY = 20;
 
@@ -81,6 +83,8 @@ export default function RecipePossible({ homeId, profileId }) {
         console.error(e);
         setRecipesOk([]);
         setRecipesPossible([]);
+      } finally {
+        setLoading(false);
       }
     };
 
@@ -152,23 +156,37 @@ export default function RecipePossible({ homeId, profileId }) {
         Recettes possibles
       </h3>
 
-      {recipesOk.length > 0 ? (
-        <>
-        <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
-            Faisables à partir du <GardeMangerLink />
+      {loading && (
+        <p className="ml-5 mb-5 mt-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[44vh] flex flex-col items-center justify-center gap-2">
+          <div> Chargement </div>
         </p>
-        {renderRow(recipesOk)}
-        </>
-      ):(
+      )}
+
+      {/* RECETTES OK */}
+      {!loading && recipesOk.length > 0 && (
         <>
           <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
-              Aucune recettes faisables à partir du <GardeMangerLink />
+            Faisables à partir du <GardeMangerLink />
           </p>
-          <p className="ml-5 mb-5 mt-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[17vh] flex flex-col items-center justify-center gap-2">
-            <div> Ajouter des produits dans <GardeMangerLink /> ou <ShoppingListLink /></div>
-          </p>
+          {renderRow(recipesOk)}
         </>
       )}
+
+      {/* AUCUNE RECETTE OK MAIS DES POSSIBLES */}
+      {!loading && recipesOk.length === 0 && recipesPossible.length > 0 && (
+        <>
+          <p className="mt-3 ml-5 text-xs font-semibold text-gray-700">
+            Aucune recette faisable à partir du <GardeMangerLink />
+          </p>
+          <div className="ml-5 mb-5 mt-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[17vh] flex flex-col items-center justify-center gap-2">
+            <div>
+              Ajouter des produits dans <GardeMangerLink /> ou{" "}
+              <ShoppingListLink />
+            </div>
+          </div>
+        </>
+      )}
+
 
       {recipesPossible.length > 0 && (
         <>
