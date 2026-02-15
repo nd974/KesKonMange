@@ -102,7 +102,7 @@ useEffect(() => {
       }
       else{
         // setIsPrimaryHome(!isPrimaryHome);
-        alert("TODO");
+        alert("Fonctionnalité à venir !");
         return;
         
       }
@@ -219,7 +219,7 @@ useEffect(() => {
 
             <div className="bg-white rounded-lg border mb-6 divide-y">
                 <SettingsActionItem
-                icon="🗺️"
+                icon="📐"
                 title="Plan"
                 descriptions={[
                     "",
@@ -239,12 +239,12 @@ useEffect(() => {
                 /> */}
 
                 <SettingsActionItem
-                icon="🏪"
-                title="Gérer Magasins"
+                icon="🗺️"
+                title="Maps (Maison & Magasins)"
                 descriptions={[
                     "",
                 ]}
-                href={"/shops"}
+                href={"/maps"}
                 onClick={null}
                 />
 

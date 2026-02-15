@@ -92,7 +92,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
 }
 
 /* ================= MAIN ================= */
-export default function TestMap({ homeId }) {
+export default function Maps({ homeId }) {
   const centerPosition = [47.88516, 1.90147];
 
   const [map, setMap] = useState(null);
@@ -206,7 +206,7 @@ export default function TestMap({ homeId }) {
         <MapContainer
           center={centerPosition}
           zoom={19}
-          className="w-full h-full rounded shadow"
+          className="w-full h-full rounded shadow z-0"
           whenCreated={setMap}
         >
           <MapController onMapReady={setMap} />
@@ -234,9 +234,30 @@ export default function TestMap({ homeId }) {
         </MapContainer>
       </div>
 
-      {/* LIST */}
+      {/* LIST MAISON SELECT + SHOP FOCUS*/}
       <div className="md:w-1/3 w-full bg-white rounded shadow p-4 max-h-[75vh] overflow-y-auto">
-        <h2 className="font-semibold mb-3">Magasins ajoutés</h2>
+        {/* MAISON */}
+        <h2 className="font-semibold mb-3">Localisation de la maison</h2>
+        <div className="flex justify-between items-center bg-gray-50 p-2 mb-2 rounded">
+          <div className="text-sm">
+            🏠 Andre Malraux
+            <div className="text-xs text-gray-500">
+              long: 1.90147 - lat: 47.88516
+            </div>
+          </div>
+
+          <div className="flex gap-2">
+            <button
+              onClick={() => alert("Fonctionnalité à venir !")}
+              className="px-2 py-1 text-xs bg-accentGreen text-white rounded hover:bg-green-600"
+            >
+              ✏️ Modifier
+            </button>
+          </div>
+        </div>
+
+        {/* SHOPS */}
+        <h2 className="font-semibold mb-3">Magasins utilisés pour cette maison</h2>
 
         {stores.map((store) => {
           const km = calculateDistance(
@@ -279,7 +300,7 @@ export default function TestMap({ homeId }) {
 
       {/* MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[2000]">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center">
           <div className="bg-white rounded-xl p-6 w-80 shadow-lg">
             <h3 className="text-lg font-semibold mb-3">
               {editingStoreIndex === null

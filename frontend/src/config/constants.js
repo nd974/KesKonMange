@@ -15,28 +15,38 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
     `v1764321145/avatar2_h6ubef_mwv7fb.png`,
     `v1764321145/avatar3_ibhdeb_cy1r1v.png`,
     `v1764321145/avatar4_czjb1t_rxnryd.png`,
-    `v1767285337/invite_x3jthx.webp`,
+    `v1771092103/avatar_vert_nfxsxn.webp`,
 ];
 
 export const CLOUDINARY_AVATARS_SETTINGS = {
-  "Personnel": [
-    "v1764321200/avatar_old1.png",
-    "v1764321201/avatar_old2.png",
-  ],
+    "Personnel": [
+        "v1764321200/avatar_old1.png",
+    ],
 
-  "Classiques": [
-    "v1764321144/avatar1_enqee6_w8lagz.png",
-    "v1764321145/avatar2_h6ubef_mwv7fb.png",
-    "v1764321145/avatar3_ibhdeb_cy1r1v.png",
-    "v1764321145/avatar4_czjb1t_rxnryd.png",
-  ],
+    "Classiques": [
+        "v1764321144/avatar1_enqee6_w8lagz.png",
+        "v1764321145/avatar2_h6ubef_mwv7fb.png",
+        "v1764321145/avatar3_ibhdeb_cy1r1v.png",
+        "v1764321145/avatar4_czjb1t_rxnryd.png",
+        "v1771092103/avatar_vert_nfxsxn.webp",
+    ],
 
-  "Fruits": [
-    "v1770988112/abricot_urmvkl.webp",
-    "v1770988215/banane_tm24e1.webp",
-    "v1770988469/fraise_r9nwtu.webp",
-    "v1770988586/framboise_on22c2.webp",
-  ],
+    "Fruits": [
+        "v1770988112/abricot_urmvkl.webp",
+        "v1770988215/banane_tm24e1.webp",
+        "v1770988469/fraise_r9nwtu.webp",
+        "v1770988586/framboise_on22c2.webp",
+        "v1771092310/pasteque_mmmnjc.webp",
+        "v1771092365/Pomme_femgwy.webp",
+    ],
+
+    "Legumes": [
+        "TODO.webp",
+    ],
+
+    "Viande": [
+        "TODO.webp",
+    ],
 };
 
 

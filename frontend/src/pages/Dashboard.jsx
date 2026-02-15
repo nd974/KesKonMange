@@ -196,7 +196,7 @@ export default function Dashboard({ homeId, profileId }) {
         <main className="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
 
           {/* LEFT – détail */}
-          <section className="order-2 lg:order-1">
+          <section className={`order-2 lg:order-1 ${selectedRecipe ? "" : "hidden sm:block"}`}>
             <div className="flex items-center gap-3">
               {selectedDay && (
                 <>

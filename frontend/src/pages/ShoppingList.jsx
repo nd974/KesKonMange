@@ -714,15 +714,15 @@ const [selectedShoppingItems, setSelectedShoppingItems] = useState([]);
 
 
         {/* ------------------ COLONNE LISTE COURSES 2/3 ------------------ */}
-        <div className="w-full md:w-2/3 bg-gray-100 p-4 rounded-lg mb-8">
-          <h3 className="text-md font-semibold mb-2">
+        <div className="w-full md:w-2/3 bg-gray-100 p-4 rounded-lg mb-8 mt-3">
+          <h3 className="text-md font-semibold mb-3 mt-3">
             Ingrédient manquants pour les Menus :
           </h3>
 
 {shoppingLoading ? (
-  <p className="text-sm text-gray-500">Calcul en cours…</p>
+  <p className="text-sm text-gray-500 mt-5 mb-3">Calcul en cours…</p>
 ) : shoppingList.length === 0 ? (
-  <p className="text-sm text-gray-500">Aucun ingrédient à acheter</p>
+  <p className="text-sm text-gray-500 mt-5 mb-3">Aucun ingrédient à acheter</p>
 ) : (
   <ul className="list-disc list-inside space-y-1">
     {shoppingList.map((item, idx) => {

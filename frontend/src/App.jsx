@@ -15,7 +15,7 @@ import Calendar from "./pages/Calendar";
 import Stock from "./pages/Stock";
 import ShoppingList from "./pages/ShoppingList";
 
-import TestMap from "./pages/TestMap";
+import Maps from "./pages/Maps";
 
 import Account from "./pages/settings/Settings";
 import Security from "./pages/settings/Security";
@@ -242,7 +242,7 @@ return (
             <Route path="/settings/termsofuse" element={<TermsOfUse />} />
 
             <Route path="/old_recipe_details" element={<OldRecipeDetail key={home_id} homeId={home_id} profileId={profile_id} />} />
-            <Route path="/shops" element={<TestMap key={home_id} homeId={home_id} profileId={profile_id} />} />
+            <Route path="/maps" element={<Maps key={home_id} homeId={home_id} profileId={profile_id} />} />
 
 
             <Route path="/utils/unusedIngredients" element={<UnusedIngredients key={home_id} homeId={home_id} profileId={profile_id}  />} />

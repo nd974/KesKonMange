@@ -372,7 +372,7 @@ export default function NewRecipeDetail({ homeId,profileId, id: idProp, compact 
     </div>
 
     {/* Titre centré verticalement */}
-<div className="-ml-16 sm:-ml-28 z-50 flex flex-col justify-center w-full text-left pl-4 sm:pl-8">
+<div className="-ml-16 sm:-ml-28 z-10 flex flex-col justify-center w-full text-left pl-4 sm:pl-8">
   {/* Wrapper pour le clamp */}
   <div
     className="overflow-hidden"

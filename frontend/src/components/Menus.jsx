@@ -52,24 +52,24 @@ export default function Menus({
   }, [selectedDay, groups, onSelectMenu]);
 
 
-  if (isLoading) {
-    return (
-      <>
-        <h3 className="text-2xl font-bold text-gray-800 flex items-center -mt-1">
-          <img
-            src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
-            alt="Menu Icon"
-            className="w-6 h-6 inline-block mr-2"
-          />
-          Menus enregistrés
-        </h3>
+  // if (isLoading) {
+  //   return (
+  //     <>
+  //       <h3 className="text-2xl font-bold text-gray-800 flex items-center -mt-1">
+  //         <img
+  //           src={`${CLOUDINARY_RES}${CLOUDINARY_ICONS["Icon_Menu"]}`}
+  //           alt="Menu Icon"
+  //           className="w-6 h-6 inline-block mr-2"
+  //         />
+  //         Menus enregistrés
+  //       </h3>
 
-        <div className="ml-5 mb-5 mt-10 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[20vh] flex flex-col items-center justify-center gap-2">
-          <div>Chargement ...</div>
-        </div>
-      </>
-    );
-  }
+  //       <div className="ml-5 mt-10 p-5 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[25vh] flex flex-col items-center justify-center gap-2">
+  //         <div>Chargement ...</div>
+  //       </div>
+  //     </>
+  //   );
+  // }
 
   return (
     <div>
@@ -83,10 +83,10 @@ export default function Menus({
       </h3>
 
       {groups.length === 0 ? (
-        <div className="sm:mb-5 ml-5 mt-10 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[20vh] flex flex-col items-center justify-center gap-2">
-          <div>Aucun menu enregistré</div>
+        <div className="ml-5 mt-4 border-2 border-dashed border-gray-400 rounded text-center text-gray-500 h-[25vh] flex flex-col items-center justify-center gap-2">
+          <div>{isLoading ? "Chargement ..." : "Aucun menu enregistré"}</div>
           <div>
-            Création dans <CalendarLink /> ou <RecipesLink />
+            {isLoading ? "" : <>Création dans <CalendarLink /> ou <RecipesLink /></>}
           </div>
         </div>
       ) : (

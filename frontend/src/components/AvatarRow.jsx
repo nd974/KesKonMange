@@ -33,7 +33,21 @@ export default function AvatarRow({
 
   return (
     <div className="relative mb-8">
-      <h3 className="text-lg font-semibold mb-3">{title}</h3>
+      <div className="flex items-center justify-left gap-2 mb-4">
+        <h3 className="text-lg font-semibold">
+          {title}
+        </h3>
+
+        {title === "Personnel" && (
+          <button
+            onClick={() => alert("Fonctionnalité à venir !")}
+            className="text-sm p-2 bg-accentGreen text-white rounded-lg shadow hover:bg-green-700 transition duration-200"
+          >
+            Upload
+          </button>
+        )}
+      </div>
+
 
       <div className="relative">
         {/* Bouton < */}
