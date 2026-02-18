@@ -118,7 +118,7 @@ export default function Header({homeId, unreadCountNotif, inAccount=false}) {
   return (
     <header className={`relative flex items-center w-full ${inAccount && "mb-4"}`}>
       {/* 🔸 Logo + salutation */}
-      <div className={`${inAccount ? "w-1/4 justify-center -mt-3" : ""} flex items-center gap-3`}>
+      <div className={`${inAccount ? "w-1/4 justify-center" : ""} flex items-center gap-3`}>
         <div className={`${inAccount ? "w-40 h-16" : "w-11 h-12"} flex items-center justify-center text-white font-bold`}>
           <img
             src={`${CLOUDINARY_RES}${inAccount ? CLOUDINARY_LOGO_ACCOUNT : CLOUDINARY_LOGO_HEADER}`}

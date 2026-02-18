@@ -5,8 +5,10 @@ import ModalProducts from "../components/modals/ModalProducts";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
+import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND } from "../config/constants";
+
 export default function Stock({ homeId }) {
-  const ITEMS_PER_PAGE = 14;
+  const ITEMS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [storages, setStorages] = useState([]);
@@ -268,6 +270,8 @@ const handleInsertProduct = async (finalProduct) => {
 
 // const units = [...new Set(ingredients.map(i => i.unit_name))];
 
+console.log(ingredients);
+
   return (
     <div className="">
 
@@ -276,7 +280,7 @@ const handleInsertProduct = async (finalProduct) => {
       <div className="flex flex-col lg:flex-row gap-6 py-6">
 
         {/* HomeZone */}
-        <div className="w-full lg:w-1/3 mt-2">
+        <div className="w-full lg:w-1/3 mt-5">
           <HomeZone
             key={homeId}
             homeId={homeId}
@@ -402,10 +406,15 @@ const handleInsertProduct = async (finalProduct) => {
           </div>
 
           {/* TABLEAU */}
-          <table className="w-full border mt-2">
+          <table className="w-full border mt-2 table-fixed">
             <thead className="bg-gray-200">
 
               <tr>
+                <th
+                  className="border px-2 py-1 w-16 text-center"
+                >
+                  Image
+                </th>
                 <th
                   className="border px-2 py-1 cursor-pointer select-none"
                   onClick={() => handleSort("ingredient_name")} // Utilisation de ingredient_name pour trier par nom
@@ -413,10 +422,10 @@ const handleInsertProduct = async (finalProduct) => {
                   Nom
                   {sortColumn === "ingredient_name" && (sortOrder === "asc" ? " ▲" : " ▼")}
                 </th>
-                <th className="border px-2 py-1">Quantité</th>
+                <th className="border px-2 py-1 sm:w-64">Quantité</th>
                 {/* <th className="border px-2 py-1">Unité</th> */}
                 <th
-                  className="border px-2 py-1 cursor-pointer select-none"
+                  className="border px-2 py-1 cursor-pointer select-none sm:w-48"
                   onClick={() => handleSort("expiry")} // Utilisation de expiry pour trier par date d'expiration
                 >
                   Péremption
@@ -429,13 +438,13 @@ const handleInsertProduct = async (finalProduct) => {
             <tbody>
               {loading && (
                 <tr>
-                  <td colSpan="5" className="text-center">Chargement...</td>
+                  <td colSpan="4" className="text-center">Chargement...</td>
                 </tr>
               )}
 
               {!loading && filteredIngredients.length === 0 && (
                 <tr>
-                  <td colSpan="5" className="text-center">Aucun ingrédient</td>
+                  <td colSpan="4" className="text-center">Aucun ingrédient</td>
                 </tr>
               )}
 
@@ -444,6 +453,13 @@ const handleInsertProduct = async (finalProduct) => {
 
                 return (
                   <tr key={idx}>
+                    <td className="border px-2 py-1 w-16 text-center align-middle">
+                      <img
+                        src={`${CLOUDINARY_RES}${ing.picture || CLOUDINARY_RECETTE_NOTFOUND}`}
+                        alt={ing.ingredient_name}
+                        className={`w-10 h-10 object-cover mx-auto ${ing.recipe_id ? "rounded-2xl" : ""}`}
+                      />
+                    </td>
                     <td
                       className="border px-2 py-1 cursor-pointer text-blue-700 hover:underline"
                       onClick={() => {

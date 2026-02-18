@@ -38,6 +38,11 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
         "v1770988586/framboise_on22c2.webp",
         "v1771092310/pasteque_mmmnjc.webp",
         "v1771092365/Pomme_femgwy.webp",
+        "v1771323769/avatar_raisin_hgrkjb.webp",
+        "v1771354507/Ananas_ls0ket.webp",
+        "v1771353317/Poire_oq4uxg.webp",
+        "v1771354243/Kiwi_r7hgxq.webp",
+        "v1771354361/Cerise_sa847q.webp",
     ],
 
     "Legumes": [

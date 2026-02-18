@@ -153,14 +153,37 @@ router.get("/getProducts/:homeId", async (req, res) => {
 
   try {
     const result = await pool.query(
-      `SELECT p.id, p.ing_id, p.amount, p.unit_id, p.amount_item, p.unit_item_id, p.stock_id, p.expiry, p.home_id,
-              i.name AS ingredient_name, u.name AS unit_name, ui.name AS unit_item_name, i.recipe_id
+      `SELECT 
+          p.id, 
+          p.ing_id, 
+          p.amount, 
+          p.unit_id, 
+          p.amount_item, 
+          p.unit_item_id, 
+          p.stock_id, 
+          p.expiry, 
+          p.home_id,
+          i.name AS ingredient_name, 
+          u.name AS unit_name, 
+          ui.name AS unit_item_name, 
+          i.recipe_id,
+
+          -- Si recette → image de Recipe, sinon image de Ingredient
+          COALESCE(r.picture, i.picture) AS picture
+
        FROM "Product" p
        JOIN "Ingredient" i ON p.ing_id = i.id
        LEFT JOIN "Unit" u ON p.unit_id = u.id
        LEFT JOIN "Unit" ui ON p.unit_item_id = ui.id
-       WHERE p.home_id = $1 AND (p.stock_id IS NULL 
-          OR p.stock_id IN (SELECT id FROM "homes_storages" WHERE home_id = $1))`,
+       LEFT JOIN "Recipe" r ON i.recipe_id = r.id
+
+       WHERE p.home_id = $1 
+         AND (
+              p.stock_id IS NULL 
+              OR p.stock_id IN (
+                  SELECT id FROM "homes_storages" WHERE home_id = $1
+              )
+         )`,
       [homeId]
     );
 
@@ -170,6 +193,7 @@ router.get("/getProducts/:homeId", async (req, res) => {
     return res.status(500).json({ error: "Une erreur s'est produite" });
   }
 });
+
 
 // ---------------------------
 // UPDATE PRODUCT

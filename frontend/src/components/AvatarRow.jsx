@@ -51,7 +51,7 @@ export default function AvatarRow({
 
       <div className="relative">
         {/* Bouton < */}
-        {canScrollLeft && (
+        {canScrollLeft && avatars.length > 1 && (
           <button
             onClick={() => scroll(-1)}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur border rounded-full w-8 h-8 flex items-center justify-center shadow"
@@ -88,7 +88,7 @@ export default function AvatarRow({
         </div>
 
         {/* Bouton > */}
-        {canScrollRight && (
+        {canScrollRight && avatars.length > 1 &&(
           <button
             onClick={() => scroll(1)}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur border rounded-full w-8 h-8 flex items-center justify-center shadow"
