@@ -11,6 +11,8 @@ export default function AvatarRow({
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
 
+  const fileInputRef = useRef(null);
+
   const updateScrollButtons = () => {
     const el = rowRef.current;
     if (!el) return;
@@ -39,12 +41,32 @@ export default function AvatarRow({
         </h3>
 
         {title === "Personnel" && (
-          <button
-            onClick={() => alert("Fonctionnalité à venir !")}
-            className="text-sm p-2 bg-accentGreen text-white rounded-lg shadow hover:bg-green-700 transition duration-200"
-          >
-            Upload
-          </button>
+          <>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              className="text-sm p-2 bg-accentGreen text-white rounded-lg shadow hover:bg-green-700 transition duration-200"
+            >
+              Upload
+            </button>
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              style={{ display: "none" }}
+              onChange={(e) => {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                if (!file.type.startsWith("image/")) {
+                  alert("Veuillez sélectionner une image valide");
+                  return;
+                }
+
+                onSelect(file); // 🔥 On envoie le File au parent
+                e.target.value = ""; // reset pour pouvoir re-upload la même image
+              }}
+              />
+            </>
         )}
       </div>
 
@@ -62,15 +84,15 @@ export default function AvatarRow({
 
         {/* Avatars */}
         <div
-        ref={rowRef}
-        onScroll={updateScrollButtons}
-        className={`flex gap-4 overflow-x-hidden transition-all ${
+          ref={rowRef}
+          onScroll={updateScrollButtons}
+          className={`flex gap-4 overflow-x-hidden transition-all ${
             canScrollLeft ? "pl-10" : "pl-0"
-        } ${canScrollRight ? "pr-10" : "pr-0"}`}
+          } ${canScrollRight ? "pr-10" : "pr-0"}`}
         >
-          {avatars.map((avatar) => (
+          {avatars.map((avatar, index) => (
             <button
-              key={avatar}
+              key={`${avatar}-${index}`}
               onClick={() => onSelect(avatar)}
               className={`min-w-[80px] h-[80px] rounded overflow-hidden border-2 transition ${
                 selectedAvatar === avatar
@@ -86,6 +108,7 @@ export default function AvatarRow({
             </button>
           ))}
         </div>
+
 
         {/* Bouton > */}
         {canScrollRight && avatars.length > 1 &&(

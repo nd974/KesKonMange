@@ -187,7 +187,34 @@ router.post("/update-pin", async (req, res) => {
   }
 });
 
+import cloudinary from "cloudinary";
+cloudinary.v2.config({
+  cloud_name: process.env.CLOUDINARY_NAME,
+  api_key: process.env.CLOUDINARY_KEY,
+  api_secret: process.env.CLOUDINARY_SECRET,
+});
 
+// Vérifier l'usage (optionnel)
+cloudinary.v2.api.usage((error, result) => {
+  if (error) {
+    console.error(error);
+  } else {
+    console.log("Usage actuel :", result);
+  }
+});
+
+// 🔥 Endpoint pour supprimer un avatar
+router.delete("/delete-avatar/:publicId", async (req, res) => {
+  const { publicId } = req.params;
+  try {
+    const result = await cloudinary.uploader.destroy(publicId);
+    if (result.result === "not found") return res.status(404).send("Avatar not found");
+    res.send({ ok: true });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send({ error: "Erreur serveur" });
+  }
+});
 
 
 

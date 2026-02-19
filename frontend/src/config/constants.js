@@ -19,9 +19,7 @@ export const CLOUDINARY_AVATAR5_DEFAULT = [
 ];
 
 export const CLOUDINARY_AVATARS_SETTINGS = {
-    "Personnel": [
-        "v1764321200/avatar_old1.png",
-    ],
+    "Personnel": [],
 
     "Classiques": [
         "v1764321144/avatar1_enqee6_w8lagz.png",

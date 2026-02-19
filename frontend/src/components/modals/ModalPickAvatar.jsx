@@ -1,5 +1,6 @@
 import AvatarRow from "../AvatarRow";
 import { CLOUDINARY_AVATARS_SETTINGS } from "../../config/constants";
+import { useState, useEffect } from "react";
 
 export default function ModalPickAvatar({
   isOpen,
@@ -7,7 +8,17 @@ export default function ModalPickAvatar({
   selectedAvatar,
   onSelectAvatar,
 }) {
+
+  const [avatarSettings, setAvatarSettings] = useState({});
+
+  useEffect(() => {
+    setAvatarSettings(CLOUDINARY_AVATARS_SETTINGS);
+  }, []);
+  
+
   if (!isOpen) return null;
+
+
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center z-[9999]">
@@ -37,16 +48,35 @@ export default function ModalPickAvatar({
 
         {/* Contenu */}
         <div className="space-y-6 max-h-[70vh] overflow-y-auto pr-2">
-          {Object.entries(CLOUDINARY_AVATARS_SETTINGS).map(
+          {Object.entries(avatarSettings).map(
             ([category, avatars]) => (
               <AvatarRow
                 key={category}
                 title={category}
                 avatars={avatars}
                 selectedAvatar={selectedAvatar}
-                onSelect={(avatar) => {
-                  onSelectAvatar(avatar);
-                  onClose();
+                onSelect={async (avatar) => {
+
+                  // 🔥 Si c’est un File → upload
+                  if (avatar instanceof File) {
+                    const uploadedAvatar = await onSelectAvatar(avatar);
+
+                    if (uploadedAvatar) {
+
+                      setAvatarSettings((prev) => ({
+                        ...prev,
+                        Personnel: [
+                          uploadedAvatar,
+                          ...(prev.Personnel || []),
+                        ],
+                      }));
+
+                    }
+
+                  } else {
+                    onSelectAvatar(avatar);
+                    onClose();
+                  }
                 }}
               />
             )

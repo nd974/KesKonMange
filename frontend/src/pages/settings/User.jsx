@@ -5,7 +5,7 @@ import { Account_links } from "../../config/constants";
 import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { setHomeId, getHomeId, getProfileId } from "../../../session";
-import { CLOUDINARY_RES, CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_AVATARS_SETTINGS, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../../config/constants";
+import { CLOUDINARY_RES, CLOUDINARY_API, CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_AVATARS_SETTINGS, CLOUDINARY_LOGO_HEADER, CLOUDINARY_LOGO_ACCOUNT } from "../../config/constants";
 
 import ModalPickAvatar from "../../components/modals/ModalPickAvatar";
 
@@ -88,6 +88,118 @@ export default function User({ homeId, profileId }) {
       alert("Erreur serveur");
     }
   };
+
+const handleUploadAvatar = async (profileId, file) => {
+  if (!file || !profileId) return null;
+
+  // Compression côté client
+
+
+  const compressed = await compressImage(file);
+  const fileToUpload = compressed || file;
+
+  const formData = new FormData();
+  formData.append("file", fileToUpload);
+  formData.append("upload_preset", "Avatars");
+  formData.append("public_id", `profileAvatar_${profileId}`); // 🔑 même public_id
+
+  const res = await fetch(CLOUDINARY_API, { method: "POST", body: formData });
+  const data = await res.json();
+
+  if (data.secure_url) {
+    const transformedUrl = data.secure_url.replace(
+      "/upload/",
+      "/upload/w_256,h_256,c_fill,f_webp,q_auto/"
+    );
+    return transformedUrl.split("/upload/w_256,h_256,c_fill,f_webp,q_auto/")[1];
+  }
+
+  return null;
+};
+
+const getPublicIdFromUrl = (url) => {
+  if (!url) return null;
+  // url: v1770988112/abricot_urmvkl.webp
+  const parts = url.split("/"); 
+  const filename = parts[parts.length - 1]; // abricot_urmvkl.webp
+  return filename.split(".")[0]; // abricot_urmvkl
+};
+
+const compressImage = (file, maxSize = 512, quality = 0.8) => {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.src = URL.createObjectURL(file);
+
+    img.onload = () => {
+      const size = Math.min(img.width, img.height);
+      const canvas = document.createElement("canvas");
+      canvas.width = maxSize;
+      canvas.height = maxSize;
+
+      const ctx = canvas.getContext("2d");
+      const startX = (img.width - size) / 2;
+      const startY = (img.height - size) / 2;
+
+      ctx.drawImage(img, startX, startY, size, size, 0, 0, maxSize, maxSize);
+
+      canvas.toBlob((blob) => resolve(blob || file), "image/jpeg", quality);
+    };
+  });
+};
+
+const handleSelectAvatar = async (avatar) => {
+  if (!avatar) return null;
+
+  if (avatar instanceof File) {
+    // 🔹 Supprimer l'ancien avatar si c'était un avatar personnel
+    if (selectedAvatar && selectedAvatar.startsWith("profileAvatar_")) {
+      const oldPublicId = getPublicIdFromUrl(selectedAvatar);
+      if (oldPublicId) {
+        try {
+          await fetch(`${API_URL}/profile/delete-avatar/${oldPublicId}`, {
+            method: "DELETE",
+          });
+          console.log("Ancien avatar supprimé ✅");
+        } catch (err) {
+          console.error("Erreur suppression avatar:", err);
+        }
+      }
+    }
+
+    // 🔹 Upload nouveau avatar
+    try {
+      const compressed = await compressImage(avatar);
+      const fileToUpload = compressed || avatar;
+
+      const publicId = `profileAvatar_${profile.id}`;
+      const formData = new FormData();
+      formData.append("file", fileToUpload);
+      formData.append("upload_preset", "Avatars");
+      formData.append("public_id", publicId);
+
+      const res = await fetch(CLOUDINARY_API, { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (data.secure_url) {
+        const transformedUrl = data.secure_url.replace(
+          "/upload/",
+          "/upload/w_256,h_256,c_fill,f_webp,q_auto/"
+        );
+        setSelectedAvatar(transformedUrl.split("/upload/w_256,h_256,c_fill,f_webp,q_auto/")[1]);
+        return transformedUrl.split("/upload/w_256,h_256,c_fill,f_webp,q_auto/")[1];
+      }
+    } catch (err) {
+      console.error("Upload Cloudinary failed:", err);
+      alert("Échec de l'upload. Vérifiez votre connexion.");
+      return null;
+    }
+  } else {
+    setSelectedAvatar(avatar);
+    return avatar;
+  }
+};
+
+
 
 
 
@@ -202,7 +314,7 @@ export default function User({ homeId, profileId }) {
               isOpen={isAvatarModalOpen}
               onClose={() => setIsAvatarModalOpen(false)}
               selectedAvatar={selectedAvatar || profile?.avatar}
-              onSelectAvatar={setSelectedAvatar}
+              onSelectAvatar={handleSelectAvatar}
             />
         )}
 
