@@ -7,6 +7,7 @@ export default function ModalPickAvatar({
   onClose,
   selectedAvatar,
   onSelectAvatar,
+  profileId,
 }) {
 
   const [avatarSettings, setAvatarSettings] = useState({});
@@ -55,28 +56,10 @@ export default function ModalPickAvatar({
                 title={category}
                 avatars={avatars}
                 selectedAvatar={selectedAvatar}
+                profileId={profileId}
                 onSelect={async (avatar) => {
-
-                  // 🔥 Si c’est un File → upload
-                  if (avatar instanceof File) {
-                    const uploadedAvatar = await onSelectAvatar(avatar);
-
-                    if (uploadedAvatar) {
-
-                      setAvatarSettings((prev) => ({
-                        ...prev,
-                        Personnel: [
-                          uploadedAvatar,
-                          ...(prev.Personnel || []),
-                        ],
-                      }));
-
-                    }
-
-                  } else {
-                    onSelectAvatar(avatar);
+                    await onSelectAvatar(avatar);
                     onClose();
-                  }
                 }}
               />
             )

@@ -101,7 +101,7 @@ const handleUploadAvatar = async (profileId, file) => {
   const formData = new FormData();
   formData.append("file", fileToUpload);
   formData.append("upload_preset", "Avatars");
-  formData.append("public_id", `profileAvatar_${profileId}`); // 🔑 même public_id
+  formData.append("public_id", `profile_avatar_${profileId}`); // 🔑 même public_id
 
   const res = await fetch(CLOUDINARY_API, { method: "POST", body: formData });
   const data = await res.json();
@@ -149,10 +149,11 @@ const compressImage = (file, maxSize = 512, quality = 0.8) => {
 
 const handleSelectAvatar = async (avatar) => {
   if (!avatar) return null;
-
+  console.log("selectedAvatar:", selectedAvatar);
   if (avatar instanceof File) {
+    console.log("DELETE new avatar...");
     // 🔹 Supprimer l'ancien avatar si c'était un avatar personnel
-    if (selectedAvatar && selectedAvatar.startsWith("profileAvatar_")) {
+    if (selectedAvatar && selectedAvatar.split("/")[selectedAvatar.split("/").length - 1].startsWith("profile_avatar_")) {
       const oldPublicId = getPublicIdFromUrl(selectedAvatar);
       if (oldPublicId) {
         try {
@@ -166,12 +167,14 @@ const handleSelectAvatar = async (avatar) => {
       }
     }
 
+    console.log("Uploading new avatar...");
+
     // 🔹 Upload nouveau avatar
     try {
       const compressed = await compressImage(avatar);
       const fileToUpload = compressed || avatar;
 
-      const publicId = `profileAvatar_${profile.id}`;
+      const publicId = `profile_avatar_${profile.id}`;
       const formData = new FormData();
       formData.append("file", fileToUpload);
       formData.append("upload_preset", "Avatars");
@@ -180,13 +183,12 @@ const handleSelectAvatar = async (avatar) => {
       const res = await fetch(CLOUDINARY_API, { method: "POST", body: formData });
       const data = await res.json();
 
-      if (data.secure_url) {
-        const transformedUrl = data.secure_url.replace(
-          "/upload/",
-          "/upload/w_256,h_256,c_fill,f_webp,q_auto/"
-        );
-        setSelectedAvatar(transformedUrl.split("/upload/w_256,h_256,c_fill,f_webp,q_auto/")[1]);
-        return transformedUrl.split("/upload/w_256,h_256,c_fill,f_webp,q_auto/")[1];
+      if (data.public_id && data.version) {
+        const transformedPath = `v${data.version}/${data.public_id}`;
+
+        setSelectedAvatar(transformedPath);
+
+        return transformedPath;
       }
     } catch (err) {
       console.error("Upload Cloudinary failed:", err);
@@ -315,6 +317,7 @@ const handleSelectAvatar = async (avatar) => {
               onClose={() => setIsAvatarModalOpen(false)}
               selectedAvatar={selectedAvatar || profile?.avatar}
               onSelectAvatar={handleSelectAvatar}
+              profileId={profile?.id}
             />
         )}
 

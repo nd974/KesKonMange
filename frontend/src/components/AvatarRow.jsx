@@ -1,11 +1,12 @@
 import { useRef, useState } from "react";
-import { CLOUDINARY_RES } from "../config/constants";
+import { CLOUDINARY_RECETTE_NOTFOUND, CLOUDINARY_RES } from "../config/constants";
 
 export default function AvatarRow({
   title,
   avatars,
   selectedAvatar,
   onSelect,
+  profileId,
 }) {
   const rowRef = useRef(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
@@ -33,20 +34,23 @@ export default function AvatarRow({
     setTimeout(updateScrollButtons, 300);
   };
 
+  console.log("selectedAvatar in AvatarRow:", selectedAvatar);
+  console.log("Personnel avatar:", `${CLOUDINARY_RES}profile_avatar_${profileId}?t=${Date.now()}`)
+
   return (
-    <div className="relative mb-8">
+    <div className={`relative mb-8 ${title === "Upload" ? "-mb-10" : ""}`}>
       <div className="flex items-center justify-left gap-2 mb-4">
         <h3 className="text-lg font-semibold">
-          {title}
+          {title === "Upload" ? "" : title}
         </h3>
 
-        {title === "Personnel" && (
-          <>
+        {title === "Upload" && (
+          <div className="ml-auto flex items-center gap-2">
             <button
               onClick={() => fileInputRef.current?.click()}
               className="text-sm p-2 bg-accentGreen text-white rounded-lg shadow hover:bg-green-700 transition duration-200"
             >
-              Upload
+              ⬇️ Importer une image
             </button>
             <input
               type="file"
@@ -65,9 +69,10 @@ export default function AvatarRow({
                 onSelect(file); // 🔥 On envoie le File au parent
                 e.target.value = ""; // reset pour pouvoir re-upload la même image
               }}
-              />
-            </>
+            />
+          </div>
         )}
+
       </div>
 
 
@@ -90,24 +95,27 @@ export default function AvatarRow({
             canScrollLeft ? "pl-10" : "pl-0"
           } ${canScrollRight ? "pr-10" : "pr-0"}`}
         >
-          {avatars.map((avatar, index) => (
-            <button
-              key={`${avatar}-${index}`}
-              onClick={() => onSelect(avatar)}
-              className={`min-w-[80px] h-[80px] rounded overflow-hidden border-2 transition ${
-                selectedAvatar === avatar
-                  ? "border-accentGreen p-1"
-                  : "border-transparent hover:border-gray-300"
-              }`}
-            >
-              <img
-                src={`${CLOUDINARY_RES}${avatar}`}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
-            </button>
-          ))}
+          {
+            avatars.map((avatar, index) => (
+              <button
+                key={`${avatar}-${index}`}
+                onClick={() => onSelect(avatar)}
+                className={`min-w-[80px] h-[80px] rounded overflow-hidden border-2 transition ${
+                  selectedAvatar === avatar
+                    ? "border-accentGreen p-1"
+                    : "border-transparent hover:border-gray-300"
+                }`}
+              >
+                <img
+                  src={`${CLOUDINARY_RES}${avatar}`}
+                  alt="Avatar"
+                  className="w-full h-full object-cover"
+                />
+              </button>
+            ))
+          }
         </div>
+
 
 
         {/* Bouton > */}
