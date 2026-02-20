@@ -248,12 +248,12 @@ export default function RecipeDetail({ homeId,profileId, idProp}) {
         <main className={`flex-1 bg-white relative ${!idProp ? "p-6 shadow rounded-lg overflow-hidden" : ""}`}>
             {!idProp && 
               <div className="flex justify-center mt-6 mb-6 space-x-4">
-                <button
+                {/* <button
                   className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
                   onClick={deleteValidate}
                 >
                   🗑️ Supprimer la recette
-                </button>
+                </button> */}
                 <button
                   className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
                   onClick={() => navigate(`/recipe/edit/${recipe.id}`)}

@@ -918,109 +918,109 @@ router.delete("/delete-image/:publicId", async (req, res) => {
 });
 
 
-router.delete("/delete/:id", async (req, res) => {
-  const recipeId = parseInt(req.params.id, 10);
+// router.delete("/delete/:id", async (req, res) => {
+//   const recipeId = parseInt(req.params.id, 10);
 
-  if (isNaN(recipeId)) {
-    return res.status(400).json({ error: "ID de recette invalide" });
-  }
+//   if (isNaN(recipeId)) {
+//     return res.status(400).json({ error: "ID de recette invalide" });
+//   }
 
-  try {
-    // 1️⃣ Récupérer le publicId (image)
-    const imageResult = await pool.query(
-      `SELECT name FROM "Recipe" WHERE id = $1`,
-      [recipeId]
-    );
+//   try {
+//     // 1️⃣ Récupérer le publicId (image)
+//     const imageResult = await pool.query(
+//       `SELECT name FROM "Recipe" WHERE id = $1`,
+//       [recipeId]
+//     );
 
-    if (imageResult.rowCount === 0) {
-      return res.status(404).json({ error: "Recette non trouvée" });
-    }
+//     if (imageResult.rowCount === 0) {
+//       return res.status(404).json({ error: "Recette non trouvée" });
+//     }
 
-    const publicId = imageResult.rows[0].name;
+//     const publicId = imageResult.rows[0].name;
 
-    // 2️⃣ Récupérer les ingrédients liés avant suppression
-    const ingredientsResult = await pool.query(
-      `SELECT ingredient_id FROM recipes_ingredients WHERE recipe_id = $1`,
-      [recipeId]
-    );
+//     // 2️⃣ Récupérer les ingrédients liés avant suppression
+//     const ingredientsResult = await pool.query(
+//       `SELECT ingredient_id FROM recipes_ingredients WHERE recipe_id = $1`,
+//       [recipeId]
+//     );
 
-    const ingredientIds = ingredientsResult.rows.map(r => r.ingredient_id);
+//     const ingredientIds = ingredientsResult.rows.map(r => r.ingredient_id);
 
-    // 3️⃣ Récupérer les steps liés avant suppression
-    const stepsResult = await pool.query(
-      `SELECT step_id FROM recipes_steps WHERE recipe_id = $1`,
-      [recipeId]
-    );
+//     // 3️⃣ Récupérer les steps liés avant suppression
+//     const stepsResult = await pool.query(
+//       `SELECT step_id FROM recipes_steps WHERE recipe_id = $1`,
+//       [recipeId]
+//     );
 
-    const stepIds = stepsResult.rows.map(r => r.step_id);
+//     const stepIds = stepsResult.rows.map(r => r.step_id);
 
-    // 4️⃣ Supprimer la recette
-    await pool.query(
-      `DELETE FROM "Recipe" WHERE id = $1`,
-      [recipeId]
-    );
+//     // 4️⃣ Supprimer la recette
+//     await pool.query(
+//       `DELETE FROM "Recipe" WHERE id = $1`,
+//       [recipeId]
+//     );
 
-    // 5️⃣ Supprimer les relations dans recipes_ingredients
-    await pool.query(
-      `DELETE FROM recipes_ingredients WHERE recipe_id = $1`,
-      [recipeId]
-    );
+//     // 5️⃣ Supprimer les relations dans recipes_ingredients
+//     await pool.query(
+//       `DELETE FROM recipes_ingredients WHERE recipe_id = $1`,
+//       [recipeId]
+//     );
 
-    // 6️⃣ Supprimer les ingrédients orphelins
-    for (const ingId of ingredientIds) {
-      await pool.query(
-        `
-        DELETE FROM "Ingredient"
-        WHERE id = $1
-        AND NOT EXISTS (
-          SELECT 1 FROM recipes_ingredients ri WHERE ri.ingredient_id = $1
-        )
-        `,
-        [ingId]
-      );
-    }
+//     // 6️⃣ Supprimer les ingrédients orphelins
+//     for (const ingId of ingredientIds) {
+//       await pool.query(
+//         `
+//         DELETE FROM "Ingredient"
+//         WHERE id = $1
+//         AND NOT EXISTS (
+//           SELECT 1 FROM recipes_ingredients ri WHERE ri.ingredient_id = $1
+//         )
+//         `,
+//         [ingId]
+//       );
+//     }
 
-    // 7️⃣ Supprimer les relations dans recipes_steps
-    await pool.query(
-      `DELETE FROM recipes_steps WHERE recipe_id = $1`,
-      [recipeId]
-    );
+//     // 7️⃣ Supprimer les relations dans recipes_steps
+//     await pool.query(
+//       `DELETE FROM recipes_steps WHERE recipe_id = $1`,
+//       [recipeId]
+//     );
 
-    // 8️⃣ Supprimer les steps orphelins
-    if (stepIds.length > 0) {
-      await pool.query(
-        `
-        DELETE FROM "Step"
-        WHERE id = ANY($1)
-        AND NOT EXISTS (
-          SELECT 1 FROM recipes_steps rs WHERE rs.step_id = ANY($1)
-        )
-        `,
-        [stepIds]
-      );
-    }
+//     // 8️⃣ Supprimer les steps orphelins
+//     if (stepIds.length > 0) {
+//       await pool.query(
+//         `
+//         DELETE FROM "Step"
+//         WHERE id = ANY($1)
+//         AND NOT EXISTS (
+//           SELECT 1 FROM recipes_steps rs WHERE rs.step_id = ANY($1)
+//         )
+//         `,
+//         [stepIds]
+//       );
+//     }
 
-    // 9️⃣ Supprimer l'image Cloudinary
-    if (publicId) {
-      try {
-        const cloudDelete = await cloudinary.v2.uploader.destroy(publicId);
-        console.log("Cloudinary:", cloudDelete);
-      } catch (err) {
-        console.error("⚠️ Erreur suppression Cloudinary :", err);
-      }
-    }
+//     // 9️⃣ Supprimer l'image Cloudinary
+//     if (publicId) {
+//       try {
+//         const cloudDelete = await cloudinary.v2.uploader.destroy(publicId);
+//         console.log("Cloudinary:", cloudDelete);
+//       } catch (err) {
+//         console.error("⚠️ Erreur suppression Cloudinary :", err);
+//       }
+//     }
 
-    res.json({
-      ok: true,
-      deletedRecipeId: recipeId,
-      deletedImagePublicId: publicId || null
-    });
+//     res.json({
+//       ok: true,
+//       deletedRecipeId: recipeId,
+//       deletedImagePublicId: publicId || null
+//     });
 
-  } catch (e) {
-    console.error("Erreur lors de la suppression :", e);
-    res.status(500).json({ error: e.message });
-  }
-});
+//   } catch (e) {
+//     console.error("Erreur lors de la suppression :", e);
+//     res.status(500).json({ error: e.message });
+//   }
+// });
 
 
 
