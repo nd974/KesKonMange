@@ -50,7 +50,7 @@ export default function AvatarRow({
               onClick={() => fileInputRef.current?.click()}
               className="text-sm p-2 bg-accentGreen text-white rounded-lg shadow hover:bg-green-700 transition duration-200"
             >
-              ⬇️ Importer une image
+              ⬇️ Importer un avatar personnalisé
             </button>
             <input
               type="file"

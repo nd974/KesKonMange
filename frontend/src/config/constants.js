@@ -27,6 +27,8 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
         "v1764321145/avatar3_ibhdeb_cy1r1v.png",
         "v1764321145/avatar4_czjb1t_rxnryd.png",
         "v1771092103/avatar_vert_nfxsxn.webp",
+        "v1771582311/avatar6_violet_blbdtn.webp",
+        "v1771582311/avatar7_orange_tb61rk.webp",
     ],
 
     "Fruits": [
@@ -43,12 +45,13 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
         "v1771354361/Cerise_sa847q.webp",
     ],
 
-    "Legumes": [
+    "Légumes": [
         "TODO.webp",
     ],
 
     "Viande": [
-        "TODO.webp",
+        "v1771584177/avatar_poulet_ddsb6h.webp",
+        "v1771584353/avatar_boeuf_jubomh.webp",
     ],
 };
 
