@@ -113,19 +113,6 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
       {message && <p className="text-center mb-3">{message}</p>}
 
       <div className="flex flex-col gap-4 text-black">
-        {/* Nom de la maison */}
-        <div className="flex flex-col gap-1">
-          <label className="font-medium">Nom de la maison :</label>
-          <input
-            className={inputClass(nameIsValid, name)}
-            placeholder="Nom de la maison"
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-          />
-          {nameError && (
-            <p className="text-sm text-red-500 mt-1">{nameError}</p>
-          )}
-        </div>
 
         {/* Email */}
         <div className="flex flex-col gap-1">
@@ -153,6 +140,20 @@ export default function ModalHomeCreate({ onClose, onCreated }) {
           />
           {passwordError && (
             <p className="text-sm text-red-500 mt-1">{passwordError}</p>
+          )}
+        </div>
+
+        {/* Nom de la maison */}
+        <div className="flex flex-col gap-1">
+          <label className="font-medium">Nom du foyer familiale:</label>
+          <input
+            className={inputClass(nameIsValid, name)}
+            placeholder="Nom du foyer familiale"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+          />
+          {nameError && (
+            <p className="text-sm text-red-500 mt-1">{nameError}</p>
           )}
         </div>
 

@@ -6,16 +6,18 @@ export const CLOUDINARY_API = `https://api.cloudinary.com/v1_1/${CLOUDINARY_NAME
 export const CLOUDINARY_PRESET_LOGO = "Logos";
 export const CLOUDINARY_LOGO_HOME = "v1764321172/KsKnMg_Home_qe5fbb_c2ynaz.png";
 export const CLOUDINARY_LOGO_HEADER = "v1764321173/KsKnMg_ljgxhk_nndgpi.svg";
-export const CLOUDINARY_LOGO_ACCOUNT = "v1767014146/KsKnMg_Account_xpwupp.svg";
+export const CLOUDINARY_LOGO_ACCOUNT = "v1771774640/Logo_account_ik6d7r.webp";
 
 
 export const CLOUDINARY_PRESET_AVATAR = "Avatars";
 export const CLOUDINARY_AVATAR5_DEFAULT = [
-    `v1764321144/avatar1_enqee6_w8lagz.png`,
-    `v1764321145/avatar2_h6ubef_mwv7fb.png`,
-    `v1764321145/avatar3_ibhdeb_cy1r1v.png`,
-    `v1764321145/avatar4_czjb1t_rxnryd.png`,
-    `v1771092103/avatar_vert_nfxsxn.webp`,
+        "v1764321144/avatar1_enqee6_w8lagz.png",
+        "v1764321145/avatar2_h6ubef_mwv7fb.png",
+        "v1764321145/avatar3_ibhdeb_cy1r1v.png",
+        "v1764321145/avatar4_czjb1t_rxnryd.png",
+        "v1771092103/avatar_vert_nfxsxn.webp",
+        "v1771582311/avatar6_violet_blbdtn.webp",
+        "v1771582311/avatar7_orange_tb61rk.webp",
 ];
 
 export const CLOUDINARY_AVATARS_SETTINGS = {
@@ -35,23 +37,27 @@ export const CLOUDINARY_AVATARS_SETTINGS = {
         "v1770988112/abricot_urmvkl.webp",
         "v1770988215/banane_tm24e1.webp",
         "v1770988469/fraise_r9nwtu.webp",
-        "v1770988586/framboise_on22c2.webp",
-        "v1771092310/pasteque_mmmnjc.webp",
+        "v1771092310/Pasteque_tabi8h.webp",
         "v1771092365/Pomme_femgwy.webp",
+        "v1771768554/Mangue_jozvrt.webp",
         "v1771323769/avatar_raisin_hgrkjb.webp",
         "v1771354507/Ananas_ls0ket.webp",
         "v1771353317/Poire_oq4uxg.webp",
         "v1771354243/Kiwi_r7hgxq.webp",
         "v1771354361/Cerise_sa847q.webp",
+
+        "v1770988586/framboise_on22c2.webp",
     ],
 
     "Légumes": [
-        "TODO.webp",
+        "v1771769682/carotte_iwv2bu.webp",
     ],
 
     "Viande": [
         "v1771584177/avatar_poulet_ddsb6h.webp",
         "v1771584353/avatar_boeuf_jubomh.webp",
+        "v1771769090/porc_ribs_wgvtuf.webp",
+        "v1771769174/Magret_Canard_lu7gyb.webp",
     ],
 };
 

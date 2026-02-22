@@ -112,7 +112,7 @@ export default function ModalProfileCreate({ onClose, onCreated }) {
         </div>
 
         {/* Role */}
-        <div className="flex flex-col gap-1">
+        {/* <div className="flex flex-col gap-1">
           <label className="font-medium">Rôle :</label>
           <select
             value={roleId}
@@ -121,7 +121,7 @@ export default function ModalProfileCreate({ onClose, onCreated }) {
           >
             <option value={2}>Member</option>
           </select>
-        </div>
+        </div> */}
 
         {/* Submit */}
         <button

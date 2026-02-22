@@ -38,7 +38,7 @@ export default function AvatarRow({
   console.log("Personnel avatar:", `${CLOUDINARY_RES}profile_avatar_${profileId}?t=${Date.now()}`)
 
   return (
-    <div className={`relative mb-8 ${title === "Upload" ? "-mb-10" : ""}`}>
+    <div className={`relative ${title === "Upload" ? "-mb-6" : "mb-8"}`}>
       <div className="flex items-center justify-left gap-2 mb-4">
         <h3 className="text-lg font-semibold">
           {title === "Upload" ? "" : title}
@@ -78,7 +78,7 @@ export default function AvatarRow({
 
       <div className="relative">
         {/* Bouton < */}
-        {canScrollLeft && avatars.length > 1 && (
+        {canScrollLeft && avatars.length > 4 && (
           <button
             onClick={() => scroll(-1)}
             className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur border rounded-full w-8 h-8 flex items-center justify-center shadow"
@@ -119,7 +119,7 @@ export default function AvatarRow({
 
 
         {/* Bouton > */}
-        {canScrollRight && avatars.length > 1 &&(
+        {canScrollRight && avatars.length > 4 &&(
           <button
             onClick={() => scroll(1)}
             className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur border rounded-full w-8 h-8 flex items-center justify-center shadow"
